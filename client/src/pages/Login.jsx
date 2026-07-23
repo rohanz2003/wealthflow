@@ -17,7 +17,12 @@ export default function Login() {
     try {
       await login(form.email, form.password);
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const data = err.response?.data;
+      if (data?.errors) {
+        setError(data.errors.map((e) => e.msg).join(', '));
+      } else {
+        setError(data?.message || 'Login failed. Make sure the server and MongoDB are running, and seed the database with demo users.');
+      }
     } finally {
       setLoading(false);
     }

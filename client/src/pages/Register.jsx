@@ -24,7 +24,12 @@ export default function Register() {
     try {
       await register(form.name, form.email, form.password);
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || 'Registration failed');
+      const data = err.response?.data;
+      if (data?.errors) {
+        setError(data.errors.map((e) => e.msg).join(', '));
+      } else {
+        setError(data?.message || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }
