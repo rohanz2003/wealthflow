@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiTrendingUp, FiDollarSign, FiPieChart, FiBarChart2 } from 'react-icons/fi';
+import { FiTrendingUp, FiDollarSign, FiBarChart2 } from 'react-icons/fi';
 import { Line, Doughnut, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Filler } from 'chart.js';
 
@@ -10,33 +10,22 @@ export default function WealthAnalytics() {
   const [data, setData] = useState({ expenses: [], incomes: [], investments: [], goals: [], habits: [] });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
       const [expRes, incRes, invRes, goalRes, habRes] = await Promise.all([
-        axios.get('/api/expenses'),
-        axios.get('/api/income'),
-        axios.get('/api/investments'),
-        axios.get('/api/savings'),
-        axios.get('/api/habits'),
+        axios.get('/api/expenses'), axios.get('/api/income'), axios.get('/api/investments'), axios.get('/api/savings'), axios.get('/api/habits'),
       ]);
       setData({ expenses: expRes.data, incomes: incRes.data, investments: invRes.data, goals: goalRes.data, habits: habRes.data });
-    } catch (err) {
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400" /></div>;
   }
 
   const { expenses, incomes, investments, goals, habits } = data;
-
   const totalIncome = incomes.reduce((s, i) => s + i.amount, 0);
   const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
   const totalInvested = investments.reduce((s, i) => s + i.currentValue, 0);
@@ -47,7 +36,6 @@ export default function WealthAnalytics() {
   expenses.forEach((e) => { expenseByCat[e.category] = (expenseByCat[e.category] || 0) + e.amount; });
   const incomeByCat = {};
   incomes.forEach((i) => { incomeByCat[i.category] = (incomeByCat[i.category] || 0) + i.amount; });
-
   const investmentByType = {};
   investments.forEach((inv) => { investmentByType[inv.type] = (investmentByType[inv.type] || 0) + inv.currentValue; });
 
@@ -62,9 +50,8 @@ export default function WealthAnalytics() {
     if (t.type === 'income') monthlyData[month].income += t.amount;
     else monthlyData[month].expense += t.amount;
   });
-  Object.keys(monthlyData).forEach((m) => {
-    monthlyData[m].savings = monthlyData[m].income - monthlyData[m].expense;
-  });
+  Object.keys(monthlyData).forEach((m) => { monthlyData[m].savings = monthlyData[m].income - monthlyData[m].expense; });
+
   const months = Object.keys(monthlyData);
   const monthlyIncomeData = months.map((m) => monthlyData[m].income);
   const monthlyExpenseData = months.map((m) => monthlyData[m].expense);
@@ -74,12 +61,10 @@ export default function WealthAnalytics() {
     labels: Object.keys(expenseByCat),
     datasets: [{ data: Object.values(expenseByCat), backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#a855f7', '#14b8a6', '#f97316', '#64748b'], borderWidth: 0 }],
   };
-
   const investmentChartData = {
     labels: Object.keys(investmentByType),
     datasets: [{ data: Object.values(investmentByType), backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#06b6d4', '#a855f7', '#14b8a6', '#ef4444'], borderWidth: 0 }],
   };
-
   const monthlyChartData = {
     labels: months,
     datasets: [
@@ -88,7 +73,6 @@ export default function WealthAnalytics() {
       { label: 'Net Savings', data: monthlySavingsData, backgroundColor: '#6366f1', borderRadius: 4 },
     ],
   };
-
   const wealthTrendData = {
     labels: months,
     datasets: [{
@@ -101,23 +85,47 @@ export default function WealthAnalytics() {
     }],
   };
 
+  const chartOpts = (ticks) => ({
+    responsive: true,
+    plugins: { legend: { position: 'top', labels: { color: '#94a3b8' } } },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `$${v}`, color: '#94a3b8' } },
+    },
+  });
+
+  const lineChartOpts = {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `$${v}`, color: '#94a3b8' } },
+    },
+  };
+
+  const doughnutOpts = (legend) => ({
+    cutout: '65%',
+    responsive: true,
+    plugins: { legend: { position: legend, labels: { color: '#94a3b8' } } },
+  });
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Wealth Analytics</h1>
-        <p className="text-gray-500">Comprehensive view of your financial growth</p>
+        <h1 className="page-title">Wealth Analytics</h1>
+        <p className="page-subtitle">Comprehensive view of your financial growth</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Income', value: `$${totalIncome.toLocaleString()}`, icon: FiTrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
-          { label: 'Total Expenses', value: `$${totalExpenses.toLocaleString()}`, icon: FiDollarSign, color: 'text-red-600', bg: 'bg-red-50' },
-          { label: 'Investments', value: `$${totalInvested.toLocaleString()}`, icon: FiBarChart2, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Net Worth', value: `$${netWorth.toLocaleString()}`, icon: FiTrendingUp, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Total Income', value: `$${totalIncome.toLocaleString()}`, icon: FiTrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
+          { label: 'Total Expenses', value: `$${totalExpenses.toLocaleString()}`, icon: FiDollarSign, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+          { label: 'Investments', value: `$${totalInvested.toLocaleString()}`, icon: FiBarChart2, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+          { label: 'Net Worth', value: `$${netWorth.toLocaleString()}`, icon: FiTrendingUp, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
         ].map((c, i) => (
-          <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 card-hover">
+          <div key={i} className="stat-card">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-gray-500">{c.label}</p>
+              <p className="text-sm text-gray-500 dark:text-navy-400">{c.label}</p>
               <div className={`w-10 h-10 rounded-lg ${c.bg} flex items-center justify-center ${c.color}`}><c.icon size={20} /></div>
             </div>
             <p className={`text-2xl font-bold ${c.color}`}>{c.value}</p>
@@ -126,86 +134,43 @@ export default function WealthAnalytics() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Monthly Income vs Expenses</h3>
-          {months.length > 0 ? (
-            <Bar data={monthlyChartData} options={{
-              responsive: true,
-              plugins: { legend: { position: 'top' } },
-              scales: {
-                x: { grid: { display: false } },
-                y: { grid: { color: '#f1f5f9' }, ticks: { callback: (v) => `$${v}` } },
-              },
-            }} />
-          ) : (
-            <p className="text-gray-400 text-center py-12">No monthly data available</p>
-          )}
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📊 Monthly Income vs Expenses</h3>
+          {months.length > 0 ? <Bar data={monthlyChartData} options={chartOpts('top')} /> : <p className="text-gray-400 dark:text-navy-500 text-center py-12">No monthly data available</p>}
         </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Net Worth Trend</h3>
-          {months.length > 0 ? (
-            <Line data={wealthTrendData} options={{
-              responsive: true,
-              plugins: { legend: { display: false } },
-              scales: {
-                x: { grid: { display: false } },
-                y: { grid: { color: '#f1f5f9' }, ticks: { callback: (v) => `$${v}` } },
-              },
-            }} />
-          ) : (
-            <p className="text-gray-400 text-center py-12">Add income and expenses to see your trend</p>
-          )}
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📈 Net Worth Trend</h3>
+          {months.length > 0 ? <Line data={wealthTrendData} options={lineChartOpts} /> : <p className="text-gray-400 dark:text-navy-500 text-center py-12">Add income and expenses to see your trend</p>}
         </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🥧 Expense Breakdown</h3>
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🥧 Expense Breakdown</h3>
           {Object.keys(expenseByCat).length > 0 ? (
-            <div className="flex justify-center">
-              <div className="w-56 h-56">
-                <Doughnut data={expenseChartData} options={{ cutout: '65%', plugins: { legend: { position: 'bottom' } } }} />
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-400 text-center py-12">No expenses recorded</p>
-          )}
+            <div className="flex justify-center"><div className="w-56 h-56"><Doughnut data={expenseChartData} options={doughnutOpts('bottom')} /></div></div>
+          ) : <p className="text-gray-400 dark:text-navy-500 text-center py-12">No expenses recorded</p>}
         </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🥧 Investment Portfolio</h3>
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🥧 Investment Portfolio</h3>
           {Object.keys(investmentByType).length > 0 ? (
-            <div className="flex justify-center">
-              <div className="w-56 h-56">
-                <Doughnut data={investmentChartData} options={{ cutout: '65%', plugins: { legend: { position: 'bottom' } } }} />
-              </div>
-            </div>
-          ) : (
-            <p className="text-gray-400 text-center py-12">No investments tracked yet</p>
-          )}
+            <div className="flex justify-center"><div className="w-56 h-56"><Doughnut data={investmentChartData} options={doughnutOpts('bottom')} /></div></div>
+          ) : <p className="text-gray-400 dark:text-navy-500 text-center py-12">No investments tracked yet</p>}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 mb-2">Savings Rate</p>
-          <p className="text-2xl font-bold text-primary-600">
-            {totalIncome > 0 ? `${Math.round(((totalIncome - totalExpenses) / totalIncome) * 100)}%` : '0%'}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">Of total income saved</p>
+        <div className="stat-card">
+          <p className="text-sm text-gray-500 dark:text-navy-400 mb-1">Savings Rate</p>
+          <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{totalIncome > 0 ? `${Math.round(((totalIncome - totalExpenses) / totalIncome) * 100)}%` : '0%'}</p>
+          <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">Of total income saved</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 mb-2">Investment Ratio</p>
-          <p className="text-2xl font-bold text-blue-600">
-            {totalIncome > 0 ? `${Math.round((totalInvested / totalIncome) * 100)}%` : '0%'}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">Of income invested</p>
+        <div className="stat-card">
+          <p className="text-sm text-gray-500 dark:text-navy-400 mb-1">Investment Ratio</p>
+          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalIncome > 0 ? `${Math.round((totalInvested / totalIncome) * 100)}%` : '0%'}</p>
+          <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">Of income invested</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 mb-2">Habit Score</p>
-          <p className="text-2xl font-bold text-orange-600">
-            {habits.length > 0 ? `${Math.round(habits.reduce((s, h) => s + h.totalCompletions, 0) / habits.length * 10) / 10}` : '0'}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">Avg completions per habit</p>
+        <div className="stat-card">
+          <p className="text-sm text-gray-500 dark:text-navy-400 mb-1">Habit Score</p>
+          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{habits.length > 0 ? `${Math.round(habits.reduce((s, h) => s + h.totalCompletions, 0) / habits.length * 10) / 10}` : '0'}</p>
+          <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">Avg completions per habit</p>
         </div>
       </div>
     </div>
