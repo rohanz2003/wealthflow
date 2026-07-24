@@ -15,7 +15,7 @@ export default function Debts() {
   useEffect(() => { fetchDebts(); }, []);
 
   const fetchDebts = async () => {
-    try { const res = await axios.get('/api/debts'); setData(res.data); } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
+      try { const res = await axios.get('/api/debts'); const d = res.data; setData({ data: d.data || d.debts || [], totalDebt: d.totalDebt || 0, totalOriginal: d.totalOriginal || 0, paidOff: d.paidOff || 0, active: d.active || 0 }); } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
   };
 
   const resetForm = () => {

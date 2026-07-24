@@ -21,8 +21,8 @@ export default function ExpenseTracker() {
   const fetchData = async () => {
     try {
       const [expRes, incRes] = await Promise.all([axios.get('/api/expenses'), axios.get('/api/income')]);
-      setExpenses(expRes.data.data);
-      setIncomes(incRes.data.data);
+      setExpenses(expRes.data.data || expRes.data || []);
+      setIncomes(incRes.data.data || incRes.data || []);
     } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
   };
 

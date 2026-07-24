@@ -23,7 +23,7 @@ export default function SavingsGoals() {
         axios.get('/api/savings'),
         axios.get('/api/analytics/goal-projections'),
       ]);
-      setGoals(goalRes.data.data);
+      setGoals(goalRes.data.data || goalRes.data || []);
       setProjections(projRes.data);
     } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
   };

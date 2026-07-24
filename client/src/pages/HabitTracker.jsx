@@ -18,7 +18,7 @@ export default function HabitTracker() {
   const fetchHabits = async () => {
     try {
       const [habRes, statRes] = await Promise.all([axios.get('/api/habits'), axios.get('/api/habits/stats')]);
-      setHabits(habRes.data.data);
+      setHabits(habRes.data.data || habRes.data || []);
       setStats(statRes.data);
     } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
   };
