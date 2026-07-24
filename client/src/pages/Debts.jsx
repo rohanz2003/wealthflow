@@ -10,6 +10,7 @@ export default function Debts() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', type: 'Other', totalAmount: '', remainingAmount: '', interestRate: '', minimumPayment: '', dueDate: '' });
   const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => { fetchDebts(); }, []);
 
@@ -54,8 +55,7 @@ export default function Debts() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this debt?')) return;
-    try { await axios.delete(`/api/debts/${id}`); fetchDebts(); } catch (err) { console.error('Error:', err); }
+    try { await axios.delete(`/api/debts/${id}`); fetchDebts(); setDeleteConfirm(null); } catch (err) { console.error('Error:', err); }
   };
 
   const handleTogglePaid = async (debt) => {
@@ -124,13 +124,13 @@ export default function Debts() {
       )}
 
       <div className="space-y-3">
-        {data.debts.length === 0 ? (
+        {(data.data || []).length === 0 ? (
           <div className="card p-12 text-center">
             <div className="text-4xl mb-4">📊</div>
             <p className="text-gray-400 dark:text-navy-500">No debts tracked. Add your first debt to start tracking!</p>
           </div>
         ) : (
-          data.debts.map((debt) => {
+          (data.data || []).map((debt) => {
             const paidPct = debt.totalAmount > 0 ? Math.round(((debt.totalAmount - debt.remainingAmount) / debt.totalAmount) * 100) : 0;
             return (
               <div key={debt._id} className={`card p-5 card-hover ${debt.isPaid ? 'border-green-300 dark:border-green-700 bg-green-50/30 dark:bg-green-900/10 opacity-70' : ''}`}>
@@ -169,8 +169,8 @@ export default function Debts() {
                     <button onClick={() => handleTogglePaid(debt)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${debt.isPaid ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}`}>
                       {debt.isPaid ? 'Reopen' : 'Mark Paid'}
                     </button>
-                    <button onClick={() => handleEdit(debt)} className="p-2 text-gray-400 dark:text-navy-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"><FiEdit2 size={16} /></button>
-                    <button onClick={() => handleDelete(debt._id)} className="p-2 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><FiTrash2 size={16} /></button>
+                    <button onClick={() => handleEdit(debt)} aria-label="Edit debt" id={`edit-${debt._id}`} className="p-2 text-gray-400 dark:text-navy-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"><FiEdit2 size={16} /></button>
+                    <button onClick={() => setDeleteConfirm(debt._id)} aria-label="Delete debt" id={`delete-${debt._id}`} className="p-2 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><FiTrash2 size={16} /></button>
                   </div>
                 </div>
               </div>
@@ -178,6 +178,18 @@ export default function Debts() {
           })
         )}
       </div>
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white dark:bg-navy-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete this debt?</h3>
+            <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">This action cannot be undone.</p>
+            <div className="flex space-x-2">
+              <button onClick={() => handleDelete(deleteConfirm)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex-1 justify-center">Delete</button>
+              <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-navy-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-navy-600 transition-colors">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

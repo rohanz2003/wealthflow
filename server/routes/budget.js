@@ -109,9 +109,13 @@ router.post(
 
 router.put('/:id', auth, async (req, res) => {
   try {
+    const { monthlyLimit } = req.body;
+    if (monthlyLimit !== undefined && (typeof monthlyLimit !== 'number' || monthlyLimit < 1)) {
+      return res.status(400).json({ message: 'Monthly limit must be a number >= 1' });
+    }
     const budget = await Budget.findOne({ _id: req.params.id, user: req.userId });
     if (!budget) return res.status(404).json({ message: 'Budget not found' });
-    if (req.body.monthlyLimit) budget.monthlyLimit = req.body.monthlyLimit;
+    if (monthlyLimit !== undefined) budget.monthlyLimit = monthlyLimit;
     await budget.save();
     res.json(budget);
   } catch (error) {

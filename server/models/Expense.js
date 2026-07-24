@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { CATEGORIES } = require('../../shared/constants');
 
 const expenseSchema = new mongoose.Schema({
   user: {
@@ -18,7 +19,7 @@ const expenseSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Food', 'Transport', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Groceries', 'Dining', 'Other'],
+    enum: CATEGORIES,
     default: 'Other',
   },
   date: {

@@ -28,9 +28,9 @@ export default function WealthAnalytics() {
         if (cancelled) return;
         setKpis(kpiRes.data);
         setMonths(monthRes.data.months || []);
-        setInvestments(invRes.data);
-        setExpenses(expRes.data);
-        setIncomes(incRes.data);
+        setInvestments(invRes.data.data);
+        setExpenses(expRes.data.data);
+        setIncomes(incRes.data.data);
       } catch (err) { console.error('Error:', err); } finally { if (!cancelled) setLoading(false); }
     };
     fetchData();

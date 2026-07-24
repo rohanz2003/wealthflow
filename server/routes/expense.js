@@ -7,16 +7,32 @@ const router = express.Router();
 
 router.get('/', auth, async (req, res) => {
   try {
-    const { startDate, endDate, category } = req.query;
+    const { startDate, endDate, category, search } = req.query;
     const filter = { user: req.userId };
     if (startDate || endDate) {
-      filter.date = {};
-      if (startDate) filter.date.$gte = new Date(startDate);
-      if (endDate) filter.date.$lte = new Date(endDate);
+      const dateFilter = {};
+      if (startDate) {
+        const sd = new Date(startDate);
+        if (isNaN(sd.getTime())) return res.status(400).json({ message: 'Invalid startDate' });
+        dateFilter.$gte = sd;
+      }
+      if (endDate) {
+        const ed = new Date(endDate);
+        if (isNaN(ed.getTime())) return res.status(400).json({ message: 'Invalid endDate' });
+        dateFilter.$lte = ed;
+      }
+      filter.date = dateFilter;
     }
     if (category) filter.category = category;
-    const expenses = await Expense.find(filter).sort({ date: -1 });
-    res.json(expenses);
+    if (search) filter.title = { $regex: search, $options: 'i' };
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+    const [expenses, total] = await Promise.all([
+      Expense.find(filter).sort({ date: -1 }).skip(skip).limit(limit),
+      Expense.countDocuments(filter),
+    ]);
+    res.json({ data: expenses, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -44,10 +60,30 @@ router.post(
   }
 );
 
+router.get('/summary', auth, async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const expenses = await Expense.find({ user: req.userId, date: { $gte: startOfMonth } });
+    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const byCategory = {};
+    expenses.forEach((e) => {
+      byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
+    });
+    res.json({ total, byCategory, count: expenses.length });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 const ALLOWED_EXPENSE_FIELDS = ['title', 'amount', 'category', 'date', 'description', 'isRecurring'];
 
 router.put('/:id', auth, async (req, res) => {
   try {
+    const { amount } = req.body;
+    if (amount !== undefined && (typeof amount !== 'number' || amount < 0)) {
+      return res.status(400).json({ message: 'Amount must be a non-negative number' });
+    }
     let expense = await Expense.findOne({ _id: req.params.id, user: req.userId });
     if (!expense) return res.status(404).json({ message: 'Expense not found' });
     ALLOWED_EXPENSE_FIELDS.forEach((f) => {
@@ -65,22 +101,6 @@ router.delete('/:id', auth, async (req, res) => {
     const expense = await Expense.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!expense) return res.status(404).json({ message: 'Expense not found' });
     res.json({ message: 'Expense deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-router.get('/summary', auth, async (req, res) => {
-  try {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const expenses = await Expense.find({ user: req.userId, date: { $gte: startOfMonth } });
-    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const byCategory = {};
-    expenses.forEach((e) => {
-      byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
-    });
-    res.json({ total, byCategory, count: expenses.length });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

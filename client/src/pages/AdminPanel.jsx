@@ -13,6 +13,7 @@ export default function AdminPanel() {
   const [analytics, setAnalytics] = useState(null);
   const [tab, setTab] = useState('overview');
   const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => { fetchAdminData(); }, []);
 
@@ -25,8 +26,7 @@ export default function AdminPanel() {
   };
 
   const handleDeleteUser = async (id) => {
-    if (!confirm('Delete this user and all their data? This cannot be undone.')) return;
-    try { await axios.delete(`/api/admin/users/${id}`); fetchAdminData(); } catch (err) { console.error('Error:', err); }
+    try { await axios.delete(`/api/admin/users/${id}`); fetchAdminData(); setDeleteConfirm(null); } catch (err) { console.error('Error:', err); }
   };
 
   if (loading) {
@@ -157,7 +157,7 @@ export default function AdminPanel() {
                         <td className="py-3 px-4 text-sm text-gray-500 dark:text-navy-400">{new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
                         <td className="py-3 px-4 text-right">
                           {u.role !== 'admin' && (
-                            <button onClick={() => handleDeleteUser(u._id)} className="p-1.5 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded" title="Delete user">
+                            <button onClick={() => setDeleteConfirm(u._id)} className="p-1.5 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded" title="Delete user">
                               <FiTrash2 size={16} />
                             </button>
                           )}
@@ -171,6 +171,18 @@ export default function AdminPanel() {
           </div>
         )}
       </div>
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white dark:bg-navy-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete this user?</h3>
+            <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">This action cannot be undone.</p>
+            <div className="flex space-x-2">
+              <button onClick={() => handleDeleteUser(deleteConfirm)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex-1 justify-center">Delete</button>
+              <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-navy-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-navy-600 transition-colors">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

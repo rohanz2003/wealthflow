@@ -7,12 +7,19 @@ const router = express.Router();
 
 router.get('/', auth, async (req, res) => {
   try {
-    const debts = await Debt.find({ user: req.userId }).sort({ createdAt: -1 }).lean();
+    const filter = { user: req.userId };
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+    const [debts, total] = await Promise.all([
+      Debt.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Debt.countDocuments(filter),
+    ]);
     const totalDebt = debts.reduce((s, d) => s + d.remainingAmount, 0);
     const totalOriginal = debts.reduce((s, d) => s + d.totalAmount, 0);
     const paidOff = debts.filter((d) => d.isPaid).length;
     const active = debts.filter((d) => !d.isPaid).length;
-    res.json({ debts, totalDebt, totalOriginal, paidOff, active });
+    res.json({ data: debts, total, page, limit, totalPages: Math.ceil(total / limit), totalDebt, totalOriginal, paidOff, active });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -44,6 +51,19 @@ const ALLOWED_DEBT_FIELDS = ['name', 'type', 'totalAmount', 'remainingAmount', '
 
 router.put('/:id', auth, async (req, res) => {
   try {
+    const { totalAmount, remainingAmount, interestRate, minimumPayment } = req.body;
+    if (totalAmount !== undefined && (typeof totalAmount !== 'number' || totalAmount <= 0)) {
+      return res.status(400).json({ message: 'Total amount must be a positive number' });
+    }
+    if (remainingAmount !== undefined && (typeof remainingAmount !== 'number' || remainingAmount < 0)) {
+      return res.status(400).json({ message: 'Remaining amount must be a non-negative number' });
+    }
+    if (interestRate !== undefined && typeof interestRate !== 'number') {
+      return res.status(400).json({ message: 'Interest rate must be a number' });
+    }
+    if (minimumPayment !== undefined && (typeof minimumPayment !== 'number' || minimumPayment < 0)) {
+      return res.status(400).json({ message: 'Minimum payment must be a non-negative number' });
+    }
     const debt = await Debt.findOne({ _id: req.params.id, user: req.userId });
     if (!debt) return res.status(404).json({ message: 'Debt not found' });
     ALLOWED_DEBT_FIELDS.forEach((f) => {
@@ -60,15 +80,6 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const debt = await Debt.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!debt) return res.status(404).json({ message: 'Debt not found' });
-    res.json({ message: 'Debt deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-router.delete('/:id', auth, async (req, res) => {
-  try {
-    await Debt.findOneAndDelete({ _id: req.params.id, user: req.userId });
     res.json({ message: 'Debt deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

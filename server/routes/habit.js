@@ -7,8 +7,15 @@ const router = express.Router();
 
 router.get('/', auth, async (req, res) => {
   try {
-    const habits = await Habit.find({ user: req.userId }).sort({ createdAt: -1 });
-    res.json(habits);
+    const filter = { user: req.userId };
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+    const [habits, total] = await Promise.all([
+      Habit.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Habit.countDocuments(filter),
+    ]);
+    res.json({ data: habits, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

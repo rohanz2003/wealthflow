@@ -67,8 +67,6 @@ router.post(
       await user.save();
       setTokenCookies(res, accessToken, refreshToken);
       res.status(201).json({
-        token: accessToken,
-        refreshToken,
         user: { id: user._id, name: user.name, email: user.email, role: user.role },
       });
     } catch (error) {
@@ -114,8 +112,6 @@ router.post(
       await user.save();
       setTokenCookies(res, accessToken, refreshToken);
       res.json({
-        token: accessToken,
-        refreshToken,
         user: { id: user._id, name: user.name, email: user.email, role: user.role },
       });
     } catch (error) {
@@ -139,7 +135,7 @@ router.post('/refresh', async (req, res) => {
     const newRefreshToken = user.generateRefreshToken();
     await user.save();
     setTokenCookies(res, accessToken, newRefreshToken);
-    res.json({ token: accessToken, refreshToken: newRefreshToken });
+    res.json({ message: 'Token refreshed' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

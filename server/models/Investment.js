@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { INVESTMENT_TYPES } = require('../../shared/constants');
 
 const investmentSchema = new mongoose.Schema({
   user: {
@@ -13,7 +14,7 @@ const investmentSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['Stocks', 'Mutual Funds', 'Fixed Deposit', 'Real Estate', 'Gold', 'Cryptocurrency', 'Bonds', 'PPF', 'NPS', 'Other'],
+    enum: INVESTMENT_TYPES,
     default: 'Stocks',
   },
   amount: {

@@ -7,8 +7,15 @@ const router = express.Router();
 
 router.get('/', auth, async (req, res) => {
   try {
-    const investments = await Investment.find({ user: req.userId }).sort({ date: -1 });
-    res.json(investments);
+    const filter = { user: req.userId };
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+    const [investments, total] = await Promise.all([
+      Investment.find(filter).sort({ date: -1 }).skip(skip).limit(limit),
+      Investment.countDocuments(filter),
+    ]);
+    res.json({ data: investments, total, page, limit, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -40,6 +47,16 @@ const ALLOWED_INVESTMENT_FIELDS = ['name', 'type', 'amount', 'currentValue', 're
 
 router.put('/:id', auth, async (req, res) => {
   try {
+    const { amount, currentValue, returnRate } = req.body;
+    if (amount !== undefined && (typeof amount !== 'number' || amount < 0)) {
+      return res.status(400).json({ message: 'Amount must be a non-negative number' });
+    }
+    if (currentValue !== undefined && (typeof currentValue !== 'number' || currentValue < 0)) {
+      return res.status(400).json({ message: 'Current value must be a non-negative number' });
+    }
+    if (returnRate !== undefined && (typeof returnRate !== 'number')) {
+      return res.status(400).json({ message: 'Return rate must be a number' });
+    }
     let investment = await Investment.findOne({ _id: req.params.id, user: req.userId });
     if (!investment) return res.status(404).json({ message: 'Investment not found' });
     ALLOWED_INVESTMENT_FIELDS.forEach((f) => {

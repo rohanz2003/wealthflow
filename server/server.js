@@ -11,13 +11,23 @@ const connectDB = require('./config/db');
 
 dotenv.config();
 
+const requiredEnv = ['MONGODB_URI', 'JWT_SECRET'];
+requiredEnv.forEach((v) => {
+  if (!process.env[v]) throw new Error(`Missing required env var: ${v}`);
+});
+
+const clientOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+if (clientOrigin === '*' || clientOrigin.includes('*')) {
+  throw new Error('CLIENT_URL must not be a wildcard');
+}
+
 const app = express();
 
 app.use(helmet());
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: clientOrigin,
   credentials: true,
 }));
 app.use(express.json({ limit: '10kb' }));
@@ -26,10 +36,15 @@ app.use(cookieParser());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
+  message: { message: 'Too many requests. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use('/api/', limiter);
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 connectDB();
 
@@ -46,9 +61,7 @@ app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/budgets', require('./routes/budget'));
 app.use('/api/debts', require('./routes/debt'));
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found' }));
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
@@ -69,6 +82,11 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.error('UNHANDLED REJECTION:', err);
+  server.close(() => process.exit(1));
 });
 
 process.on('SIGTERM', () => {

@@ -88,16 +88,16 @@ export default function Settings() {
         <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">Update your account password</p>
         <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Current Password</label>
-            <input type="password" required value={pwForm.currentPassword} onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })} className="input-field" placeholder="Enter current password" />
+            <label htmlFor="settings-current-password" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Current Password</label>
+            <input type="password" required id="settings-current-password" value={pwForm.currentPassword} onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })} className="input-field" placeholder="Enter current password" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">New Password</label>
-            <input type="password" required minLength={8} value={pwForm.newPassword} onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })} className="input-field" placeholder="Min 8 characters, uppercase, lowercase, number" />
+            <label htmlFor="settings-new-password" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">New Password</label>
+            <input type="password" required minLength={8} id="settings-new-password" value={pwForm.newPassword} onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })} className="input-field" placeholder="Min 8 characters, uppercase, lowercase, number" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Confirm New Password</label>
-            <input type="password" required value={pwForm.confirmPassword} onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })} className="input-field" placeholder="Confirm new password" />
+            <label htmlFor="settings-confirm-password" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Confirm New Password</label>
+            <input type="password" required id="settings-confirm-password" value={pwForm.confirmPassword} onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })} className="input-field" placeholder="Confirm new password" />
           </div>
           {pwError && <p className="text-sm text-red-600 dark:text-red-400 flex items-center"><FiX className="mr-1" size={14} />{pwError}</p>}
           {pwMsg && <p className="text-sm text-green-600 dark:text-green-400 flex items-center"><FiCheck className="mr-1" size={14} />{pwMsg}</p>}

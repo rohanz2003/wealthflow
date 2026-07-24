@@ -11,13 +11,14 @@ export default function HabitTracker() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', frequency: 'daily', type: 'saving' });
   const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => { fetchHabits(); }, []);
 
   const fetchHabits = async () => {
     try {
       const [habRes, statRes] = await Promise.all([axios.get('/api/habits'), axios.get('/api/habits/stats')]);
-      setHabits(habRes.data);
+      setHabits(habRes.data.data);
       setStats(statRes.data);
     } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
   };
@@ -37,8 +38,7 @@ export default function HabitTracker() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this habit?')) return;
-    try { await axios.delete(`/api/habits/${id}`); fetchHabits(); } catch (err) { console.error('Error:', err); }
+    try { await axios.delete(`/api/habits/${id}`); fetchHabits(); setDeleteConfirm(null); } catch (err) { console.error('Error:', err); }
   };
 
   const toggleActive = async (habit) => {
@@ -147,10 +147,10 @@ export default function HabitTracker() {
                         <FiCheckCircle className="mr-1.5" size={16} /> Done
                       </span>
                     )}
-                    <button onClick={() => toggleActive(habit)} className={`p-2 rounded-lg text-sm ${habit.isActive ? 'text-gray-400 dark:text-navy-500 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20' : 'text-gray-400 dark:text-navy-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'}`}>
+                    <button onClick={() => toggleActive(habit)} aria-label={habit.isActive ? 'Pause habit' : 'Resume habit'} className={`p-2 rounded-lg text-sm ${habit.isActive ? 'text-gray-400 dark:text-navy-500 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20' : 'text-gray-400 dark:text-navy-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'}`}>
                       <FiClock size={16} />
                     </button>
-                    <button onClick={() => handleDelete(habit._id)} className="p-2 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><FiTrash2 size={16} /></button>
+                    <button onClick={() => setDeleteConfirm(habit._id)} aria-label="Delete habit" id={`delete-${habit._id}`} className="p-2 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><FiTrash2 size={16} /></button>
                   </div>
                 </div>
                 {habit.history && habit.history.length > 0 && (
@@ -167,6 +167,18 @@ export default function HabitTracker() {
           })
         )}
       </div>
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white dark:bg-navy-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete this habit?</h3>
+            <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">This action cannot be undone.</p>
+            <div className="flex space-x-2">
+              <button onClick={() => handleDelete(deleteConfirm)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex-1 justify-center">Delete</button>
+              <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-navy-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-navy-600 transition-colors">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

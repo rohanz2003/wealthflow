@@ -99,25 +99,25 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Full Name</label>
+              <label htmlFor="register-name" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Full Name</label>
               <div className="relative">
                 <FiUser className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={18} />
-                <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field pl-10" placeholder="John Doe" />
+                <input type="text" required id="register-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field pl-10" placeholder="John Doe" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Email</label>
+              <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Email</label>
               <div className="relative">
                 <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={18} />
-                <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-field pl-10" placeholder="you@example.com" />
+                <input type="email" required id="register-email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-field pl-10" placeholder="you@example.com" />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Password</label>
+              <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Password</label>
               <div className="relative">
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={18} />
-                <input type={showPw ? 'text' : 'password'} required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="input-field pl-10 pr-12" placeholder="Min 8 characters" />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500 hover:text-gray-600 dark:hover:text-navy-300">
+                <input type={showPw ? 'text' : 'password'} required id="register-password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="input-field pl-10 pr-12" placeholder="Min 8 characters" />
+                <button type="button" onClick={() => setShowPw(!showPw)} aria-label={showPw ? 'Hide password' : 'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500 hover:text-gray-600 dark:hover:text-navy-300">
                   {showPw ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                 </button>
               </div>
@@ -148,10 +148,10 @@ export default function Register() {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Confirm Password</label>
+              <label htmlFor="register-confirm-password" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Confirm Password</label>
               <div className="relative">
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={18} />
-                <input type="password" required value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} className="input-field pl-10" placeholder="Confirm your password" />
+                <input type="password" required id="register-confirm-password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} className="input-field pl-10" placeholder="Confirm your password" />
               </div>
               {form.confirmPassword && (
                 <p className={`mt-1 text-xs ${passwordsMatch ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>

@@ -1,5 +1,6 @@
 const express = require('express');
 const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 const User = require('../models/User');
 const Expense = require('../models/Expense');
 const Income = require('../models/Income');
@@ -162,8 +163,7 @@ router.get('/monthly-activity', auth, async (req, res) => {
   }
 });
 
-router.get('/admin/kpis', auth, async (req, res) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
+router.get('/admin/kpis', auth, admin, async (req, res) => {
 
   try {
     const cacheKey = 'admin:kpis';
@@ -460,7 +460,7 @@ router.get('/stability', auth, async (req, res) => {
     const [monthlyExpenses, goals, debts, habits, investments, incomes] = await Promise.all([
       Expense.find({ user: userId, date: { $gte: startOfMonth } }).lean(),
       SavingsGoal.find({ user: userId }).lean(),
-      require('../models/Debt').find({ user: userId }).lean().catch(() => []),
+      require('../models/Debt').find({ user: userId }).lean().catch((err) => { console.error('Debt fetch error:', err); return []; }),
       Habit.find({ user: userId }).lean(),
       Investment.find({ user: userId }).lean(),
       Income.find({ user: userId, date: { $gte: startOfMonth } }).lean(),

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { GOAL_CATEGORIES } = require('../../shared/constants');
 
 const savingsGoalSchema = new mongoose.Schema({
   user: {
@@ -28,7 +29,7 @@ const savingsGoalSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Emergency Fund', 'Vacation', 'Education', 'Home', 'Vehicle', 'Retirement', 'Investment', 'Debt Payment', 'Other'],
+    enum: GOAL_CATEGORIES,
     default: 'Other',
   },
   targetDate: {

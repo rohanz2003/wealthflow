@@ -62,6 +62,7 @@ export default function Navbar() {
             ))}
             <button
               onClick={toggle}
+              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
               className="ml-2 p-2 rounded-lg text-gray-500 dark:text-navy-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
               title={dark ? 'Light mode' : 'Dark mode'}
             >
@@ -72,21 +73,22 @@ export default function Navbar() {
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</p>
                 <p className="text-xs text-gray-500 dark:text-navy-400 capitalize">{user?.role}</p>
               </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-gray-400 dark:text-navy-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
-                title="Logout"
-              >
+<button
+              onClick={handleLogout}
+              aria-label="Logout"
+              className="p-2 text-gray-400 dark:text-navy-400 hover:text-red-600 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+              title="Logout"
+            >
                 <FiLogOut size={20} />
               </button>
             </div>
           </div>
 
           <div className="md:hidden flex items-center space-x-2">
-            <button onClick={toggle} className="p-2 rounded-lg text-gray-500 dark:text-navy-300 hover:bg-gray-100 dark:hover:bg-navy-800">
+            <button onClick={toggle} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} className="p-2 rounded-lg text-gray-500 dark:text-navy-300 hover:bg-gray-100 dark:hover:bg-navy-800">
               {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
             </button>
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-gray-600 dark:text-navy-300">
+            <button onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} className="p-2 text-gray-600 dark:text-navy-300">
               {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
           </div>

@@ -14,14 +14,15 @@ export default function ExpenseTracker() {
   const [filterCat, setFilterCat] = useState('');
   const [form, setForm] = useState({ title: '', amount: '', category: 'Other', date: new Date().toISOString().split('T')[0], description: '', source: '' });
   const [loading, setLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     try {
       const [expRes, incRes] = await Promise.all([axios.get('/api/expenses'), axios.get('/api/income')]);
-      setExpenses(expRes.data);
-      setIncomes(incRes.data);
+      setExpenses(expRes.data.data);
+      setIncomes(incRes.data.data);
     } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
   };
 
@@ -55,11 +56,11 @@ export default function ExpenseTracker() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this record?')) return;
     try {
       if (activeTab === 'expenses') await axios.delete(`/api/expenses/${id}`);
       else await axios.delete(`/api/income/${id}`);
       fetchData();
+      setDeleteConfirm(null);
     } catch (err) { console.error('Error:', err); }
   };
 
@@ -177,14 +178,26 @@ export default function ExpenseTracker() {
                   <span className={`font-semibold ${activeTab === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     {activeTab === 'income' ? '+' : '-'}${item.amount.toLocaleString()}
                   </span>
-                  <button onClick={() => handleEdit(item)} className="p-1.5 text-gray-400 dark:text-navy-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"><FiEdit2 size={16} /></button>
-                  <button onClick={() => handleDelete(item._id)} className="p-1.5 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"><FiTrash2 size={16} /></button>
+                  <button onClick={() => handleEdit(item)} aria-label={activeTab === 'expenses' ? 'Edit expense' : 'Edit income'} id={`edit-${item._id}`} className="p-1.5 text-gray-400 dark:text-navy-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"><FiEdit2 size={16} /></button>
+                  <button onClick={() => setDeleteConfirm(item._id)} aria-label={activeTab === 'expenses' ? 'Delete expense' : 'Delete income'} id={`delete-${item._id}`} className="p-1.5 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"><FiTrash2 size={16} /></button>
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setDeleteConfirm(null)}>
+          <div className="bg-white dark:bg-navy-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete this record?</h3>
+            <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">This action cannot be undone.</p>
+            <div className="flex space-x-2">
+              <button onClick={() => handleDelete(deleteConfirm)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex-1 justify-center">Delete</button>
+              <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-navy-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-navy-600 transition-colors">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

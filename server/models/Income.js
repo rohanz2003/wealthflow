@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { INCOME_CATEGORIES } = require('../../shared/constants');
 
 const incomeSchema = new mongoose.Schema({
   user: {
@@ -18,7 +19,7 @@ const incomeSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Salary', 'Freelance', 'Investment', 'Business', 'Rental', 'Gift', 'Other'],
+    enum: INCOME_CATEGORIES,
     default: 'Salary',
   },
   date: {
