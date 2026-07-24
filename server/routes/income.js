@@ -35,11 +35,15 @@ router.post(
   }
 );
 
+const ALLOWED_INCOME_FIELDS = ['source', 'amount', 'category', 'date', 'description'];
+
 router.put('/:id', auth, async (req, res) => {
   try {
     let income = await Income.findOne({ _id: req.params.id, user: req.userId });
     if (!income) return res.status(404).json({ message: 'Income record not found' });
-    Object.assign(income, req.body);
+    ALLOWED_INCOME_FIELDS.forEach((f) => {
+      if (req.body[f] !== undefined) income[f] = req.body[f];
+    });
     await income.save();
     res.json(income);
   } catch (error) {

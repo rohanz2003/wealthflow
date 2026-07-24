@@ -34,11 +34,15 @@ router.post(
   }
 );
 
+const ALLOWED_HABIT_FIELDS = ['name', 'description', 'frequency', 'type', 'isActive'];
+
 router.put('/:id', auth, async (req, res) => {
   try {
     let habit = await Habit.findOne({ _id: req.params.id, user: req.userId });
     if (!habit) return res.status(404).json({ message: 'Habit not found' });
-    Object.assign(habit, req.body);
+    ALLOWED_HABIT_FIELDS.forEach((f) => {
+      if (req.body[f] !== undefined) habit[f] = req.body[f];
+    });
     await habit.save();
     res.json(habit);
   } catch (error) {

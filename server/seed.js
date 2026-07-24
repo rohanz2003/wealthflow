@@ -1,5 +1,11 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+
+if (process.env.NODE_ENV === 'production') {
+  console.error('Seed script cannot run in production!');
+  process.exit(1);
+}
+
 const User = require('./models/User');
 const Income = require('./models/Income');
 const Expense = require('./models/Expense');

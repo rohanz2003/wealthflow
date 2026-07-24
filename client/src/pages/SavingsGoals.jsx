@@ -9,13 +9,23 @@ export default function SavingsGoals() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ title: '', description: '', targetAmount: '', category: 'Other', targetDate: '' });
+  const [projections, setProjections] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchGoals(); }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  const fetchGoals = async () => {
-    try { const res = await axios.get('/api/savings'); setGoals(res.data); } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
+  const fetchData = async () => {
+    try {
+      const [goalRes, projRes] = await Promise.all([
+        axios.get('/api/savings'),
+        axios.get('/api/analytics/goal-projections'),
+      ]);
+      setGoals(goalRes.data);
+      setProjections(projRes.data);
+    } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
   };
+
+  const fetchGoals = fetchData;
 
   const resetForm = () => { setForm({ title: '', description: '', targetAmount: '', category: 'Other', targetDate: '' }); setEditing(null); setShowForm(false); };
 
@@ -66,7 +76,7 @@ export default function SavingsGoals() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">Total Goals</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{goals.length}</p>
@@ -77,12 +87,17 @@ export default function SavingsGoals() {
         </div>
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">Overall Progress</p>
-          <div className="flex items-center space-x-2">
-            <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{overallProgress}%</p>
-          </div>
+          <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{overallProgress}%</p>
           <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2">
             <div className="bg-primary-600 dark:bg-primary-400 h-2 rounded-full transition-all" style={{ width: `${overallProgress}%` }} />
           </div>
+        </div>
+        <div className="stat-card">
+          <p className="text-sm text-gray-500 dark:text-navy-400">Monthly Surplus</p>
+          <p className={`text-2xl font-bold ${(projections?.monthlySurplus || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            ${(projections?.monthlySurplus || 0).toLocaleString()}
+          </p>
+          <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">Available for savings</p>
         </div>
       </div>
 
@@ -114,14 +129,15 @@ export default function SavingsGoals() {
           goals.map((goal) => {
             const progress = goal.targetAmount > 0 ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100)) : 0;
             const remaining = goal.targetAmount - goal.currentAmount;
+            const proj = projections?.projections?.find((p) => p._id === goal._id);
             return (
               <div key={goal._id} className={`card p-6 card-hover ${goal.isCompleted ? 'border-green-300 dark:border-green-700 bg-green-50/30 dark:bg-green-900/10' : ''}`}>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4">
+                  <div className="flex items-start space-x-4 flex-1">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${goal.isCompleted ? 'bg-green-100 dark:bg-green-900/30' : 'bg-blue-100 dark:bg-blue-900/30'}`}>
                       {goal.category === 'Emergency Fund' ? '🛡️' : goal.category === 'Vacation' ? '✈️' : goal.category === 'Education' ? '🎓' : goal.category === 'Home' ? '🏠' : goal.category === 'Vehicle' ? '🚗' : goal.category === 'Retirement' ? '🏖️' : '💰'}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <h3 className="font-semibold text-gray-900 dark:text-white">{goal.title}</h3>
                         {goal.isCompleted && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">Completed 🎉</span>}
@@ -138,7 +154,26 @@ export default function SavingsGoals() {
                       <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2.5 max-w-md">
                         <div className={`h-2.5 rounded-full transition-all ${goal.isCompleted ? 'bg-green-500' : 'bg-primary-600 dark:bg-primary-400'}`} style={{ width: `${progress}%` }} />
                       </div>
-                      <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">{progress}% complete &middot; ${remaining.toLocaleString()} remaining</p>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                        <p className="text-xs text-gray-400 dark:text-navy-500">{progress}% complete &middot; ${remaining.toLocaleString()} remaining</p>
+                        {proj && !goal.isCompleted && (
+                          <>
+                            {proj.monthsToGoal ? (
+                              <p className="text-xs text-green-600 dark:text-green-400">
+                                ~{proj.monthsToGoal} months to go at current savings rate
+                                {proj.projectedDate ? ` (est. ${new Date(proj.projectedDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})` : ''}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-yellow-600 dark:text-yellow-400">Increase savings to reach this goal</p>
+                            )}
+                            {proj.targetMonthsAway && proj.neededMonthly && (
+                              <p className={`text-xs ${proj.onTrack ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                                {proj.onTrack ? 'On track' : `Need $${proj.neededMonthly}/mo`} to hit target date
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">

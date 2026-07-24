@@ -36,11 +36,15 @@ router.post(
   }
 );
 
+const ALLOWED_INVESTMENT_FIELDS = ['name', 'type', 'amount', 'currentValue', 'returnRate', 'date', 'notes'];
+
 router.put('/:id', auth, async (req, res) => {
   try {
     let investment = await Investment.findOne({ _id: req.params.id, user: req.userId });
     if (!investment) return res.status(404).json({ message: 'Investment not found' });
-    Object.assign(investment, req.body);
+    ALLOWED_INVESTMENT_FIELDS.forEach((f) => {
+      if (req.body[f] !== undefined) investment[f] = req.body[f];
+    });
     await investment.save();
     res.json(investment);
   } catch (error) {

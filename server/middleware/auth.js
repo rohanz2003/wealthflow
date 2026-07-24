@@ -3,15 +3,22 @@ const User = require('../models/User');
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    let token = req.header('Authorization')?.replace('Bearer ', '');
+    if (!token && req.cookies?.token) {
+      token = req.cookies.token;
+    }
     if (!token) {
       return res.status(401).json({ message: 'No authentication token provided' });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
+    const user = await User.findById(decoded.id).select('-password -refreshToken');
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
+    if (user.isLocked) {
+      return res.status(423).json({ message: 'Account is temporarily locked. Try again later.' });
+    }
+    User.findByIdAndUpdate(user._id, { lastActive: new Date() }).catch(() => {});
     req.user = user;
     req.userId = user._id;
     next();

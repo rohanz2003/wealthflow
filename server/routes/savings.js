@@ -35,11 +35,15 @@ router.post(
   }
 );
 
+const ALLOWED_GOAL_FIELDS = ['title', 'description', 'targetAmount', 'currentAmount', 'category', 'targetDate'];
+
 router.put('/:id', auth, async (req, res) => {
   try {
     let goal = await SavingsGoal.findOne({ _id: req.params.id, user: req.userId });
     if (!goal) return res.status(404).json({ message: 'Goal not found' });
-    Object.assign(goal, req.body);
+    ALLOWED_GOAL_FIELDS.forEach((f) => {
+      if (req.body[f] !== undefined) goal[f] = req.body[f];
+    });
     if (goal.currentAmount >= goal.targetAmount) {
       goal.isCompleted = true;
     }

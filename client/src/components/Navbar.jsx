@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { FiHome, FiDollarSign, FiCheckCircle, FiTarget, FiTrendingUp, FiLogOut, FiMenu, FiX, FiShield, FiMoon, FiSun } from 'react-icons/fi';
+import { FiHome, FiDollarSign, FiCheckCircle, FiTarget, FiTrendingUp, FiLogOut, FiMenu, FiX, FiShield, FiMoon, FiSun, FiSettings, FiPieChart, FiBarChart2, FiTrendingDown } from 'react-icons/fi';
 import { useState } from 'react';
 
 export default function Navbar() {
@@ -14,14 +14,18 @@ export default function Navbar() {
   const links = [
     { to: '/dashboard', label: 'Dashboard', icon: FiHome },
     { to: '/expenses', label: 'Expenses', icon: FiDollarSign },
+    { to: '/budgets', label: 'Budgets', icon: FiPieChart },
     { to: '/habits', label: 'Habits', icon: FiCheckCircle },
     { to: '/savings', label: 'Savings', icon: FiTarget },
+    { to: '/debts', label: 'Debts', icon: FiTrendingDown },
     { to: '/wealth', label: 'Wealth', icon: FiTrendingUp },
+    { to: '/insights', label: 'Insights', icon: FiBarChart2 },
   ];
 
   if (user?.role === 'admin') {
     links.push({ to: '/admin', label: 'Admin', icon: FiShield });
   }
+  links.push({ to: '/settings', label: 'Settings', icon: FiSettings });
 
   const handleLogout = () => {
     logout();

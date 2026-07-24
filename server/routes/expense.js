@@ -44,11 +44,15 @@ router.post(
   }
 );
 
+const ALLOWED_EXPENSE_FIELDS = ['title', 'amount', 'category', 'date', 'description', 'isRecurring'];
+
 router.put('/:id', auth, async (req, res) => {
   try {
     let expense = await Expense.findOne({ _id: req.params.id, user: req.userId });
     if (!expense) return res.status(404).json({ message: 'Expense not found' });
-    Object.assign(expense, req.body);
+    ALLOWED_EXPENSE_FIELDS.forEach((f) => {
+      if (req.body[f] !== undefined) expense[f] = req.body[f];
+    });
     await expense.save();
     res.json(expense);
   } catch (error) {

@@ -1,15 +1,40 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { FiUser, FiMail, FiLock, FiMoon, FiSun } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiMoon, FiSun, FiEye, FiEyeOff, FiCheck, FiX } from 'react-icons/fi';
+
+const getStrength = (pw) => {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  return score;
+};
+
+const strengthLabels = ['Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+const strengthColors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500', 'bg-emerald-500'];
+
+const requirements = [
+  { label: 'At least 8 characters', test: (pw) => pw.length >= 8 },
+  { label: 'Uppercase letter', test: (pw) => /[A-Z]/.test(pw) },
+  { label: 'Lowercase letter', test: (pw) => /[a-z]/.test(pw) },
+  { label: 'Number', test: (pw) => /[0-9]/.test(pw) },
+];
 
 export default function Register() {
   const { register } = useAuth();
   const { dark, toggle } = useTheme();
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const strength = useMemo(() => getStrength(form.password), [form.password]);
+  const allMet = requirements.every((r) => r.test(form.password));
+  const passwordsMatch = form.password === form.confirmPassword;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,8 +43,8 @@ export default function Register() {
       setError('Passwords do not match');
       return;
     }
-    if (form.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (form.password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
     }
     setLoading(true);
@@ -91,8 +116,36 @@ export default function Register() {
               <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Password</label>
               <div className="relative">
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={18} />
-                <input type="password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="input-field pl-10" placeholder="Min 6 characters" />
+                <input type={showPw ? 'text' : 'password'} required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="input-field pl-10 pr-12" placeholder="Min 8 characters" />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500 hover:text-gray-600 dark:hover:text-navy-300">
+                  {showPw ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                </button>
               </div>
+              {form.password && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex-1 h-1.5 bg-gray-200 dark:bg-navy-700 rounded-full overflow-hidden flex">
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <div key={i} className={`flex-1 transition-colors duration-300 ${i <= strength ? strengthColors[strength - 1] || '' : ''} ${i > 0 ? 'ml-0.5' : ''}`} />
+                      ))}
+                    </div>
+                    <span className={`text-xs font-medium ${strength >= 3 ? 'text-green-600 dark:text-green-400' : strength >= 2 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {strengthLabels[strength - 1] || 'Weak'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {requirements.map((r, i) => {
+                      const met = r.test(form.password);
+                      return (
+                        <div key={i} className={`flex items-center text-xs ${met ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-navy-500'}`}>
+                          {met ? <FiCheck className="mr-1 shrink-0" size={12} /> : <FiX className="mr-1 shrink-0" size={12} />}
+                          {r.label}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Confirm Password</label>
@@ -100,6 +153,11 @@ export default function Register() {
                 <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={18} />
                 <input type="password" required value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} className="input-field pl-10" placeholder="Confirm your password" />
               </div>
+              {form.confirmPassword && (
+                <p className={`mt-1 text-xs ${passwordsMatch ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+                </p>
+              )}
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-3 text-base">
               {loading ? 'Creating account...' : 'Create Account'}

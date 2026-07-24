@@ -8,58 +8,76 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title, Filler);
 
+function useDashboard() {
+  const [state, setState] = useState({
+    summary: { monthlyExpense: 0, monthlyIncome: 0, totalSavings: 0, totalInvested: 0 },
+    expenseCategories: {},
+    dailyBalances: [],
+    last30Days: [],
+    netWorth: 0,
+    savingsRate: 0,
+    activeHabits: 0,
+    totalGoals: 0,
+    completedGoals: 0,
+    overallGoalPct: 0,
+    healthScore: 0,
+    recentHabits: [],
+    stability: null,
+    loading: true,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchData = async () => {
+      try {
+        const [dashRes, stabRes] = await Promise.all([
+          axios.get('/api/dashboard'),
+          axios.get('/api/analytics/stability'),
+        ]);
+        if (cancelled) return;
+        const d = dashRes.data;
+        setState({
+          summary: d.summary,
+          expenseCategories: d.expenseCategories,
+          dailyBalances: d.dailyBalances,
+          last30Days: d.last30Days,
+          netWorth: d.netWorth,
+          savingsRate: d.savingsRate,
+          activeHabits: d.activeHabits,
+          totalGoals: d.totalGoals,
+          completedGoals: d.completedGoals,
+          overallGoalPct: d.overallGoalPct,
+          healthScore: d.healthScore,
+          recentHabits: d.recentHabits,
+          stability: stabRes.data,
+          loading: false,
+        });
+      } catch (err) {
+        if (!cancelled) setState((s) => ({ ...s, loading: false }));
+      }
+    };
+    fetchData();
+    return () => { cancelled = true; };
+  }, []);
+
+  return state;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
-  const [data, setData] = useState({ expenses: [], incomes: [], habits: [], goals: [], investments: [] });
-  const [summary, setSummary] = useState({ monthlyExpense: 0, monthlyIncome: 0, totalSavings: 0, totalInvested: 0 });
-  const [loading, setLoading] = useState(true);
+  const { summary, expenseCategories, dailyBalances, last30Days, netWorth, savingsRate, activeHabits, totalGoals, completedGoals, overallGoalPct, healthScore, recentHabits, stability, loading } = useDashboard();
 
-  useEffect(() => { fetchData(); }, []);
-
-  const fetchData = async () => {
-    try {
-      const [expRes, incRes, habRes, goalRes, invRes] = await Promise.all([
-        axios.get('/api/expenses'), axios.get('/api/income'), axios.get('/api/habits'), axios.get('/api/savings'), axios.get('/api/investments'),
-      ]);
-      setData({ expenses: expRes.data, incomes: incRes.data, habits: habRes.data, goals: goalRes.data, investments: invRes.data });
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const monthlyExpenses = expRes.data.filter((e) => new Date(e.date) >= startOfMonth);
-      const monthlyIncomes = incRes.data.filter((i) => new Date(i.date) >= startOfMonth);
-      setSummary({
-        monthlyExpense: monthlyExpenses.reduce((s, e) => s + e.amount, 0),
-        monthlyIncome: monthlyIncomes.reduce((s, i) => s + i.amount, 0),
-        totalSavings: goalRes.data.reduce((s, g) => s + g.currentAmount, 0),
-        totalInvested: invRes.data.reduce((s, i) => s + i.currentValue, 0),
-      });
-    } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
-  };
-
-  const netWorth = summary.monthlyIncome + summary.totalSavings + summary.totalInvested - summary.monthlyExpense;
-  const savingsRate = summary.monthlyIncome > 0 ? ((summary.monthlyIncome - summary.monthlyExpense) / summary.monthlyIncome * 100) : 0;
-
-  const expenseCategories = data.expenses.reduce((acc, e) => { acc[e.category] = (acc[e.category] || 0) + e.amount; return acc; }, {});
   const doughnutData = {
     labels: Object.keys(expenseCategories),
     datasets: [{ data: Object.values(expenseCategories), backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#a855f7', '#14b8a6', '#f97316'], borderWidth: 0 }],
   };
-
-  const last30Days = Array.from({ length: 30 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (29 - i)); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); });
-  const dailyBalances = last30Days.map((_, i) => {
-    const d = new Date(); d.setDate(d.getDate() - (29 - i));
-    const dayExp = data.expenses.filter((e) => new Date(e.date).toDateString() === d.toDateString()).reduce((s, e) => s + e.amount, 0);
-    const dayInc = data.incomes.filter((inc) => new Date(inc.date).toDateString() === d.toDateString()).reduce((s, inc) => s + inc.amount, 0);
-    return dayInc - dayExp;
-  });
 
   const lineData = {
     labels: last30Days,
     datasets: [{ label: 'Daily Balance', data: dailyBalances, fill: true, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', tension: 0.4, pointRadius: 3 }],
   };
 
-  const activeHabits = data.habits.filter((h) => h.isActive);
-  const totalGoals = data.goals.length;
-  const completedGoals = data.goals.filter((g) => g.isCompleted).length;
+  const today = new Date().toDateString();
 
   if (loading) {
     return (
@@ -135,36 +153,95 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {stability && (
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financial Stability</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-navy-400">Emergency Fund</span>
+                  <span className={`font-semibold ${stability.emergencyFundAdequate === 'excellent' ? 'text-green-600 dark:text-green-400' : stability.emergencyFundAdequate === 'adequate' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {stability.emergencyFundMonths}mo ({stability.emergencyFundAdequate})
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5">
+                  <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, stability.emergencyFundProgress)}%` }} />
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-navy-400">Total Debt</span>
+                  <span className="font-semibold text-red-600 dark:text-red-400">${(stability.totalDebt || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-navy-400">Debt-to-Income</span>
+                  <span className={`font-semibold ${stability.debtBurden === 'low' ? 'text-green-600 dark:text-green-400' : stability.debtBurden === 'moderate' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {stability.debtToIncome}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-navy-400">Income Sources</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{stability.incomeDiversity} ({stability.incomeDiversityScore})</span>
+                </div>
+                <Link to="/insights" className="mt-2 inline-flex items-center text-xs text-primary-600 dark:text-primary-400 font-medium hover:underline">
+                  View detailed insights →
+                </Link>
+              </div>
+            </div>
+          )}
+
           <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Quick Stats</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-navy-400 flex items-center"><FiCheckCircle className="mr-2 text-green-500" size={16} /> Active Habits</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{activeHabits.length}</span>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financial Health</h3>
+            <div className="flex flex-col items-center py-2">
+              <div className="relative w-28 h-28">
+                <svg className="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeWidth="10" className="text-gray-200 dark:text-navy-700" />
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeWidth="10" strokeDasharray={`${(healthScore / 100) * 326.73} 326.73`} strokeLinecap="round"
+                    className={`transition-all duration-1000 ease-out ${healthScore >= 70 ? 'text-green-500' : healthScore >= 40 ? 'text-yellow-500' : 'text-red-500'}`} />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className={`text-2xl font-bold ${healthScore >= 70 ? 'text-green-600 dark:text-green-400' : healthScore >= 40 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {healthScore}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-navy-400 flex items-center"><FiTarget className="mr-2 text-blue-500" size={16} /> Goals Progress</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{completedGoals}/{totalGoals}</span>
+              <span className="text-sm text-gray-500 dark:text-navy-400 mt-1">out of 100</span>
+            </div>
+            <div className="mt-4 space-y-3">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600 dark:text-navy-400 flex items-center"><FiCheckCircle className="mr-1.5 text-green-500" size={14} /> Active Habits</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{activeHabits}</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5">
+                  <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, (activeHabits / 5) * 100)}%` }} />
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-navy-400 flex items-center"><FiTrendingUp className="mr-2 text-green-500" size={16} /> Savings Rate</span>
-                <span className={`font-semibold ${savingsRate >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{savingsRate.toFixed(1)}%</span>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600 dark:text-navy-400 flex items-center"><FiTarget className="mr-1.5 text-blue-500" size={14} /> Goals Progress</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{completedGoals}/{totalGoals}</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5">
+                  <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{ width: `${overallGoalPct}%` }} />
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-navy-400 flex items-center"><FiDollarSign className="mr-2 text-purple-500" size={16} /> Investments</span>
-                <span className="font-semibold text-gray-900 dark:text-white">${summary.totalInvested.toLocaleString()}</span>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600 dark:text-navy-400 flex items-center"><FiTrendingUp className="mr-1.5 text-purple-500" size={14} /> Savings Rate</span>
+                  <span className={`font-semibold ${savingsRate >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{savingsRate.toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5">
+                  <div className={`h-1.5 rounded-full transition-all ${savingsRate >= 20 ? 'bg-green-500' : savingsRate >= 10 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${Math.min(100, savingsRate * 2)}%` }} />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {data.habits.filter((h) => h.isActive).length > 0 && (
+      {recentHabits.length > 0 && (
         <div className="card p-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Today's Habits</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {data.habits.filter((h) => h.isActive).slice(0, 6).map((habit) => {
-              const today = new Date().toDateString();
+            {recentHabits.map((habit) => {
               const doneToday = habit.history?.some((h) => new Date(h.date).toDateString() === today && h.completed);
               return (
                 <div key={habit._id} className={`p-4 rounded-lg border ${doneToday ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-navy-800 border-gray-200 dark:border-navy-700'}`}>

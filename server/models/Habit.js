@@ -54,4 +54,7 @@ const habitSchema = new mongoose.Schema({
   },
 });
 
+habitSchema.index({ user: 1 });
+habitSchema.index({ user: 1, isActive: 1 });
+
 module.exports = mongoose.model('Habit', habitSchema);

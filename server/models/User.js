@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -30,10 +31,33 @@ const userSchema = new mongoose.Schema({
     bio: { type: String, default: '' },
     avatar: { type: String, default: '' },
   },
+  refreshToken: {
+    type: String,
+    default: null,
+  },
+  loginAttempts: {
+    type: Number,
+    default: 0,
+  },
+  lockUntil: {
+    type: Date,
+    default: null,
+  },
+  lastActive: {
+    type: Date,
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+});
+
+userSchema.index({ lastActive: -1 });
+userSchema.index({ role: 1 });
+
+userSchema.virtual('isLocked').get(function () {
+  return this.lockUntil && this.lockUntil > Date.now();
 });
 
 userSchema.pre('save', async function (next) {
@@ -45,6 +69,31 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.methods.incrementLoginAttempts = async function () {
+  this.loginAttempts += 1;
+  if (this.loginAttempts >= 5) {
+    this.lockUntil = Date.now() + 30 * 60 * 1000;
+  }
+  await this.save();
+};
+
+userSchema.methods.resetLoginAttempts = async function () {
+  this.loginAttempts = 0;
+  this.lockUntil = null;
+  await this.save();
+};
+
+userSchema.methods.generateRefreshToken = function () {
+  const token = crypto.randomBytes(40).toString('hex');
+  this.refreshToken = crypto.createHash('sha256').update(token).digest('hex');
+  return token;
+};
+
+userSchema.methods.verifyRefreshToken = function (token) {
+  const hash = crypto.createHash('sha256').update(token).digest('hex');
+  return this.refreshToken === hash;
 };
 
 module.exports = mongoose.model('User', userSchema);
