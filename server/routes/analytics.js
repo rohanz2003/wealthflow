@@ -20,17 +20,13 @@ router.get('/kpis', auth, async (req, res) => {
     const userId = req.userId;
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    const [habits, goals, monthlyExpenses, monthlyIncomes, yearlyExpenses, yearlyIncomes, investments] = await Promise.all([
+    const [habits, goals, monthlyExpenses, monthlyIncomes, investments] = await Promise.all([
       Habit.find({ user: userId }).lean(),
       SavingsGoal.find({ user: userId }).lean(),
       Expense.find({ user: userId, date: { $gte: startOfMonth } }).lean(),
       Income.find({ user: userId, date: { $gte: startOfMonth } }).lean(),
-      Expense.find({ user: userId, date: { $gte: startOfYear } }).sort({ date: 1 }).lean(),
-      Income.find({ user: userId, date: { $gte: startOfYear } }).sort({ date: 1 }).lean(),
       Investment.find({ user: userId }).lean(),
     ]);
 
@@ -121,8 +117,6 @@ router.get('/monthly-activity', auth, async (req, res) => {
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
       const key = d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
-      const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
-      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 1);
       monthlyMap[key] = {
         month: key,
         income: 0,
@@ -403,7 +397,6 @@ router.get('/wealth-projections', auth, async (req, res) => {
     const monthlySavings = Math.max(0, monthlyIncome - monthlyExpense);
 
     const currentInvestments = investments.reduce((s, i) => s + i.currentValue, 0);
-    const totalInvested = investments.reduce((s, i) => s + i.amount, 0);
     const avgReturn = investments.length > 0
       ? investments.reduce((s, i) => s + (i.returnRate || 0), 0) / investments.length
       : 7;

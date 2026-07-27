@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FiPlus, FiEdit2, FiTrash2, FiFilter, FiSearch } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiFilter, FiSearch, FiX } from 'react-icons/fi';
 
 const CATEGORIES = ['Food', 'Transport', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Groceries', 'Dining', 'Other'];
 
@@ -75,33 +75,33 @@ export default function ExpenseTracker() {
   const totalIncomes = incomes.reduce((s, i) => s + i.amount, 0);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-600 dark:border-primary-400 border-t-transparent" /></div>;
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="page-title">Income & Expenses</h1>
           <p className="page-subtitle">Track your money flow</p>
         </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-sm">
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-sm w-full sm:w-auto justify-center">
           <FiPlus className="mr-2" size={18} /> Add {activeTab === 'expenses' ? 'Expense' : 'Income'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="stat-card">
-          <p className="text-sm text-gray-500 dark:text-navy-400">Total Income</p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">${totalIncomes.toLocaleString()}</p>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Income</p>
+          <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">${totalIncomes.toLocaleString()}</p>
         </div>
         <div className="stat-card">
-          <p className="text-sm text-gray-500 dark:text-navy-400">Total Expenses</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">${totalExpenses.toLocaleString()}</p>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Expenses</p>
+          <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">${totalExpenses.toLocaleString()}</p>
         </div>
         <div className="stat-card">
-          <p className="text-sm text-gray-500 dark:text-navy-400">Net Balance</p>
-          <p className={`text-2xl font-bold ${totalIncomes - totalExpenses >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Net Balance</p>
+          <p className={`text-xl sm:text-2xl font-bold ${totalIncomes - totalExpenses >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             ${(totalIncomes - totalExpenses).toLocaleString()}
           </p>
         </div>
@@ -112,11 +112,7 @@ export default function ExpenseTracker() {
           <div className="flex">
             {['expenses', 'income'].map((tab) => (
               <button key={tab} onClick={() => { setActiveTab(tab); resetForm(); }}
-                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? 'border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400'
-                    : 'border-transparent text-gray-500 dark:text-navy-400 hover:text-gray-700 dark:hover:text-navy-200'
-                }`}
+                className={activeTab === tab ? 'tab-active' : 'tab'}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
@@ -125,8 +121,8 @@ export default function ExpenseTracker() {
         </div>
 
         {showForm && (
-          <div className="p-6 border-b border-gray-200 dark:border-navy-700 bg-gray-50 dark:bg-navy-800/50">
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-navy-700 bg-gray-50/50 dark:bg-navy-800/30">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {activeTab === 'expenses'
                 ? <input type="text" required placeholder="Expense title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="input-field" />
                 : <input type="text" required placeholder="Income source" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} className="input-field" />
@@ -137,63 +133,71 @@ export default function ExpenseTracker() {
               </select>
               <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input-field" />
               <input type="text" placeholder="Description (optional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" />
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 sm:self-end">
                 <button type="submit" className="btn-primary text-sm">{editing ? 'Update' : 'Add'}</button>
-                <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-navy-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-navy-600 transition-colors">Cancel</button>
+                <button type="button" onClick={resetForm} className="btn-secondary text-sm">Cancel</button>
               </div>
             </form>
           </div>
         )}
 
-        <div className="p-4 border-b border-gray-200 dark:border-navy-700 flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-4">
+        <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-navy-700 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
           <div className="relative flex-1">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={18} />
-            <input type="text" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field pl-10 text-sm" />
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={16} />
+            <input type="text" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field pl-9 text-sm" />
           </div>
           <div className="flex items-center space-x-2">
-            <FiFilter className="text-gray-400 dark:text-navy-500" size={18} />
-            <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="select-field text-sm">
+            <FiFilter className="text-gray-400 dark:text-navy-500 shrink-0" size={16} />
+            <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="select-field text-sm py-2">
               <option value="">All Categories</option>
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
         </div>
 
-        <div className="divide-y divide-gray-100 dark:divide-navy-700">
+        <div className="divide-y divide-gray-100 dark:divide-navy-700/50">
           {filtered.length === 0 ? (
-            <div className="p-8 text-center text-gray-400 dark:text-navy-500">No records found. Start adding your {activeTab}!</div>
+            <div className="p-8 sm:p-12 text-center text-gray-400 dark:text-navy-500">
+              <p className="text-lg mb-1">No records found</p>
+              <p className="text-sm">Start adding your {activeTab}!</p>
+            </div>
           ) : (
             filtered.map((item) => (
-              <div key={item._id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-navy-800/50 transition-colors">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${activeTab === 'income' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'}`}>
+              <div key={item._id} className="p-3 sm:p-4 flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-navy-800/30 transition-colors">
+                <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
+                  <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 ${
+                    activeTab === 'income'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                  }`}>
                     {activeTab === 'income' ? 'I' : 'E'}
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{item.title || item.source}</p>
-                    <p className="text-xs text-gray-500 dark:text-navy-400">{item.category} &middot; {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">{item.title || item.source}</p>
+                    <p className="text-xs text-gray-500 dark:text-navy-400 truncate">{item.category} &middot; {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <span className={`font-semibold ${activeTab === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                <div className="flex items-center space-x-2 sm:space-x-3 shrink-0 ml-2">
+                  <span className={`text-sm sm:text-base font-semibold ${activeTab === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     {activeTab === 'income' ? '+' : '-'}${item.amount.toLocaleString()}
                   </span>
-                  <button onClick={() => handleEdit(item)} aria-label={activeTab === 'expenses' ? 'Edit expense' : 'Edit income'} id={`edit-${item._id}`} className="p-1.5 text-gray-400 dark:text-navy-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"><FiEdit2 size={16} /></button>
-                  <button onClick={() => setDeleteConfirm(item._id)} aria-label={activeTab === 'expenses' ? 'Delete expense' : 'Delete income'} id={`delete-${item._id}`} className="p-1.5 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"><FiTrash2 size={16} /></button>
+                  <button onClick={() => handleEdit(item)} aria-label="Edit" className="btn-ghost p-1.5"><FiEdit2 size={15} /></button>
+                  <button onClick={() => setDeleteConfirm(item._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400"><FiTrash2 size={15} /></button>
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
+
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setDeleteConfirm(null)}>
-          <div className="bg-white dark:bg-navy-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete this record?</h3>
-            <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">This action cannot be undone.</p>
-            <div className="flex space-x-2">
-              <button onClick={() => handleDelete(deleteConfirm)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex-1 justify-center">Delete</button>
-              <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-navy-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-navy-600 transition-colors">Cancel</button>
+        <div className="modal-overlay" onClick={() => setDeleteConfirm(null)}>
+          <div className="modal-content p-5 sm:p-6 mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Delete this record?</h3>
+            <p className="text-sm text-gray-500 dark:text-navy-400 mb-5">This action cannot be undone.</p>
+            <div className="flex space-x-3">
+              <button onClick={() => handleDelete(deleteConfirm)} className="btn-danger text-sm flex-1 justify-center">Delete</button>
+              <button onClick={() => setDeleteConfirm(null)} className="btn-secondary text-sm flex-1 justify-center">Cancel</button>
             </div>
           </div>
         </div>

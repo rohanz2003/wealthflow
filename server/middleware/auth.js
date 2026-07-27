@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
 const auth = async (req, res, next) => {
   try {
@@ -18,7 +19,7 @@ const auth = async (req, res, next) => {
     if (user.isLocked) {
       return res.status(423).json({ message: 'Account is temporarily locked. Try again later.' });
     }
-    User.findByIdAndUpdate(user._id, { lastActive: new Date() }).catch((err) => console.error('lastActive update failed:', err));
+    User.findByIdAndUpdate(user._id, { lastActive: new Date() }).catch((err) => logger.error('lastActive update failed:', err));
     req.user = user;
     req.userId = user._id;
     next();

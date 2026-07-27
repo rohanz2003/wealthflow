@@ -18,7 +18,6 @@ router.get('/users', auth, admin, async (req, res) => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
 
     const usersWithStats = await Promise.all(users.map(async (u) => {
-      const ids = { user: { $in: [u._id] } };
       const [totalExpenses, totalIncome, expenseSum, incomeSum, activeDays] = await Promise.all([
         Expense.countDocuments({ user: u._id }),
         Income.countDocuments({ user: u._id }),

@@ -9,9 +9,18 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "build": "cd client && npm run build",
     "start": "cd server && npm start",
-    "seed": "cd server && node seed.js"
+    "seed": "cd server && node seed.js",
+    "test": "cd server && npm test",
+    "test:calc": "cd server && npm run test:calc",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "server/**/*.js": ["npx eslint --fix --ignore-pattern node_modules/", "npx jest --bail --findRelatedTests --no-coverage --passWithNoTests"],
+    "client/**/*.{js,jsx}": ["npx eslint --fix --ignore-pattern node_modules/"]
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.2.0"
   }
 }

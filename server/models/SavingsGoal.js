@@ -54,5 +54,6 @@ savingsGoalSchema.set('toJSON', { virtuals: true });
 savingsGoalSchema.set('toObject', { virtuals: true });
 
 savingsGoalSchema.index({ user: 1 });
+savingsGoalSchema.index({ user: 1, isCompleted: 1 });
 
 module.exports = mongoose.model('SavingsGoal', savingsGoalSchema);

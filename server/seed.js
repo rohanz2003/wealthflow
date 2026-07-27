@@ -18,7 +18,6 @@ const Debt = require('./models/Debt');
 dotenv.config();
 
 const now = new Date();
-const m = (d) => { const date = new Date(d); date.setHours(0, 0, 0, 0); return date; };
 
 const usersData = [
   { name: 'Admin User', email: 'admin@wealthflow.com', password: 'Admin@123', role: 'admin', profile: { occupation: 'Platform Administrator', monthlyIncome: 8500 } },
@@ -64,9 +63,7 @@ function generateExpenses(userId, incomeLevel) {
     { title: 'Healthcare', pct: 0.02, cat: 'Healthcare' },
   ];
   const records = [];
-  const startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1);
   for (let monthOff = 5; monthOff >= 0; monthOff--) {
-    const baseDate = new Date(now.getFullYear(), now.getMonth() - monthOff, 1);
     for (const cat of categories) {
       const day = Math.floor(Math.random() * 25) + 1;
       const amount = Math.round(monthlyBase * cat.pct * (0.8 + Math.random() * 0.4));
@@ -88,7 +85,7 @@ function generateExpenses(userId, incomeLevel) {
   return records;
 }
 
-function generateHabits(userId, profile) {
+function generateHabits(userId) {
   const habitsTemplates = [
     { name: 'Daily Savings Transfer', desc: 'Auto-transfer to savings account', freq: 'daily', type: 'saving' },
     { name: 'Track All Expenses', desc: 'Log every expense before bed', freq: 'daily', type: 'tracking' },
@@ -200,7 +197,7 @@ const seedData = async () => {
       const expenses = generateExpenses(user._id, ud.profile.monthlyIncome);
       await Expense.insertMany(expenses);
 
-      const habits = generateHabits(user._id, ud.profile);
+      const habits = generateHabits(user._id);
       await Habit.insertMany(habits);
 
       const goals = generateGoals(user._id, ud.profile.monthlyIncome);

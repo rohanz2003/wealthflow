@@ -55,6 +55,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.index({ lastActive: -1 });
 userSchema.index({ role: 1 });
+userSchema.index({ createdAt: -1 });
 
 userSchema.virtual('isLocked').get(function () {
   return this.lockUntil && this.lockUntil > Date.now();
