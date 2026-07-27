@@ -1,12 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { FiDownload, FiTrash2, FiLock, FiAlertTriangle, FiCheck, FiX } from 'react-icons/fi';
+import { FiDownload, FiTrash2, FiLock, FiAlertTriangle, FiCheck, FiX, FiUser, FiCalendar, FiClock, FiBriefcase, FiDollarSign, FiEdit2, FiSave } from 'react-icons/fi';
 
 export default function Settings() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ occupation: '', monthlyIncome: '', bio: '' });
+  const [profileMsg, setProfileMsg] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [profileSaving, setProfileSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -15,6 +22,39 @@ export default function Settings() {
   const [pwMsg, setPwMsg] = useState('');
   const [pwError, setPwError] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
+
+  useEffect(() => {
+    axios.get('/api/auth/me', { withCredentials: true }).then((res) => {
+      setProfile(res.data);
+      setProfileForm({
+        occupation: res.data.profile?.occupation || '',
+        monthlyIncome: res.data.profile?.monthlyIncome?.toString() || '',
+        bio: res.data.profile?.bio || '',
+      });
+    }).catch(() => {}).finally(() => setProfileLoading(false));
+  }, []);
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setProfileMsg('');
+    setProfileError('');
+    setProfileSaving(true);
+    try {
+      const res = await axios.put('/api/auth/profile', {
+        occupation: profileForm.occupation,
+        monthlyIncome: Number(profileForm.monthlyIncome) || 0,
+        bio: profileForm.bio,
+      });
+      setProfile(res.data);
+      setProfileMsg('Profile updated');
+      setTimeout(() => setProfileMsg(''), 3000);
+      setEditingProfile(false);
+    } catch (err) {
+      setProfileError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   const handleExport = async () => {
     setExporting(true);
@@ -76,11 +116,79 @@ export default function Settings() {
     }
   };
 
+  const p = profile || user || {};
+  const joinedDate = p.createdAt ? new Date(p.createdAt) : null;
+  const lastActive = p.lastActive ? new Date(p.lastActive) : null;
+  const memberFor = joinedDate ? Math.floor((Date.now() - joinedDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
   return (
     <div className="space-y-6 animate-fade-in max-w-2xl">
       <div>
         <h1 className="page-title">Settings</h1>
         <p className="page-subtitle">Manage your account and data</p>
+      </div>
+
+      <div className="card p-6">
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-700 dark:text-primary-400 text-2xl font-bold">
+              {(p.name || '?').charAt(0)}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{p.name}</h2>
+              <p className="text-sm text-gray-500 dark:text-navy-400">{p.email}</p>
+              <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${p.role === 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-navy-300'}`}>
+                {p.role}
+              </span>
+            </div>
+          </div>
+          <button onClick={() => setEditingProfile(!editingProfile)} className="btn-outline text-sm">
+            <FiEdit2 className="mr-1.5" size={14} /> {editingProfile ? 'Cancel' : 'Edit Profile'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+            <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiCalendar className="mr-1" size={12} /> Joined</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{joinedDate ? joinedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '-'}</p>
+          </div>
+          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+            <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiClock className="mr-1" size={12} /> Member for</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{memberFor > 0 ? `${memberFor} days` : 'Today'}</p>
+          </div>
+          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+            <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiClock className="mr-1" size={12} /> Last Active</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{lastActive ? lastActive.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}</p>
+          </div>
+          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+            <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiBriefcase className="mr-1" size={12} /> Occupation</p>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{p.profile?.occupation || '-'}</p>
+          </div>
+        </div>
+
+        {editingProfile && (
+          <form onSubmit={handleSaveProfile} className="border-t border-gray-200 dark:border-navy-700 pt-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="profile-occupation" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Occupation</label>
+                <input type="text" id="profile-occupation" value={profileForm.occupation} onChange={(e) => setProfileForm({ ...profileForm, occupation: e.target.value })} className="input-field" placeholder="e.g. Software Engineer" />
+              </div>
+              <div>
+                <label htmlFor="profile-income" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Monthly Income ($)</label>
+                <input type="number" id="profile-income" min="0" value={profileForm.monthlyIncome} onChange={(e) => setProfileForm({ ...profileForm, monthlyIncome: e.target.value })} className="input-field" placeholder="e.g. 5000" />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="profile-bio" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Bio</label>
+              <textarea id="profile-bio" rows={2} value={profileForm.bio} onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })} className="input-field" placeholder="Tell us about yourself..." />
+            </div>
+            {profileError && <p className="text-sm text-red-600 dark:text-red-400 flex items-center"><FiX className="mr-1" size={14} />{profileError}</p>}
+            {profileMsg && <p className="text-sm text-green-600 dark:text-green-400 flex items-center"><FiCheck className="mr-1" size={14} />{profileMsg}</p>}
+            <button type="submit" disabled={profileSaving} className="btn-primary text-sm">
+              <FiSave className="mr-1.5" size={14} /> {profileSaving ? 'Saving...' : 'Save Profile'}
+            </button>
+          </form>
+        )}
       </div>
 
       <div className="card p-6">

@@ -69,10 +69,10 @@ export default function Navbar() {
               {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
             </button>
             <div className="ml-4 pl-4 border-l border-gray-200 dark:border-navy-700 flex items-center space-x-3">
-              <div className="text-right">
+              <Link to="/settings" className="text-right hover:opacity-80 transition-opacity">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</p>
                 <p className="text-xs text-gray-500 dark:text-navy-400 capitalize">{user?.role}</p>
-              </div>
+              </Link>
 <button
               onClick={handleLogout}
               aria-label="Logout"
