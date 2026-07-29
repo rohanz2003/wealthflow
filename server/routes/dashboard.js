@@ -6,6 +6,7 @@ const Income = require('../models/Income');
 const Habit = require('../models/Habit');
 const SavingsGoal = require('../models/SavingsGoal');
 const Investment = require('../models/Investment');
+const Debt = require('../models/Debt');
 const cache = require('../utils/cache');
 const {
   calculateSavingsRate,
@@ -27,12 +28,13 @@ router.get('/', auth, asyncHandler(async (req, res) => {
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const [expenses, incomes, habits, goals, investments] = await Promise.all([
+  const [expenses, incomes, habits, goals, investments, debts] = await Promise.all([
     Expense.find({ user: userId, date: { $gte: thirtyDaysAgo } }).sort({ date: -1 }).lean(),
     Income.find({ user: userId, date: { $gte: thirtyDaysAgo } }).sort({ date: -1 }).lean(),
     Habit.find({ user: userId }).lean(),
     SavingsGoal.find({ user: userId }).lean(),
     Investment.find({ user: userId }).lean(),
+    Debt.find({ user: userId }).lean(),
   ]);
 
   const monthlyExpenses = expenses.filter((e) => e.date >= startOfMonth);
@@ -45,7 +47,8 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     totalInvested: investments.reduce((s, i) => s + i.currentValue, 0),
   };
 
-  const netWorth = summary.monthlyIncome + summary.totalSavings + summary.totalInvested - summary.monthlyExpense;
+  const totalDebt = debts.reduce((s, d) => s + d.remainingAmount, 0);
+  const netWorth = summary.totalSavings + summary.totalInvested - totalDebt;
   const savingsRate = calculateSavingsRate(summary.monthlyIncome, summary.monthlyExpense);
   const expenseCategories = aggregateByCategory(expenses, 'category', 'amount');
   const expenseRatio = summary.monthlyIncome > 0 ? summary.monthlyExpense / summary.monthlyIncome : 0;

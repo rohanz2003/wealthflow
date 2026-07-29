@@ -12,18 +12,20 @@ export default function WealthAnalytics() {
   const [investments, setInvestments] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [incomes, setIncomes] = useState([]);
+  const [totalSavings, setTotalSavings] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     const fetchData = async () => {
       try {
-        const [kpiRes, monthRes, invRes, expRes, incRes] = await Promise.all([
+        const [kpiRes, monthRes, invRes, expRes, incRes, goalRes] = await Promise.all([
           axios.get('/api/analytics/kpis'),
           axios.get('/api/analytics/monthly-activity'),
           axios.get('/api/investments'),
           axios.get('/api/expenses'),
           axios.get('/api/income'),
+          axios.get('/api/savings'),
         ]);
         if (cancelled) return;
         setKpis(kpiRes.data);
@@ -31,6 +33,8 @@ export default function WealthAnalytics() {
         setInvestments(invRes.data.data || invRes.data || []);
         setExpenses(expRes.data.data || expRes.data || []);
         setIncomes(incRes.data.data || incRes.data || []);
+        const goals = goalRes.data.data || goalRes.data || [];
+        setTotalSavings(goals.reduce((s, g) => s + g.currentAmount, 0));
       } catch (err) { console.error('Error:', err); } finally { if (!cancelled) setLoading(false); }
     };
     fetchData();
@@ -98,7 +102,7 @@ export default function WealthAnalytics() {
     labels: monthLabels,
     datasets: [{
       label: 'Net Worth',
-      data: cumulativeSavings.map((s) => s + totalInvested),
+      data: cumulativeSavings.map((s) => s + totalSavings + totalInvested),
       fill: true,
       borderColor: '#6366f1',
       backgroundColor: 'rgba(99, 102, 241, 0.1)',

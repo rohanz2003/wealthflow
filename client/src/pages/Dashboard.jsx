@@ -72,9 +72,14 @@ export default function Dashboard() {
     datasets: [{ data: Object.values(expenseCategories), backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#a855f7', '#14b8a6', '#f97316'], borderWidth: 0 }],
   };
 
+  const cumulativeBalances = dailyBalances.reduce((acc, v, i) => {
+    acc.push((acc[i - 1] || 0) + v);
+    return acc;
+  }, []);
+
   const lineData = {
     labels: last30Days,
-    datasets: [{ label: 'Daily Balance', data: dailyBalances, fill: true, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', tension: 0.4, pointRadius: 3 }],
+    datasets: [{ label: 'Running Balance', data: cumulativeBalances, fill: true, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', tension: 0.4, pointRadius: 0, pointHoverRadius: 4 }],
   };
 
   const today = new Date().toDateString();
@@ -119,16 +124,19 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 card p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">30-Day Balance Trend</h3>
-          <Line data={lineData} options={{
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false }, ticks: { color: '#94a3b8', maxTicksLimit: 7 } },
-              y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `$${v}`, color: '#94a3b8' } },
-            },
-          }} />
+        <div className="lg:col-span-2 card p-4 sm:p-6">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">30-Day Balance Trend</h3>
+          <div className="h-48 sm:h-56">
+            <Line data={lineData} options={{
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false }, ticks: { color: '#94a3b8', maxTicksLimit: 7, font: { size: 10 } } },
+                y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `$${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: 10 } } },
+              },
+            }} />
+          </div>
         </div>
 
         <div className="space-y-6">
