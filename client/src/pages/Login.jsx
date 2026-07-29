@@ -19,11 +19,15 @@ export default function Login() {
     try {
       await login(form.email, form.password);
     } catch (err) {
-      const data = err.response?.data;
-      if (data?.errors) {
-        setError(data.errors.map((e) => e.msg).join(', '));
+      if (err.code === 'ERR_NETWORK') {
+        setError('Cannot reach server. Check your connection or the server may be down.');
       } else {
-        setError(data?.message || 'Login failed. Make sure the server and MongoDB are running.');
+        const data = err.response?.data;
+        if (data?.errors) {
+          setError(data.errors.map((e) => e.msg).join(', '));
+        } else {
+          setError(data?.message || 'Login failed. Please try again.');
+        }
       }
     } finally {
       setLoading(false);

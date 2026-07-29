@@ -17,7 +17,7 @@ requiredEnv.forEach((v) => {
   if (!process.env[v]) throw new Error(`Missing required env var: ${v}`);
 });
 
-const clientOrigin = process.env.CLIENT_URL || 'http://localhost:5173';
+let clientOrigin = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
 if (clientOrigin === '*' || clientOrigin.includes('*')) {
   throw new Error('CLIENT_URL must not be a wildcard');
 }
