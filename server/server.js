@@ -49,6 +49,10 @@ app.get('/api/health', (req, res) => {
 
 connectDB();
 
+if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
+  logger.warn('CLIENT_URL not set — CORS may block frontend requests');
+}
+
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/income', require('./routes/income'));
 app.use('/api/expenses', require('./routes/expense'));
