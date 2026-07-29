@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { formatCurrency } from '../utils/formatCurrency';
 import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiCheckCircle } from 'react-icons/fi';
 
 const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Groceries', 'Dining', 'Other'];
@@ -80,16 +81,16 @@ export default function Budgets() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">Total Budgeted</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">${data.totalBudgeted.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(data.totalBudgeted)}</p>
         </div>
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">Total Spent</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">${data.totalSpent.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(data.totalSpent)}</p>
         </div>
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">Remaining</p>
           <p className={`text-2xl font-bold ${data.totalRemaining >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            ${data.totalRemaining.toLocaleString()}
+            {formatCurrency(data.totalRemaining)}
           </p>
         </div>
         <div className="stat-card">
@@ -149,11 +150,11 @@ export default function Budgets() {
                     )}
                   </div>
                   <div className="flex items-center space-x-3 mt-1">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">${b.spent.toLocaleString()}</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(b.spent)}</span>
                     <span className="text-sm text-gray-400 dark:text-navy-500">of</span>
-                    <span className="text-sm text-gray-500 dark:text-navy-400">${b.monthlyLimit.toLocaleString()}</span>
+                    <span className="text-sm text-gray-500 dark:text-navy-400">{formatCurrency(b.monthlyLimit)}</span>
                     <span className={`text-sm font-medium ${b.remaining >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      (${b.remaining >= 0 ? `${b.remaining.toLocaleString()} left` : `${Math.abs(b.remaining).toLocaleString()} over`})
+                      ({b.remaining >= 0 ? `${formatCurrency(b.remaining)} left` : `${formatCurrency(Math.abs(b.remaining))} over`})
                     </span>
                   </div>
                   <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2.5 max-w-md">
@@ -181,7 +182,7 @@ export default function Budgets() {
             {data.categoriesWithoutBudget.map((c) => (
               <div key={c.category} className="flex items-center space-x-2 px-3 py-2 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
                 <span className="text-sm font-medium text-gray-700 dark:text-navy-200">{c.category}</span>
-                <span className="text-sm text-gray-500 dark:text-navy-400">${c.spent.toLocaleString()}</span>
+                <span className="text-sm text-gray-500 dark:text-navy-400">{formatCurrency(c.spent)}</span>
                 <button onClick={() => { setForm({ category: c.category, monthlyLimit: '' }); setEditing(null); setShowForm(true); }} className="text-primary-600 dark:text-primary-400 hover:text-primary-700 text-xs font-medium">
                   + Set Budget
                 </button>

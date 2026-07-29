@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiUsers, FiDollarSign, FiTarget, FiCheckCircle, FiTrash2, FiShield, FiTrendingUp, FiCreditCard, FiActivity, FiCalendar } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { formatCurrency } from '../utils/formatCurrency';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 
@@ -55,9 +56,9 @@ export default function AdminPanel() {
 
   const statCards = [
     { label: 'Total Users', value: a.totalUsers, sub: `${a.activeUsers || 0} active (30d)`, icon: FiUsers, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-    { label: 'Total Expenses', value: `$${(a.totalExpenseAmount || 0).toLocaleString()}`, sub: `${a.totalExpenses || 0} records`, icon: FiDollarSign, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
-    { label: 'Total Income', value: `$${(a.totalIncomeAmount || 0).toLocaleString()}`, sub: `${a.totalIncome || 0} records`, icon: FiTrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
-    { label: 'Total Debt', value: `$${(a.totalDebtRemaining || 0).toLocaleString()}`, sub: `${debtPct}% paid off`, icon: FiCreditCard, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+    { label: 'Total Expenses', value: formatCurrency(a.totalExpenseAmount), sub: `${a.totalExpenses || 0} records`, icon: FiDollarSign, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+    { label: 'Total Income', value: formatCurrency(a.totalIncomeAmount), sub: `${a.totalIncome || 0} records`, icon: FiTrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
+    { label: 'Total Debt', value: formatCurrency(a.totalDebtRemaining), sub: `${debtPct}% paid off`, icon: FiCreditCard, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
     { label: 'Goal Progress', value: goalPct + '%', sub: `${a.totalGoalsCompleted || 0}/${a.totalGoals || 0} completed`, icon: FiTarget, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
     { label: 'Habit Completions', value: (a.totalHabitCompletions || 0).toLocaleString(), sub: `${a.totalHabits || 0} habits tracked`, icon: FiCheckCircle, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20' },
   ];
@@ -136,7 +137,7 @@ export default function AdminPanel() {
               </div>
               <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
                 <p className="text-xs text-gray-500 dark:text-navy-400">Investments</p>
-                <p className="text-xl font-bold text-green-600 dark:text-green-400">${(a.totalInvestmentValue || 0).toLocaleString()}</p>
+                <p className="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(a.totalInvestmentValue)}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
                 <p className="text-xs text-gray-500 dark:text-navy-400">Avg Goal Completion</p>
@@ -174,8 +175,8 @@ export default function AdminPanel() {
                           </td>
                           <td className="py-3 px-3 text-sm text-gray-500 dark:text-navy-400">{u.profile?.occupation || '-'}</td>
                           <td className="py-3 px-3 text-sm text-gray-500 dark:text-navy-400">{new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                          <td className="py-3 px-3 text-sm text-red-600 dark:text-red-400 font-medium">${(s.totalExpenseAmount || 0).toLocaleString()}</td>
-                          <td className="py-3 px-3 text-sm text-green-600 dark:text-green-400 font-medium">${(s.totalIncomeAmount || 0).toLocaleString()}</td>
+                          <td className="py-3 px-3 text-sm text-red-600 dark:text-red-400 font-medium">{formatCurrency(s.totalExpenseAmount)}</td>
+                          <td className="py-3 px-3 text-sm text-green-600 dark:text-green-400 font-medium">{formatCurrency(s.totalIncomeAmount)}</td>
                           <td className="py-3 px-3 text-sm text-gray-500 dark:text-navy-400">{s.activeDays || 0}d</td>
                           <td className="py-3 px-3 text-right">
                             {u.role !== 'admin' && (

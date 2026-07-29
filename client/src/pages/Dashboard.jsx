@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { formatCurrency } from '../utils/formatCurrency';
 import { FiDollarSign, FiTrendingUp, FiTarget, FiCheckCircle } from 'react-icons/fi';
 import { Doughnut, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title, Filler } from 'chart.js';
@@ -106,10 +107,10 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Monthly Income', value: `$${summary.monthlyIncome.toLocaleString()}`, icon: FiTrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
-          { label: 'Monthly Expenses', value: `$${summary.monthlyExpense.toLocaleString()}`, icon: FiDollarSign, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
-          { label: 'Total Savings', value: `$${summary.totalSavings.toLocaleString()}`, icon: FiTarget, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-          { label: 'Net Worth', value: `$${netWorth.toLocaleString()}`, icon: FiTrendingUp, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+          { label: 'Monthly Income', value: formatCurrency(summary.monthlyIncome), icon: FiTrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
+          { label: 'Monthly Expenses', value: formatCurrency(summary.monthlyExpense), icon: FiDollarSign, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+          { label: 'Total Savings', value: formatCurrency(summary.totalSavings), icon: FiTarget, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+          { label: 'Net Worth', value: formatCurrency(netWorth), icon: FiTrendingUp, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
         ].map((card, i) => (
           <div key={i} className="stat-card">
             <div className="flex items-center justify-between mb-3">
@@ -133,7 +134,7 @@ export default function Dashboard() {
               plugins: { legend: { display: false } },
               scales: {
                 x: { grid: { display: false }, ticks: { color: '#94a3b8', maxTicksLimit: 7, font: { size: 10 } } },
-                y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `$${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: 10 } } },
+                y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: 10 } } },
               },
             }} />
           </div>
@@ -155,7 +156,7 @@ export default function Dashboard() {
               {Object.entries(expenseCategories).slice(0, 5).map(([cat, amt]) => (
                 <div key={cat} className="flex justify-between text-sm">
                   <span className="text-gray-600 dark:text-navy-400">{cat}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">${amt.toLocaleString()}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(amt)}</span>
                 </div>
               ))}
             </div>
@@ -176,7 +177,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600 dark:text-navy-400">Total Debt</span>
-                  <span className="font-semibold text-red-600 dark:text-red-400">${(stability.totalDebt || 0).toLocaleString()}</span>
+                  <span className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(stability.totalDebt)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600 dark:text-navy-400">Debt-to-Income</span>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { formatCurrency } from '../utils/formatCurrency';
 import { FiTrendingUp, FiDollarSign, FiBarChart2 } from 'react-icons/fi';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler } from 'chart.js';
@@ -93,7 +94,7 @@ export default function WealthAnalytics() {
     },
     scales: {
       x: { grid: { display: false }, ticks: { color: '#94a3b8', maxRotation: isMobile ? 45 : 0, font: { size: isMobile ? 9 : 12 } } },
-      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `$${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: isMobile ? 9 : 12 } } },
+      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: isMobile ? 9 : 12 } } },
     },
   };
 
@@ -116,7 +117,7 @@ export default function WealthAnalytics() {
     plugins: { legend: { display: false } },
     scales: {
       x: { grid: { display: false }, ticks: { color: '#94a3b8', maxRotation: isMobile ? 45 : 0, font: { size: isMobile ? 9 : 12 } } },
-      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `$${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: isMobile ? 9 : 12 } } },
+      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: isMobile ? 9 : 12 } } },
     },
   };
 
@@ -138,10 +139,10 @@ export default function WealthAnalytics() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: 'Total Income', value: `$${(kpis?.monthlyIncomeTotal || 0).toLocaleString()}`, sub: 'This month', icon: FiTrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
-          { label: 'Total Expenses', value: `$${(kpis?.monthlyExpenseTotal || 0).toLocaleString()}`, sub: 'This month', icon: FiDollarSign, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+          { label: 'Total Income', value: formatCurrency(kpis?.monthlyIncomeTotal), sub: 'This month', icon: FiTrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
+          { label: 'Total Expenses', value: formatCurrency(kpis?.monthlyExpenseTotal), sub: 'This month', icon: FiDollarSign, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
           { label: 'Habit Completion', value: `${kpis?.habitCompletionRate || 0}%`, sub: `${kpis?.habitsCompletedToday || 0} done today`, icon: FiBarChart2, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-          { label: 'Net Cash Flow', value: `$${(kpis?.monthlyNetCashflow || 0).toLocaleString()}`, sub: `${kpis?.totalMonthlyTransactions || 0} transactions`, icon: FiBarChart2, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
+          { label: 'Net Cash Flow', value: formatCurrency(kpis?.monthlyNetCashflow), sub: `${kpis?.totalMonthlyTransactions || 0} transactions`, icon: FiBarChart2, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
         ].map((c, i) => (
           <div key={i} className="stat-card p-3 sm:p-4">
             <div className="flex items-center justify-between mb-1 sm:mb-2">
@@ -208,7 +209,7 @@ export default function WealthAnalytics() {
         <div className="stat-card p-3 sm:p-4">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-0.5 sm:mb-1">Monthly Net Cashflow</p>
           <p className={`text-lg sm:text-2xl font-bold ${(kpis?.monthlyNetCashflow || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            ${(kpis?.monthlyNetCashflow || 0).toLocaleString()}
+            {formatCurrency(kpis?.monthlyNetCashflow)}
           </p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5 sm:mt-1">Income minus expenses</p>
         </div>

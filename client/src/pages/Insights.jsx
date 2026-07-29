@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { formatCurrency } from '../utils/formatCurrency';
 import { FiTrendingUp, FiAlertTriangle, FiStar, FiPieChart, FiBarChart2, FiTarget } from 'react-icons/fi';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
@@ -50,7 +51,7 @@ export default function Insights() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">This Month's Spending</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">${(insights?.totalSpentThisMonth || 0).toLocaleString()}</p>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(insights?.totalSpentThisMonth)}</p>
         </div>
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">Spending Trend</p>
@@ -68,7 +69,7 @@ export default function Insights() {
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">Net Worth</p>
           <p className={`text-2xl font-bold ${(stability?.netWorth || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            ${(stability?.netWorth || 0).toLocaleString()}
+            {formatCurrency(stability?.netWorth)}
           </p>
         </div>
       </div>
@@ -84,7 +85,7 @@ export default function Insights() {
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">{a.category}</p>
                   <p className="text-sm text-gray-500 dark:text-navy-400">
-                    ${a.currentAmount.toLocaleString()} this month vs ${a.averageAmount.toLocaleString()} average
+                    {formatCurrency(a.currentAmount)} this month vs {formatCurrency(a.averageAmount)} average
                   </p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${a.severity === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'}`}>
@@ -123,7 +124,7 @@ export default function Insights() {
               <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2">
                 <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${Math.min(100, stability?.emergencyFundProgress || 0)}%` }} />
               </div>
-              <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">${(stability?.emergencyFundTarget || 0).toLocaleString()} target (6 months of expenses)</p>
+              <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">{formatCurrency(stability?.emergencyFundTarget)} target (6 months of expenses)</p>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-navy-400">Debt-to-Income</span>
@@ -133,11 +134,11 @@ export default function Insights() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-navy-400">Total Debt</span>
-              <span className="font-semibold text-red-600 dark:text-red-400">${(stability?.totalDebt || 0).toLocaleString()}</span>
+              <span className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(stability?.totalDebt)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-navy-400">Total Assets</span>
-              <span className="font-semibold text-green-600 dark:text-green-400">${(stability?.totalAssets || 0).toLocaleString()}</span>
+              <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(stability?.totalAssets)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-navy-400">Income Diversity</span>

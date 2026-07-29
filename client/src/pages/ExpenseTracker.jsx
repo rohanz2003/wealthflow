@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { formatCurrency } from '../utils/formatCurrency';
 import { FiPlus, FiEdit2, FiTrash2, FiFilter, FiSearch, FiX } from 'react-icons/fi';
 
 const CATEGORIES = ['Food', 'Transport', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Groceries', 'Dining', 'Other'];
@@ -93,16 +94,16 @@ export default function ExpenseTracker() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Income</p>
-          <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">${totalIncomes.toLocaleString()}</p>
+          <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(totalIncomes)}</p>
         </div>
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Expenses</p>
-          <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">${totalExpenses.toLocaleString()}</p>
+          <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(totalExpenses)}</p>
         </div>
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Net Balance</p>
           <p className={`text-xl sm:text-2xl font-bold ${totalIncomes - totalExpenses >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            ${(totalIncomes - totalExpenses).toLocaleString()}
+            {formatCurrency(totalIncomes - totalExpenses)}
           </p>
         </div>
       </div>
@@ -179,7 +180,7 @@ export default function ExpenseTracker() {
                 </div>
                 <div className="flex items-center space-x-2 sm:space-x-3 shrink-0 ml-2">
                   <span className={`text-sm sm:text-base font-semibold ${activeTab === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {activeTab === 'income' ? '+' : '-'}${item.amount.toLocaleString()}
+                    {activeTab === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
                   </span>
                   <button onClick={() => handleEdit(item)} aria-label="Edit" className="btn-ghost p-1.5"><FiEdit2 size={15} /></button>
                   <button onClick={() => setDeleteConfirm(item._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400"><FiTrash2 size={15} /></button>

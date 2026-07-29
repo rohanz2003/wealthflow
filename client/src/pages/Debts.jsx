@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { formatCurrency } from '../utils/formatCurrency';
 import { FiPlus, FiEdit2, FiTrash2, FiTrendingDown } from 'react-icons/fi';
 
 const DEBT_TYPES = ['Credit Card', 'Student Loan', 'Personal Loan', 'Mortgage', 'Auto Loan', 'Medical', 'Other'];
@@ -83,7 +84,7 @@ export default function Debts() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">Total Debt</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">${data.totalDebt.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(data.totalDebt)}</p>
         </div>
         <div className="stat-card">
           <p className="text-sm text-gray-500 dark:text-navy-400">Paid Off</p>
@@ -147,13 +148,13 @@ export default function Debts() {
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                         <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                          ${debt.remainingAmount.toLocaleString()} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> ${debt.totalAmount.toLocaleString()}
+                          {formatCurrency(debt.remainingAmount)} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> {formatCurrency(debt.totalAmount)}
                         </span>
                         {debt.interestRate > 0 && (
                           <span className="text-xs text-gray-400 dark:text-navy-500">{debt.interestRate}% APR</span>
                         )}
                         {debt.minimumPayment > 0 && (
-                          <span className="text-xs text-gray-400 dark:text-navy-500">Min: ${debt.minimumPayment}/mo</span>
+                          <span className="text-xs text-gray-400 dark:text-navy-500">Min: {formatCurrency(debt.minimumPayment)}/mo</span>
                         )}
                         {debt.dueDate && (
                           <span className="text-xs text-gray-400 dark:text-navy-500">Due: {new Date(debt.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>

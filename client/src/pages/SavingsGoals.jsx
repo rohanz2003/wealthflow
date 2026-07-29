@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { formatCurrency } from '../utils/formatCurrency';
 import { FiPlus, FiEdit2, FiTrash2, FiCalendar } from 'react-icons/fi';
 
 const GOAL_CATEGORIES = ['Emergency Fund', 'Vacation', 'Education', 'Home', 'Vehicle', 'Retirement', 'Investment', 'Debt Payment', 'Other'];
@@ -85,7 +86,7 @@ export default function SavingsGoals() {
         </div>
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Saved</p>
-          <p className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">${totalSaved.toLocaleString()}</p>
+          <p className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(totalSaved)}</p>
         </div>
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Overall Progress</p>
@@ -97,7 +98,7 @@ export default function SavingsGoals() {
         <div className="stat-card">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Monthly Surplus</p>
           <p className={`text-lg sm:text-2xl font-bold ${(projections?.monthlySurplus || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            ${(projections?.monthlySurplus || 0).toLocaleString()}
+            {formatCurrency(projections?.monthlySurplus)}
           </p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5">Available for savings</p>
         </div>
@@ -147,7 +148,7 @@ export default function SavingsGoals() {
                       <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate">{goal.category}{goal.description ? ` · ${goal.description}` : ''}</p>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                         <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                          ${goal.currentAmount.toLocaleString()} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> ${goal.targetAmount.toLocaleString()}
+                          {formatCurrency(goal.currentAmount)} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> {formatCurrency(goal.targetAmount)}
                         </span>
                         {goal.targetDate && (
                           <span className="text-xs text-gray-400 dark:text-navy-500 flex items-center"><FiCalendar className="mr-1" size={14} /> {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
@@ -157,7 +158,7 @@ export default function SavingsGoals() {
                         <div className={`h-2 sm:h-2.5 rounded-full transition-all ${goal.isCompleted ? 'bg-green-500' : 'bg-primary-600 dark:bg-primary-400'}`} style={{ width: `${progress}%` }} />
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-                        <p className="text-xs text-gray-400 dark:text-navy-500">{progress}% complete · ${remaining.toLocaleString()} remaining</p>
+                        <p className="text-xs text-gray-400 dark:text-navy-500">{progress}% complete · {formatCurrency(remaining)} remaining</p>
                         {proj && !goal.isCompleted && (
                           <>
                             {proj.monthsToGoal ? (
@@ -170,7 +171,7 @@ export default function SavingsGoals() {
                             )}
                             {proj.targetMonthsAway && proj.neededMonthly && (
                               <p className={`text-xs ${proj.onTrack ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                                {proj.onTrack ? 'On track' : `Need $${proj.neededMonthly}/mo`} to hit target date
+                                {proj.onTrack ? 'On track' : `Need ${formatCurrency(proj.neededMonthly)}/mo`} to hit target date
                               </p>
                             )}
                           </>
