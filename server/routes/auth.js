@@ -22,17 +22,18 @@ const generateToken = (user) => {
 };
 
 const setTokenCookies = (res, accessToken, refreshToken) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('token', accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'strict',
     maxAge: 15 * 60 * 1000,
   });
   if (refreshToken) {
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'strict',
       path: '/api/auth',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -131,10 +132,11 @@ router.post('/refresh', asyncHandler(async (req, res) => {
 }));
 
 router.post('/logout', auth, asyncHandler(async (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   req.user.refreshToken = null;
   await req.user.save();
-  res.clearCookie('token');
-  res.clearCookie('refreshToken', { path: '/api/auth' });
+  res.clearCookie('token', { secure: isProduction, sameSite: isProduction ? 'none' : 'strict' });
+  res.clearCookie('refreshToken', { path: '/api/auth', secure: isProduction, sameSite: isProduction ? 'none' : 'strict' });
   res.json({ message: 'Logged out successfully' });
 }));
 
@@ -167,10 +169,11 @@ router.put('/password', auth, asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Current password is incorrect' });
   }
   user.password = newPassword;
+  const isProduction = process.env.NODE_ENV === 'production';
   user.refreshToken = null;
   await user.save();
-  res.clearCookie('token');
-  res.clearCookie('refreshToken', { path: '/api/auth' });
+  res.clearCookie('token', { secure: isProduction, sameSite: isProduction ? 'none' : 'strict' });
+  res.clearCookie('refreshToken', { path: '/api/auth', secure: isProduction, sameSite: isProduction ? 'none' : 'strict' });
   res.json({ message: 'Password updated. Please log in again.' });
 }));
 
