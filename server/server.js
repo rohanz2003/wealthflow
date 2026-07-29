@@ -1,5 +1,4 @@
 const express = require('express');
-const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -64,13 +63,6 @@ app.use('/api/budgets', require('./routes/budget'));
 app.use('/api/debts', require('./routes/debt'));
 
 app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found' }));
-
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-  });
-}
 
 app.use(errorHandler);
 
