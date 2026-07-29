@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 const logger = require('../utils/logger');
+
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY = 5000;

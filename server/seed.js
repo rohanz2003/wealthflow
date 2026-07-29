@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
 const dotenv = require('dotenv');
+
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 if (process.env.NODE_ENV === 'production') {
   console.error('Seed script cannot run in production!');
