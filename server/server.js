@@ -24,6 +24,7 @@ if (clientOrigin === '*' || clientOrigin.includes('*')) {
 
 const app = express();
 
+app.set('trust proxy', 1);
 app.use(helmet());
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
@@ -67,6 +68,8 @@ app.use('/api/budgets', require('./routes/budget'));
 app.use('/api/debts', require('./routes/debt'));
 
 app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found' }));
+
+app.get('/', (req, res) => res.json({ status: 'ok', app: 'WealthFlow API' }));
 
 app.use(errorHandler);
 
