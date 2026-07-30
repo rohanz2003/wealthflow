@@ -17,10 +17,7 @@ requiredEnv.forEach((v) => {
   if (!process.env[v]) throw new Error(`Missing required env var: ${v}`);
 });
 
-let clientOrigin = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
-if (clientOrigin === '*' || clientOrigin.includes('*')) {
-  throw new Error('CLIENT_URL must not be a wildcard');
-}
+const clientOrigin = (process.env.CLIENT_URL || '').replace(/\/+$/, '');
 
 const app = express();
 
@@ -28,8 +25,21 @@ app.set('trust proxy', 1);
 app.use(helmet());
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+if (process.env.NODE_ENV === 'production' && !clientOrigin) {
+  logger.warn('CLIENT_URL not set — CORS will allow all origins. Set CLIENT_URL in Render env vars.');
+}
+
+const allowedOrigins = clientOrigin ? [clientOrigin, ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:5173', 'http://localhost:3000'] : [])] : [];
 app.use(cors({
-  origin: clientOrigin,
+  origin: (origin, cb) => {
+    if (!origin || (allowedOrigins.length > 0 && allowedOrigins.includes(origin))) {
+      return cb(null, origin || true);
+    }
+    if (allowedOrigins.length === 0) return cb(null, origin || true);
+    logger.warn(`CORS blocked: ${origin}`);
+    cb(null, false);
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10kb' }));
