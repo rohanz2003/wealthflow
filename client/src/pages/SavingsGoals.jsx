@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatCurrency } from '../utils/formatCurrency';
-import { FiPlus, FiEdit2, FiTrash2, FiCalendar } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiTarget } from 'react-icons/fi';
+import { categoryIcon, goalCategoryMeta } from '../utils/categoryMeta';
 
 const GOAL_CATEGORIES = ['Emergency Fund', 'Vacation', 'Education', 'Home', 'Vehicle', 'Retirement', 'Investment', 'Debt Payment', 'Other'];
 
@@ -60,7 +61,7 @@ export default function SavingsGoals() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-600 dark:border-primary-400 border-t-transparent" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" /></div>;
   }
 
   const totalTarget = goals.reduce((s, g) => s + g.targetAmount, 0);
@@ -68,8 +69,8 @@ export default function SavingsGoals() {
   const overallProgress = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
 
   return (
-    <div className="space-y-4 sm:space-y-6 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up">
         <div>
           <h1 className="page-title">Savings Goals</h1>
           <p className="page-subtitle">Set and track your financial goals</p>
@@ -80,24 +81,24 @@ export default function SavingsGoals() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="stat-card">
+        <div className="stat-card reveal">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Goals</p>
-          <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{goals.length}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{goals.length}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-1">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Saved</p>
-          <p className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(totalSaved)}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-mint-600 dark:text-mint-400">{formatCurrency(totalSaved)}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-2">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Overall Progress</p>
-          <p className="text-lg sm:text-2xl font-bold text-primary-600 dark:text-primary-400">{overallProgress}%</p>
-          <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2">
-            <div className="bg-primary-600 dark:bg-primary-400 h-2 rounded-full transition-all" style={{ width: `${overallProgress}%` }} />
+          <p className="text-lg sm:text-2xl font-extrabold text-primary-600 dark:text-primary-400">{overallProgress}%</p>
+          <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 overflow-hidden">
+            <div className="bg-gradient-to-r from-primary-500 to-magenta-500 h-2 rounded-full transition-all duration-1000 progress-shimmer" style={{ width: `${overallProgress}%` }} />
           </div>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-3">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Monthly Surplus</p>
-          <p className={`text-lg sm:text-2xl font-bold ${(projections?.monthlySurplus || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className={`text-lg sm:text-2xl font-extrabold ${(projections?.monthlySurplus || 0) > 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
             {formatCurrency(projections?.monthlySurplus)}
           </p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5">Available for savings</p>
@@ -125,20 +126,24 @@ export default function SavingsGoals() {
       <div className="space-y-3 sm:space-y-4">
         {goals.length === 0 ? (
           <div className="card p-8 sm:p-12 text-center">
-            <div className="text-4xl mb-4">🎯</div>
+            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 animate-float">
+              <FiTarget size={26} />
+            </div>
             <p className="text-gray-400 dark:text-navy-500">No savings goals yet. Start by creating one!</p>
           </div>
         ) : (
-          goals.map((goal) => {
+          goals.map((goal, gi) => {
             const progress = goal.targetAmount > 0 ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100)) : 0;
             const remaining = goal.targetAmount - goal.currentAmount;
             const proj = projections?.projections?.find((p) => p._id === goal._id);
+            const cat = categoryIcon(goal.category, goalCategoryMeta);
+            const GoalIcon = cat.icon;
             return (
-              <div key={goal._id} className={`card p-4 sm:p-6 card-hover ${goal.isCompleted ? 'border-green-300 dark:border-green-700 bg-green-50/30 dark:bg-green-900/10' : ''}`}>
+              <div key={goal._id} className={`card p-4 sm:p-6 card-hover reveal ${goal.isCompleted ? 'border-mint-300 dark:border-mint-700 bg-mint-50/30 dark:bg-mint-900/10' : ''}`} style={{ transitionDelay: `${Math.min(gi, 5) * 0.06}s` }}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start space-x-3 sm:space-x-4 flex-1 min-w-0">
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-lg sm:text-xl shrink-0 ${goal.isCompleted ? 'bg-green-100 dark:bg-green-900/30' : 'bg-blue-100 dark:bg-blue-900/30'}`}>
-                      {goal.category === 'Emergency Fund' ? '🛡️' : goal.category === 'Vacation' ? '✈️' : goal.category === 'Education' ? '🎓' : goal.category === 'Home' ? '🏠' : goal.category === 'Vehicle' ? '🚗' : goal.category === 'Retirement' ? '🏖️' : '💰'}
+                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 hover:scale-110 hover:rotate-6 ${goal.isCompleted ? 'bg-mint-100 dark:bg-mint-900/30 text-mint-600 dark:text-mint-400' : cat.bg + ' ' + cat.text}`}>
+                      <GoalIcon size={22} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center space-x-2 flex-wrap gap-y-1">
@@ -154,23 +159,23 @@ export default function SavingsGoals() {
                           <span className="text-xs text-gray-400 dark:text-navy-500 flex items-center"><FiCalendar className="mr-1" size={14} /> {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         )}
                       </div>
-                      <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 sm:h-2.5 max-w-md">
-                        <div className={`h-2 sm:h-2.5 rounded-full transition-all ${goal.isCompleted ? 'bg-green-500' : 'bg-primary-600 dark:bg-primary-400'}`} style={{ width: `${progress}%` }} />
+                      <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 sm:h-2.5 max-w-md overflow-hidden">
+                        <div className={`h-2 sm:h-2.5 rounded-full transition-all duration-1000 ${goal.isCompleted ? 'bg-gradient-to-r from-mint-500 to-mint-600' : 'bg-gradient-to-r from-primary-500 to-magenta-500'} progress-shimmer`} style={{ width: `${progress}%` }} />
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                         <p className="text-xs text-gray-400 dark:text-navy-500">{progress}% complete · {formatCurrency(remaining)} remaining</p>
                         {proj && !goal.isCompleted && (
                           <>
                             {proj.monthsToGoal ? (
-                              <p className="text-xs text-green-600 dark:text-green-400">
+                              <p className="text-xs text-mint-600 dark:text-mint-400">
                                 ~{proj.monthsToGoal} months at current rate
                                 {proj.projectedDate ? ` (est. ${new Date(proj.projectedDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})` : ''}
                               </p>
                             ) : (
-                              <p className="text-xs text-yellow-600 dark:text-yellow-400">Increase savings to reach this goal</p>
+                              <p className="text-xs text-sun-600 dark:text-sun-400">Increase savings to reach this goal</p>
                             )}
                             {proj.targetMonthsAway && proj.neededMonthly && (
-                              <p className={`text-xs ${proj.onTrack ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                              <p className={`text-xs ${proj.onTrack ? 'text-mint-600 dark:text-mint-400' : 'text-sun-600 dark:text-sun-400'}`}>
                                 {proj.onTrack ? 'On track' : `Need ${formatCurrency(proj.neededMonthly)}/mo`} to hit target date
                               </p>
                             )}

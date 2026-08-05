@@ -1,8 +1,10 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
+import RevealObserver from './components/RevealObserver';
+import Logo from './components/Logo';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -18,11 +20,24 @@ const Budgets = lazy(() => import('./pages/Budgets'));
 const Insights = lazy(() => import('./pages/Insights'));
 const Debts = lazy(() => import('./pages/Debts'));
 
-function AppLayout({ children }) {
+function PageLoader() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div className="flex flex-col items-center justify-center h-64 gap-3" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <Logo size={44} withText={false} className="animate-pulse-soft" />
+      <div className="w-8 h-8 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400 rounded-full animate-spin" />
+    </div>
+  );
+}
+
+function AppLayout({ children }) {
+  const location = useLocation();
+
+  return (
+    <div className="min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Navbar />
-      <main className="page-container">{children}</main>
+      <main key={location.pathname} className="page-container animate-page-in">
+        {children}
+      </main>
     </div>
   );
 }
@@ -31,7 +46,8 @@ export default function App() {
   const { user } = useAuth();
 
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400" /></div>}>
+    <Suspense fallback={<PageLoader />}>
+      <RevealObserver />
       <Routes>
         <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />

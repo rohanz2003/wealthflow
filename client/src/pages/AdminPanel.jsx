@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/formatCurrency';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { chartPalette, chartAnimation } from '../utils/categoryMeta';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
@@ -31,7 +32,7 @@ export default function AdminPanel() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" /></div>;
   }
 
   const a = analytics || {};
@@ -40,37 +41,38 @@ export default function AdminPanel() {
 
   const expenseChartData = a.expensesByCategory?.length ? {
     labels: a.expensesByCategory.map((e) => e._id),
-    datasets: [{ data: a.expensesByCategory.map((e) => e.total), backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#a855f7', '#14b8a6', '#f97316', '#64748b'], borderWidth: 0 }],
+    datasets: [{ data: a.expensesByCategory.map((e) => e.total), backgroundColor: chartPalette, borderWidth: 0 }],
   } : null;
 
   const incomeChartData = a.incomeByCategory?.length ? {
     labels: a.incomeByCategory.map((i) => i._id),
-    datasets: [{ data: a.incomeByCategory.map((i) => i.total), backgroundColor: ['#22c55e', '#6366f1', '#f59e0b', '#06b6d4', '#a855f7', '#14b8a6'], borderWidth: 0 }],
+    datasets: [{ data: a.incomeByCategory.map((i) => i.total), backgroundColor: chartPalette, borderWidth: 0 }],
   } : null;
 
   const doughnutOpts = {
     cutout: '65%',
     responsive: true,
-    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } },
+    animation: chartAnimation,
+    plugins: { legend: { position: 'bottom', labels: { color: '#8a86a3' } } },
   };
 
   const statCards = [
-    { label: 'Total Users', value: a.totalUsers, sub: `${a.activeUsers || 0} active (30d)`, icon: FiUsers, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-    { label: 'Total Expenses', value: formatCurrency(a.totalExpenseAmount), sub: `${a.totalExpenses || 0} records`, icon: FiDollarSign, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
-    { label: 'Total Income', value: formatCurrency(a.totalIncomeAmount), sub: `${a.totalIncome || 0} records`, icon: FiTrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
-    { label: 'Total Debt', value: formatCurrency(a.totalDebtRemaining), sub: `${debtPct}% paid off`, icon: FiCreditCard, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
-    { label: 'Goal Progress', value: goalPct + '%', sub: `${a.totalGoalsCompleted || 0}/${a.totalGoals || 0} completed`, icon: FiTarget, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-    { label: 'Habit Completions', value: (a.totalHabitCompletions || 0).toLocaleString(), sub: `${a.totalHabits || 0} habits tracked`, icon: FiCheckCircle, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+    { label: 'Total Users', value: a.totalUsers, sub: `${a.activeUsers || 0} active (30d)`, icon: FiUsers, color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-100 dark:bg-primary-900/30' },
+    { label: 'Total Expenses', value: formatCurrency(a.totalExpenseAmount), sub: `${a.totalExpenses || 0} records`, icon: FiDollarSign, color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
+    { label: 'Total Income', value: formatCurrency(a.totalIncomeAmount), sub: `${a.totalIncome || 0} records`, icon: FiTrendingUp, color: 'text-mint-600 dark:text-mint-400', bg: 'bg-mint-100 dark:bg-mint-900/30' },
+    { label: 'Total Debt', value: formatCurrency(a.totalDebtRemaining), sub: `${debtPct}% paid off`, icon: FiCreditCard, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30' },
+    { label: 'Goal Progress', value: goalPct + '%', sub: `${a.totalGoalsCompleted || 0}/${a.totalGoals || 0} completed`, icon: FiTarget, color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
+    { label: 'Habit Completions', value: (a.totalHabitCompletions || 0).toLocaleString(), sub: `${a.totalHabits || 0} habits tracked`, icon: FiCheckCircle, color: 'text-sun-600 dark:text-sun-400', bg: 'bg-sun-100 dark:bg-sun-900/30' },
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between animate-fade-up">
         <div>
           <h1 className="page-title">Admin Panel</h1>
           <p className="page-subtitle">Manage platform and monitor usage</p>
         </div>
-        <div className="flex items-center space-x-2 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 px-4 py-2 rounded-lg">
+        <div className="flex items-center space-x-2 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 px-4 py-2 rounded-xl">
           <FiShield size={18} />
           <span className="text-sm font-medium">Admin Access</span>
         </div>
@@ -78,18 +80,18 @@ export default function AdminPanel() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         {statCards.map((c, i) => (
-          <div key={i} className="stat-card">
+          <div key={i} className="stat-card reveal" style={{ transitionDelay: `${i * 0.07}s` }}>
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs text-gray-500 dark:text-navy-400">{c.label}</p>
-              <div className={`w-8 h-8 rounded-lg ${c.bg} flex items-center justify-center ${c.color}`}><c.icon size={16} /></div>
+              <div className={`w-8 h-8 rounded-xl ${c.bg} flex items-center justify-center ${c.color} transition-transform duration-300 hover:scale-110 hover:rotate-6`}><c.icon size={16} /></div>
             </div>
-            <p className={`text-lg font-bold ${c.color}`}>{c.value}</p>
+            <p className={`text-lg font-extrabold ${c.color}`}>{c.value}</p>
             <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5">{c.sub}</p>
           </div>
         ))}
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden reveal reveal-delay-1">
         <div className="border-b border-gray-200 dark:border-navy-700">
           <div className="flex">
             {[
@@ -98,9 +100,9 @@ export default function AdminPanel() {
               { key: 'activity', label: 'Activity' },
             ].map((t) => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-6 py-3 text-sm font-medium border-b-2 transition-all duration-300 ${
                   tab === t.key
-                    ? 'border-primary-600 dark:border-primary-400 text-primary-600 dark:text-primary-400'
+                    ? 'border-primary-500 dark:border-primary-400 text-primary-600 dark:text-primary-400'
                     : 'border-transparent text-gray-500 dark:text-navy-400 hover:text-gray-700 dark:hover:text-navy-200'
                 }`}
               >
@@ -127,21 +129,21 @@ export default function AdminPanel() {
               </div>
             </div>
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
+              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-xl border border-gray-200 dark:border-navy-700 transition-transform duration-300 hover:-translate-y-0.5">
                 <p className="text-xs text-gray-500 dark:text-navy-400">Budgets</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">{a.totalBudgets || 0}</p>
+                <p className="text-xl font-extrabold text-gray-900 dark:text-white">{a.totalBudgets || 0}</p>
               </div>
-              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
+              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-xl border border-gray-200 dark:border-navy-700 transition-transform duration-300 hover:-translate-y-0.5">
                 <p className="text-xs text-gray-500 dark:text-navy-400">Debts</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">{a.totalDebts || 0}</p>
+                <p className="text-xl font-extrabold text-gray-900 dark:text-white">{a.totalDebts || 0}</p>
               </div>
-              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
+              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-xl border border-gray-200 dark:border-navy-700 transition-transform duration-300 hover:-translate-y-0.5">
                 <p className="text-xs text-gray-500 dark:text-navy-400">Investments</p>
-                <p className="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(a.totalInvestmentValue)}</p>
+                <p className="text-xl font-extrabold text-mint-600 dark:text-mint-400">{formatCurrency(a.totalInvestmentValue)}</p>
               </div>
-              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
+              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-xl border border-gray-200 dark:border-navy-700 transition-transform duration-300 hover:-translate-y-0.5">
                 <p className="text-xs text-gray-500 dark:text-navy-400">Avg Goal Completion</p>
-                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">{goalPct}%</p>
+                <p className="text-xl font-extrabold text-magenta-600 dark:text-magenta-400">{goalPct}%</p>
               </div>
             </div>
           </div>

@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/formatCurrency';
-import { FiDollarSign, FiTrendingUp, FiTarget, FiCheckCircle } from 'react-icons/fi';
+import { FiDollarSign, FiTrendingUp, FiTarget, FiCheckCircle, FiAward } from 'react-icons/fi';
 import { Doughnut, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title, Filler } from 'chart.js';
+import CountUp from '../components/CountUp';
+import { chartPalette, chartAnimation } from '../utils/categoryMeta';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title, Filler);
 
@@ -64,13 +66,20 @@ function useDashboard() {
   return state;
 }
 
+const statCards = [
+  { key: 'income', label: 'Monthly Income', icon: FiTrendingUp, color: 'text-mint-600 dark:text-mint-400', bg: 'bg-mint-100 dark:bg-mint-900/30' },
+  { key: 'expense', label: 'Monthly Expenses', icon: FiDollarSign, color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
+  { key: 'savings', label: 'Total Savings', icon: FiTarget, color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-100 dark:bg-primary-900/30' },
+  { key: 'worth', label: 'Net Worth', icon: FiTrendingUp, color: 'text-sun-600 dark:text-sun-400', bg: 'bg-sun-100 dark:bg-sun-900/30' },
+];
+
 export default function Dashboard() {
   const { user } = useAuth();
   const { summary, expenseCategories, dailyBalances, last30Days, netWorth, savingsRate, activeHabits, totalGoals, completedGoals, overallGoalPct, healthScore, recentHabits, stability, loading } = useDashboard();
 
   const doughnutData = {
     labels: Object.keys(expenseCategories),
-    datasets: [{ data: Object.values(expenseCategories), backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#a855f7', '#14b8a6', '#f97316'], borderWidth: 0 }],
+    datasets: [{ data: Object.values(expenseCategories), backgroundColor: chartPalette, borderWidth: 0 }],
   };
 
   const cumulativeBalances = dailyBalances.reduce((acc, v, i) => {
@@ -80,7 +89,7 @@ export default function Dashboard() {
 
   const lineData = {
     labels: last30Days,
-    datasets: [{ label: 'Running Balance', data: cumulativeBalances, fill: true, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', tension: 0.4, pointRadius: 0, pointHoverRadius: 4 }],
+    datasets: [{ label: 'Running Balance', data: cumulativeBalances, fill: true, borderColor: '#6554ff', backgroundColor: 'rgba(101, 84, 255, 0.12)', tension: 0.4, pointRadius: 0, pointHoverRadius: 4 }],
   };
 
   const today = new Date().toDateString();
@@ -88,65 +97,72 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400" />
+        <div className="animate-spin rounded-full h-12 w-12 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" />
       </div>
     );
   }
 
+  const values = {
+    income: summary.monthlyIncome,
+    expense: summary.monthlyExpense,
+    savings: summary.totalSavings,
+    worth: netWorth,
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="page-title">Welcome back, {user?.name}!</h1>
+        <div className="animate-fade-up">
+          <h1 className="page-title">
+            Welcome back, <span className="text-gradient">{user?.name}!</span>
+          </h1>
           <p className="page-subtitle">Here's your financial overview</p>
         </div>
-        <Link to="/wealth" className="btn-primary text-sm">
+        <Link to="/wealth" className="btn-primary text-sm animate-fade-up">
           <FiTrendingUp className="mr-2" size={16} /> View Analytics
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: 'Monthly Income', value: formatCurrency(summary.monthlyIncome), icon: FiTrendingUp, color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
-          { label: 'Monthly Expenses', value: formatCurrency(summary.monthlyExpense), icon: FiDollarSign, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
-          { label: 'Total Savings', value: formatCurrency(summary.totalSavings), icon: FiTarget, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-          { label: 'Net Worth', value: formatCurrency(netWorth), icon: FiTrendingUp, color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-        ].map((card, i) => (
-          <div key={i} className="stat-card">
+        {statCards.map((card, i) => (
+          <div key={card.key} className={`stat-card reveal`} style={{ transitionDelay: `${i * 0.08}s` }}>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-gray-500 dark:text-navy-400 font-medium">{card.label}</span>
-              <div className={`w-10 h-10 rounded-lg ${card.bg} flex items-center justify-center ${card.color}`}>
+              <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center ${card.color} transition-transform duration-300 hover:scale-110 hover:rotate-6`}>
                 <card.icon size={20} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+            <p className="text-2xl font-extrabold text-gray-900 dark:text-white">
+              <CountUp value={values[card.key]} format={formatCurrency} />
+            </p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 card p-4 sm:p-6">
+        <div className="lg:col-span-2 card p-4 sm:p-6 reveal reveal-delay-1">
           <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">30-Day Balance Trend</h3>
           <div className="h-48 sm:h-56">
             <Line data={lineData} options={{
               responsive: true,
               maintainAspectRatio: false,
+              animation: chartAnimation,
               plugins: { legend: { display: false } },
               scales: {
-                x: { grid: { display: false }, ticks: { color: '#94a3b8', maxTicksLimit: 7, font: { size: 10 } } },
-                y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: 10 } } },
+                x: { grid: { display: false }, ticks: { color: '#8a86a3', maxTicksLimit: 7, font: { size: 10 } } },
+                y: { grid: { color: 'rgba(138, 134, 163, 0.18)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#8a86a3', font: { size: 10 } } },
               },
             }} />
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="card p-6">
+          <div className="card p-6 reveal reveal-delay-2">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Expense Breakdown</h3>
             {Object.keys(expenseCategories).length > 0 ? (
               <div className="flex justify-center">
                 <div className="w-48 h-48">
-                  <Doughnut data={doughnutData} options={{ cutout: '70%', plugins: { legend: { display: false } } }} />
+                  <Doughnut data={doughnutData} options={{ cutout: '70%', animation: chartAnimation, plugins: { legend: { display: false } } }} />
                 </div>
               </div>
             ) : (
@@ -163,17 +179,17 @@ export default function Dashboard() {
           </div>
 
           {stability && (
-            <div className="card p-6">
+            <div className="card p-6 reveal reveal-delay-3">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financial Stability</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600 dark:text-navy-400">Emergency Fund</span>
-                  <span className={`font-semibold ${stability.emergencyFundAdequate === 'excellent' ? 'text-green-600 dark:text-green-400' : stability.emergencyFundAdequate === 'adequate' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                  <span className={`font-semibold ${stability.emergencyFundAdequate === 'excellent' ? 'text-mint-600 dark:text-mint-400' : stability.emergencyFundAdequate === 'adequate' ? 'text-sun-600 dark:text-sun-400' : 'text-red-600 dark:text-red-400'}`}>
                     {stability.emergencyFundMonths}mo ({stability.emergencyFundAdequate})
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5">
-                  <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, stability.emergencyFundProgress)}%` }} />
+                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-mint-500 to-mint-600 h-1.5 rounded-full transition-all duration-1000 progress-shimmer" style={{ width: `${Math.min(100, stability.emergencyFundProgress)}%` }} />
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600 dark:text-navy-400">Total Debt</span>
@@ -181,7 +197,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600 dark:text-navy-400">Debt-to-Income</span>
-                  <span className={`font-semibold ${stability.debtBurden === 'low' ? 'text-green-600 dark:text-green-400' : stability.debtBurden === 'moderate' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                  <span className={`font-semibold ${stability.debtBurden === 'low' ? 'text-mint-600 dark:text-mint-400' : stability.debtBurden === 'moderate' ? 'text-sun-600 dark:text-sun-400' : 'text-red-600 dark:text-red-400'}`}>
                     {stability.debtToIncome}%
                   </span>
                 </div>
@@ -189,25 +205,25 @@ export default function Dashboard() {
                   <span className="text-gray-600 dark:text-navy-400">Income Sources</span>
                   <span className="font-semibold text-gray-900 dark:text-white">{stability.incomeDiversity} ({stability.incomeDiversityScore})</span>
                 </div>
-                <Link to="/insights" className="mt-2 inline-flex items-center text-xs text-primary-600 dark:text-primary-400 font-medium hover:underline">
+                <Link to="/insights" className="mt-2 inline-flex items-center text-xs text-primary-600 dark:text-primary-400 font-semibold hover:underline">
                   View detailed insights →
                 </Link>
               </div>
             </div>
           )}
 
-          <div className="card p-6">
+          <div className="card p-6 reveal reveal-delay-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financial Health</h3>
             <div className="flex flex-col items-center py-2">
               <div className="relative w-28 h-28">
                 <svg className="w-28 h-28 -rotate-90" viewBox="0 0 120 120">
                   <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeWidth="10" className="text-gray-200 dark:text-navy-700" />
                   <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" strokeWidth="10" strokeDasharray={`${(healthScore / 100) * 326.73} 326.73`} strokeLinecap="round"
-                    className={`transition-all duration-1000 ease-out ${healthScore >= 70 ? 'text-green-500' : healthScore >= 40 ? 'text-yellow-500' : 'text-red-500'}`} />
+                    className={`transition-all duration-1000 ease-out ${healthScore >= 70 ? 'text-mint-500' : healthScore >= 40 ? 'text-sun-500' : 'text-red-500'}`} />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`text-2xl font-bold ${healthScore >= 70 ? 'text-green-600 dark:text-green-400' : healthScore >= 40 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {healthScore}
+                  <span className={`text-2xl font-extrabold ${healthScore >= 70 ? 'text-mint-600 dark:text-mint-400' : healthScore >= 40 ? 'text-sun-600 dark:text-sun-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <CountUp value={healthScore} />
                   </span>
                 </div>
               </div>
@@ -216,29 +232,29 @@ export default function Dashboard() {
             <div className="mt-4 space-y-3">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600 dark:text-navy-400 flex items-center"><FiCheckCircle className="mr-1.5 text-green-500" size={14} /> Active Habits</span>
+                  <span className="text-gray-600 dark:text-navy-400 flex items-center"><FiCheckCircle className="mr-1.5 text-mint-500" size={14} /> Active Habits</span>
                   <span className="font-semibold text-gray-900 dark:text-white">{activeHabits}</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5">
-                  <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, (activeHabits / 5) * 100)}%` }} />
+                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-mint-500 to-mint-600 h-1.5 rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (activeHabits / 5) * 100)}%` }} />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600 dark:text-navy-400 flex items-center"><FiTarget className="mr-1.5 text-blue-500" size={14} /> Goals Progress</span>
+                  <span className="text-gray-600 dark:text-navy-400 flex items-center"><FiTarget className="mr-1.5 text-primary-500" size={14} /> Goals Progress</span>
                   <span className="font-semibold text-gray-900 dark:text-white">{completedGoals}/{totalGoals}</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5">
-                  <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{ width: `${overallGoalPct}%` }} />
+                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-gradient-to-r from-primary-500 to-magenta-500 h-1.5 rounded-full transition-all duration-1000" style={{ width: `${overallGoalPct}%` }} />
                 </div>
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600 dark:text-navy-400 flex items-center"><FiTrendingUp className="mr-1.5 text-purple-500" size={14} /> Savings Rate</span>
-                  <span className={`font-semibold ${savingsRate >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{savingsRate.toFixed(1)}%</span>
+                  <span className="text-gray-600 dark:text-navy-400 flex items-center"><FiTrendingUp className="mr-1.5 text-magenta-500" size={14} /> Savings Rate</span>
+                  <span className={`font-semibold ${savingsRate >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>{savingsRate.toFixed(1)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5">
-                  <div className={`h-1.5 rounded-full transition-all ${savingsRate >= 20 ? 'bg-green-500' : savingsRate >= 10 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${Math.min(100, savingsRate * 2)}%` }} />
+                <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-1.5 overflow-hidden">
+                  <div className={`h-1.5 rounded-full transition-all duration-1000 ${savingsRate >= 20 ? 'bg-gradient-to-r from-mint-500 to-mint-600' : savingsRate >= 10 ? 'bg-gradient-to-r from-sun-400 to-sun-500' : 'bg-gradient-to-r from-red-500 to-red-600'}`} style={{ width: `${Math.min(100, savingsRate * 2)}%` }} />
                 </div>
               </div>
             </div>
@@ -247,23 +263,25 @@ export default function Dashboard() {
       </div>
 
       {recentHabits.length > 0 && (
-        <div className="card p-6">
+        <div className="card p-6 reveal">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Today's Habits</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {recentHabits.map((habit) => {
               const doneToday = habit.history?.some((h) => new Date(h.date).toDateString() === today && h.completed);
               return (
-                <div key={habit._id} className={`p-4 rounded-lg border ${doneToday ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-navy-800 border-gray-200 dark:border-navy-700'}`}>
+                <div key={habit._id} className={`p-4 rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${doneToday ? 'bg-mint-50 dark:bg-mint-900/20 border-mint-200 dark:border-mint-800' : 'bg-gray-50 dark:bg-navy-800 border-gray-200 dark:border-navy-700'}`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white">{habit.name}</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">{habit.name}</p>
                       <p className="text-xs text-gray-500 dark:text-navy-400 capitalize">{habit.frequency} &middot; {habit.type}</p>
                     </div>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${doneToday ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-navy-600 text-gray-500 dark:text-navy-400'}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${doneToday ? 'bg-mint-500 text-white scale-110' : 'bg-gray-200 dark:bg-navy-600 text-gray-500 dark:text-navy-400'}`}>
                       <FiCheckCircle size={16} />
                     </div>
                   </div>
-                  <p className="mt-2 text-sm text-gray-500 dark:text-navy-400">&#x1F525; {habit.streak} day streak</p>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-navy-400 flex items-center">
+                    <FiAward className={`mr-1 ${habit.streak > 0 ? 'text-sun-500' : 'text-gray-400'}`} size={14} /> {habit.streak} day streak
+                  </p>
                 </div>
               );
             })}

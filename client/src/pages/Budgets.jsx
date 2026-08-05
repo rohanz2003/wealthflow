@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { formatCurrency } from '../utils/formatCurrency';
-import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiCheckCircle } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiPieChart } from 'react-icons/fi';
+import { categoryIcon, expenseCategoryMeta } from '../utils/categoryMeta';
 
 const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Groceries', 'Dining', 'Other'];
 
@@ -51,12 +52,12 @@ export default function Budgets() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" /></div>;
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-4 animate-fade-up">
         <div>
           <h1 className="page-title">Budget Management</h1>
           <p className="page-subtitle">Set monthly spending limits for each category</p>
@@ -79,23 +80,23 @@ export default function Budgets() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="stat-card">
+        <div className="stat-card reveal">
           <p className="text-sm text-gray-500 dark:text-navy-400">Total Budgeted</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatCurrency(data.totalBudgeted)}</p>
+          <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{formatCurrency(data.totalBudgeted)}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-1">
           <p className="text-sm text-gray-500 dark:text-navy-400">Total Spent</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(data.totalSpent)}</p>
+          <p className="text-2xl font-extrabold text-magenta-600 dark:text-magenta-400">{formatCurrency(data.totalSpent)}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-2">
           <p className="text-sm text-gray-500 dark:text-navy-400">Remaining</p>
-          <p className={`text-2xl font-bold ${data.totalRemaining >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className={`text-2xl font-extrabold ${data.totalRemaining >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
             {formatCurrency(data.totalRemaining)}
           </p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-3">
           <p className="text-sm text-gray-500 dark:text-navy-400">Usage</p>
-          <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+          <p className="text-2xl font-extrabold text-primary-600 dark:text-primary-400">
             {data.totalBudgeted > 0 ? Math.round((data.totalSpent / data.totalBudgeted) * 100) : 0}%
           </p>
         </div>
@@ -131,35 +132,40 @@ export default function Budgets() {
         </h2>
         {data.budgets.length === 0 && data.categoriesWithoutBudget.length === 0 && (
           <div className="card p-12 text-center">
-            <div className="text-4xl mb-4">💰</div>
+            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 animate-float">
+              <FiPieChart size={26} />
+            </div>
             <p className="text-gray-400 dark:text-navy-500">No budgets set. Start by creating budgets for your spending categories!</p>
           </div>
         )}
-        {data.budgets.length > 0 && data.budgets.map((b) => (
-          <div key={b._id} className={`card p-5 card-hover ${b.isOverBudget ? 'border-red-300 dark:border-red-800 bg-red-50/30 dark:bg-red-900/10' : ''}`}>
+        {data.budgets.length > 0 && data.budgets.map((b, i) => {
+          const cat = categoryIcon(b.category, expenseCategoryMeta);
+          const CatIcon = cat.icon;
+          return (
+          <div key={b._id} className={`card p-5 card-hover reveal ${b.isOverBudget ? 'border-red-300 dark:border-red-800 bg-red-50/30 dark:bg-red-900/10' : ''}`} style={{ transitionDelay: `${Math.min(i, 5) * 0.06}s` }}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4 flex-1">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${b.isOverBudget ? 'bg-red-100 dark:bg-red-900/30' : 'bg-blue-100 dark:bg-blue-900/30'}`}>
-                  {b.isOverBudget ? '⚠️' : '💰'}
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${b.isOverBudget ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : cat.bg + ' ' + cat.text} transition-transform duration-300 hover:scale-110 hover:rotate-6`}>
+                  <CatIcon size={22} />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <h3 className="font-semibold text-gray-900 dark:text-white">{b.category}</h3>
                     {b.isOverBudget && (
-                      <span className="px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full font-medium">Over Budget!</span>
+                      <span className="px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full font-semibold">Over Budget!</span>
                     )}
                   </div>
                   <div className="flex items-center space-x-3 mt-1">
                     <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(b.spent)}</span>
                     <span className="text-sm text-gray-400 dark:text-navy-500">of</span>
                     <span className="text-sm text-gray-500 dark:text-navy-400">{formatCurrency(b.monthlyLimit)}</span>
-                    <span className={`text-sm font-medium ${b.remaining >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <span className={`text-sm font-medium ${b.remaining >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
                       ({b.remaining >= 0 ? `${formatCurrency(b.remaining)} left` : `${formatCurrency(Math.abs(b.remaining))} over`})
                     </span>
                   </div>
-                  <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2.5 max-w-md">
+                  <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2.5 max-w-md overflow-hidden">
                     <div
-                      className={`h-2.5 rounded-full transition-all ${b.percentUsed >= 100 ? 'bg-red-500' : b.percentUsed >= 80 ? 'bg-yellow-500' : 'bg-primary-600 dark:bg-primary-400'}`}
+                      className={`h-2.5 rounded-full transition-all duration-1000 ${b.percentUsed >= 100 ? 'bg-red-500' : b.percentUsed >= 80 ? 'bg-gradient-to-r from-sun-400 to-sun-500' : 'bg-gradient-to-r from-primary-500 to-magenta-500'}`}
                       style={{ width: `${Math.min(100, b.percentUsed)}%` }}
                     />
                   </div>
@@ -171,7 +177,8 @@ export default function Budgets() {
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {data.categoriesWithoutBudget.length > 0 && (

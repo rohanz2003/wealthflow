@@ -1,3 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <text y=".9em" font-size="90">💰</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="wfg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6554ff"/>
+      <stop offset="1" stop-color="#d9167a"/>
+    </linearGradient>
+  </defs>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="17" fill="url(#wfg)"/>
+  <path d="M17 44 L24 27 L32 16 L40 27 L47 44" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

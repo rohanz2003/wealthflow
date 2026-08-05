@@ -68,6 +68,7 @@ router.post(
     await user.save();
     setTokenCookies(res, accessToken, refreshToken);
     res.status(201).json({
+      token: accessToken,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   })
@@ -109,6 +110,7 @@ router.post(
     await user.save();
     setTokenCookies(res, accessToken, refreshToken);
     res.json({
+      token: accessToken,
       user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   })

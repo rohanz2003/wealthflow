@@ -122,22 +122,22 @@ export default function Settings() {
   const memberFor = joinedDate ? Math.floor((Date.now() - joinedDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
-      <div>
+    <div className="space-y-6 max-w-2xl">
+      <div className="animate-fade-up">
         <h1 className="page-title">Settings</h1>
         <p className="page-subtitle">Manage your account and data</p>
       </div>
 
-      <div className="card p-6">
+      <div className="card p-6 reveal">
         <div className="flex items-start justify-between mb-6">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-700 dark:text-primary-400 text-2xl font-bold">
+            <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center text-white text-2xl font-extrabold shadow-glow">
               {(p.name || '?').charAt(0)}
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">{p.name}</h2>
               <p className="text-sm text-gray-500 dark:text-navy-400">{p.email}</p>
-              <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${p.role === 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-navy-300'}`}>
+              <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${p.role === 'admin' ? 'bg-magenta-100 dark:bg-magenta-900/30 text-magenta-700 dark:text-magenta-400' : 'bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-navy-300'}`}>
                 {p.role}
               </span>
             </div>
@@ -148,19 +148,19 @@ export default function Settings() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-xl transition-transform duration-300 hover:-translate-y-0.5">
             <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiCalendar className="mr-1" size={12} /> Joined</p>
             <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{joinedDate ? joinedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '-'}</p>
           </div>
-          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-xl transition-transform duration-300 hover:-translate-y-0.5">
             <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiClock className="mr-1" size={12} /> Member for</p>
             <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{memberFor > 0 ? `${memberFor} days` : 'Today'}</p>
           </div>
-          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-xl transition-transform duration-300 hover:-translate-y-0.5">
             <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiClock className="mr-1" size={12} /> Last Active</p>
             <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{lastActive ? lastActive.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}</p>
           </div>
-          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-lg">
+          <div className="p-3 bg-gray-50 dark:bg-navy-800 rounded-xl transition-transform duration-300 hover:-translate-y-0.5">
             <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiBriefcase className="mr-1" size={12} /> Occupation</p>
             <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{p.profile?.occupation || '-'}</p>
           </div>
@@ -183,7 +183,7 @@ export default function Settings() {
               <textarea id="profile-bio" rows={2} value={profileForm.bio} onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })} className="input-field" placeholder="Tell us about yourself..." />
             </div>
             {profileError && <p className="text-sm text-red-600 dark:text-red-400 flex items-center"><FiX className="mr-1" size={14} />{profileError}</p>}
-            {profileMsg && <p className="text-sm text-green-600 dark:text-green-400 flex items-center"><FiCheck className="mr-1" size={14} />{profileMsg}</p>}
+            {profileMsg && <p className="text-sm text-mint-600 dark:text-mint-400 flex items-center"><FiCheck className="mr-1" size={14} />{profileMsg}</p>}
             <button type="submit" disabled={profileSaving} className="btn-primary text-sm">
               <FiSave className="mr-1.5" size={14} /> {profileSaving ? 'Saving...' : 'Save Profile'}
             </button>
@@ -191,7 +191,7 @@ export default function Settings() {
         )}
       </div>
 
-      <div className="card p-6">
+      <div className="card p-6 reveal reveal-delay-1">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Change Password</h3>
         <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">Update your account password</p>
         <form onSubmit={handlePasswordChange} className="space-y-4 max-w-md">
@@ -208,14 +208,14 @@ export default function Settings() {
             <input type="password" required id="settings-confirm-password" value={pwForm.confirmPassword} onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })} className="input-field" placeholder="Confirm new password" />
           </div>
           {pwError && <p className="text-sm text-red-600 dark:text-red-400 flex items-center"><FiX className="mr-1" size={14} />{pwError}</p>}
-          {pwMsg && <p className="text-sm text-green-600 dark:text-green-400 flex items-center"><FiCheck className="mr-1" size={14} />{pwMsg}</p>}
+          {pwMsg && <p className="text-sm text-mint-600 dark:text-mint-400 flex items-center"><FiCheck className="mr-1" size={14} />{pwMsg}</p>}
           <button type="submit" disabled={pwLoading} className="btn-primary text-sm">
             {pwLoading ? 'Updating...' : 'Update Password'}
           </button>
         </form>
       </div>
 
-      <div className="card p-6">
+      <div className="card p-6 reveal reveal-delay-2">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Export Your Data</h3>
         <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">Download all your financial data as JSON</p>
         <button onClick={handleExport} disabled={exporting} className="btn-outline text-sm">
@@ -224,7 +224,7 @@ export default function Settings() {
         </button>
       </div>
 
-      <div className="card p-6 border-red-200 dark:border-red-900">
+      <div className="card p-6 border-red-200 dark:border-red-900 reveal reveal-delay-3">
         <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-1 flex items-center">
           <FiAlertTriangle className="mr-2" size={18} /> Delete Account
         </h3>

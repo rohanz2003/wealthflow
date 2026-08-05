@@ -4,6 +4,7 @@ import { formatCurrency } from '../utils/formatCurrency';
 import { FiTrendingUp, FiAlertTriangle, FiStar, FiPieChart, FiBarChart2, FiTarget } from 'react-icons/fi';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { chartPalette, chartAnimation } from '../utils/categoryMeta';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
@@ -30,65 +31,65 @@ export default function Insights() {
   }, []);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" /></div>;
   }
 
   const topCatChart = insights?.topCategories?.length > 0 ? {
     labels: insights.topCategories.map((c) => c.category),
-    datasets: [{ data: insights.topCategories.map((c) => c.amount), backgroundColor: ['#6366f1', '#f59e0b', '#ef4444'], borderWidth: 0 }],
+    datasets: [{ data: insights.topCategories.map((c) => c.amount), backgroundColor: chartPalette, borderWidth: 0 }],
   } : null;
 
   const recIcons = { warning: FiAlertTriangle, alert: FiAlertTriangle, suggestion: FiStar };
-  const recColors = { warning: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800', alert: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800', suggestion: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' };
+  const recColors = { warning: 'text-sun-600 dark:text-sun-400 bg-sun-50 dark:bg-sun-900/20 border-sun-200 dark:border-sun-800', alert: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800', suggestion: 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
+    <div className="space-y-6">
+      <div className="animate-fade-up">
         <h1 className="page-title">Financial Insights</h1>
         <p className="page-subtitle">Understand your spending patterns and financial health</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="stat-card">
+        <div className="stat-card reveal">
           <p className="text-sm text-gray-500 dark:text-navy-400">This Month's Spending</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(insights?.totalSpentThisMonth)}</p>
+          <p className="text-2xl font-extrabold text-magenta-600 dark:text-magenta-400">{formatCurrency(insights?.totalSpentThisMonth)}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-1">
           <p className="text-sm text-gray-500 dark:text-navy-400">Spending Trend</p>
-          <p className={`text-2xl font-bold ${(insights?.spendingTrend || 0) > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+          <p className={`text-2xl font-extrabold ${(insights?.spendingTrend || 0) > 0 ? 'text-red-600 dark:text-red-400' : 'text-mint-600 dark:text-mint-400'}`}>
             {insights?.spendingTrend > 0 ? '+' : ''}{insights?.spendingTrend || 0}%
           </p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">vs 3-month average</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-2">
           <p className="text-sm text-gray-500 dark:text-navy-400">Expense-to-Income</p>
-          <p className={`text-2xl font-bold ${(insights?.expenseRatio || 0) > 80 ? 'text-red-600 dark:text-red-400' : (insights?.expenseRatio || 0) > 60 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
+          <p className={`text-2xl font-extrabold ${(insights?.expenseRatio || 0) > 80 ? 'text-red-600 dark:text-red-400' : (insights?.expenseRatio || 0) > 60 ? 'text-sun-600 dark:text-sun-400' : 'text-mint-600 dark:text-mint-400'}`}>
             {insights?.expenseRatio || 0}%
           </p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-3">
           <p className="text-sm text-gray-500 dark:text-navy-400">Net Worth</p>
-          <p className={`text-2xl font-bold ${(stability?.netWorth || 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className={`text-2xl font-extrabold ${(stability?.netWorth || 0) >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
             {formatCurrency(stability?.netWorth)}
           </p>
         </div>
       </div>
 
       {insights?.anomalies?.length > 0 && (
-        <div className="card p-6 border-red-200 dark:border-red-900">
+        <div className="card p-6 border-red-200 dark:border-red-900 reveal">
           <h3 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-3 flex items-center">
             <FiAlertTriangle className="mr-2" size={20} /> Spending Anomalies Detected
           </h3>
           <div className="space-y-3">
             {insights.anomalies.map((a, i) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900">
+              <div key={i} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-900 transition-transform duration-300 hover:translate-x-1">
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">{a.category}</p>
                   <p className="text-sm text-gray-500 dark:text-navy-400">
                     {formatCurrency(a.currentAmount)} this month vs {formatCurrency(a.averageAmount)} average
                   </p>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${a.severity === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'}`}>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${a.severity === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-sun-100 dark:bg-sun-900/30 text-sun-700 dark:text-sun-400'}`}>
                   +{a.percentIncrease}% {a.severity === 'high' ? 'High' : 'Moderate'}
                 </span>
               </div>
@@ -98,37 +99,37 @@ export default function Insights() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card p-6">
+        <div className="card p-6 reveal">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
             <FiPieChart className="mr-2 text-primary-500" size={18} /> Top Spending Categories
           </h3>
           {topCatChart ? (
-            <div className="flex justify-center"><div className="w-48 h-48"><Doughnut data={topCatChart} options={{ cutout: '65%', responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }} /></div></div>
+            <div className="flex justify-center"><div className="w-48 h-48"><Doughnut data={topCatChart} options={{ cutout: '65%', responsive: true, animation: chartAnimation, plugins: { legend: { position: 'bottom', labels: { color: '#8a86a3' } } } }} /></div></div>
           ) : (
             <p className="text-gray-400 dark:text-navy-500 text-center py-8">No spending data for this month</p>
           )}
         </div>
 
-        <div className="card p-6">
+        <div className="card p-6 reveal reveal-delay-1">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            <FiTarget className="mr-2 text-green-500" size={18} /> Financial Stability
+            <FiTarget className="mr-2 text-mint-500" size={18} /> Financial Stability
           </h3>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-600 dark:text-navy-400">Emergency Fund</span>
-                <span className={`font-semibold ${stability?.emergencyFundAdequate === 'excellent' ? 'text-green-600' : stability?.emergencyFundAdequate === 'adequate' ? 'text-yellow-600' : 'text-red-600'} dark:text-${{ excellent: 'green-400', adequate: 'yellow-400', minimal: 'red-400', none: 'red-400' }[stability?.emergencyFundAdequate || 'none']}`}>
+                <span className={`font-semibold ${stability?.emergencyFundAdequate === 'excellent' ? 'text-mint-600' : stability?.emergencyFundAdequate === 'adequate' ? 'text-sun-600' : 'text-red-600'} dark:text-${{ excellent: 'mint-400', adequate: 'sun-400', minimal: 'red-400', none: 'red-400' }[stability?.emergencyFundAdequate || 'none']}`}>
                   {stability?.emergencyFundMonths || 0} months ({stability?.emergencyFundAdequate})
                 </span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full transition-all" style={{ width: `${Math.min(100, stability?.emergencyFundProgress || 0)}%` }} />
+              <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 overflow-hidden">
+                <div className="bg-gradient-to-r from-mint-500 to-mint-600 h-2 rounded-full transition-all duration-1000 progress-shimmer" style={{ width: `${Math.min(100, stability?.emergencyFundProgress || 0)}%` }} />
               </div>
               <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">{formatCurrency(stability?.emergencyFundTarget)} target (6 months of expenses)</p>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-navy-400">Debt-to-Income</span>
-              <span className={`font-semibold ${stability?.debtBurden === 'low' ? 'text-green-600 dark:text-green-400' : stability?.debtBurden === 'moderate' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+              <span className={`font-semibold ${stability?.debtBurden === 'low' ? 'text-mint-600 dark:text-mint-400' : stability?.debtBurden === 'moderate' ? 'text-sun-600 dark:text-sun-400' : 'text-red-600 dark:text-red-400'}`}>
                 {stability?.debtToIncome || 0}% ({stability?.debtBurden})
               </span>
             </div>
@@ -138,17 +139,17 @@ export default function Insights() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-navy-400">Total Assets</span>
-              <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(stability?.totalAssets)}</span>
+              <span className="font-semibold text-mint-600 dark:text-mint-400">{formatCurrency(stability?.totalAssets)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-navy-400">Income Diversity</span>
-              <span className={`font-semibold ${stability?.incomeDiversityScore === 'high' ? 'text-green-600 dark:text-green-400' : stability?.incomeDiversityScore === 'medium' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+              <span className={`font-semibold ${stability?.incomeDiversityScore === 'high' ? 'text-mint-600 dark:text-mint-400' : stability?.incomeDiversityScore === 'medium' ? 'text-sun-600 dark:text-sun-400' : 'text-red-600 dark:text-red-400'}`}>
                 {stability?.incomeDiversity || 0} sources ({stability?.incomeDiversityScore})
               </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-navy-400">Financial Habits</span>
-              <span className={`font-semibold ${stability?.habitScore === 'strong' ? 'text-green-600 dark:text-green-400' : stability?.habitScore === 'developing' ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+              <span className={`font-semibold ${stability?.habitScore === 'strong' ? 'text-mint-600 dark:text-mint-400' : stability?.habitScore === 'developing' ? 'text-sun-600 dark:text-sun-400' : 'text-red-600 dark:text-red-400'}`}>
                 {stability?.activeHabits || 0} active ({stability?.habitScore})
               </span>
             </div>
@@ -157,9 +158,9 @@ export default function Insights() {
       </div>
 
       {insights?.recommendations?.length > 0 && (
-        <div className="card p-6">
+        <div className="card p-6 reveal">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-            <FiStar className="mr-2 text-yellow-500" size={20} /> Recommendations
+            <FiStar className="mr-2 text-sun-500" size={20} /> Recommendations
           </h3>
           <div className="space-y-3">
             {insights.recommendations.map((r, i) => {

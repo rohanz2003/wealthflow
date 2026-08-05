@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatCurrency } from '../utils/formatCurrency';
-import { FiPlus, FiEdit2, FiTrash2, FiTrendingDown } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiTrendingDown, FiFileText } from 'react-icons/fi';
+import { categoryIcon, debtTypeMeta } from '../utils/categoryMeta';
 
 const DEBT_TYPES = ['Credit Card', 'Student Loan', 'Personal Loan', 'Mortgage', 'Auto Loan', 'Medical', 'Other'];
 
@@ -64,14 +65,14 @@ export default function Debts() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 dark:border-primary-400" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" /></div>;
   }
 
   const paidOffPct = data.totalOriginal > 0 ? Math.round(((data.totalOriginal - data.totalDebt) / data.totalOriginal) * 100) : 0;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between animate-fade-up">
         <div>
           <h1 className="page-title">Debt Tracking</h1>
           <p className="page-subtitle">Track and manage your liabilities</p>
@@ -82,26 +83,26 @@ export default function Debts() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="stat-card">
+        <div className="stat-card reveal">
           <p className="text-sm text-gray-500 dark:text-navy-400">Total Debt</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(data.totalDebt)}</p>
+          <p className="text-2xl font-extrabold text-red-600 dark:text-red-400">{formatCurrency(data.totalDebt)}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-1">
           <p className="text-sm text-gray-500 dark:text-navy-400">Paid Off</p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{paidOffPct}%</p>
+          <p className="text-2xl font-extrabold text-mint-600 dark:text-mint-400">{paidOffPct}%</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-2">
           <p className="text-sm text-gray-500 dark:text-navy-400">Active Debts</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.active}</p>
+          <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{data.active}</p>
         </div>
-        <div className="stat-card">
+        <div className="stat-card reveal reveal-delay-3">
           <p className="text-sm text-gray-500 dark:text-navy-400">Settled</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{data.paidOff}</p>
+          <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{data.paidOff}</p>
         </div>
       </div>
 
-      <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-3 overflow-hidden">
-        <div className="bg-green-500 h-3 rounded-full transition-all" style={{ width: `${paidOffPct}%` }} />
+      <div className="w-full bg-gray-200 dark:bg-navy-700 rounded-full h-3 overflow-hidden reveal">
+        <div className="bg-gradient-to-r from-mint-500 to-mint-600 h-3 rounded-full transition-all duration-1000 progress-shimmer" style={{ width: `${paidOffPct}%` }} />
       </div>
 
       {showForm && (
@@ -127,24 +128,28 @@ export default function Debts() {
       <div className="space-y-3">
         {(data.data || []).length === 0 ? (
           <div className="card p-12 text-center">
-            <div className="text-4xl mb-4">📊</div>
+            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-magenta-100 dark:bg-magenta-900/30 flex items-center justify-center text-magenta-600 dark:text-magenta-400 animate-float">
+              <FiTrendingDown size={26} />
+            </div>
             <p className="text-gray-400 dark:text-navy-500">No debts tracked. Add your first debt to start tracking!</p>
           </div>
         ) : (
-          (data.data || []).map((debt) => {
+          (data.data || []).map((debt, di) => {
             const paidPct = debt.totalAmount > 0 ? Math.round(((debt.totalAmount - debt.remainingAmount) / debt.totalAmount) * 100) : 0;
+            const cat = categoryIcon(debt.type, debtTypeMeta);
+            const DebtIcon = cat.icon;
             return (
-              <div key={debt._id} className={`card p-5 card-hover ${debt.isPaid ? 'border-green-300 dark:border-green-700 bg-green-50/30 dark:bg-green-900/10 opacity-70' : ''}`}>
+              <div key={debt._id} className={`card p-5 card-hover reveal ${debt.isPaid ? 'border-mint-300 dark:border-mint-700 bg-mint-50/30 dark:bg-mint-900/10 opacity-70' : ''}`} style={{ transitionDelay: `${Math.min(di, 5) * 0.06}s` }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4 flex-1">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${debt.isPaid ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
-                      {debt.type === 'Mortgage' ? '🏠' : debt.type === 'Auto Loan' ? '🚗' : debt.type === 'Student Loan' ? '🎓' : debt.type === 'Credit Card' ? '💳' : '📋'}
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110 hover:rotate-6 ${debt.isPaid ? 'bg-mint-100 dark:bg-mint-900/30 text-mint-600 dark:text-mint-400' : cat.bg + ' ' + cat.text}`}>
+                      <DebtIcon size={22} />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <h3 className="font-semibold text-gray-900 dark:text-white">{debt.name}</h3>
                         <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-navy-300 rounded-full">{debt.type}</span>
-                        {debt.isPaid && <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">Paid Off ✓</span>}
+                        {debt.isPaid && <span className="px-2 py-0.5 text-xs bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400 rounded-full">Paid Off ✓</span>}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                         <span className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -160,8 +165,8 @@ export default function Debts() {
                           <span className="text-xs text-gray-400 dark:text-navy-500">Due: {new Date(debt.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         )}
                       </div>
-                      <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 max-w-md">
-                        <div className={`h-2 rounded-full transition-all ${debt.isPaid ? 'bg-green-500' : 'bg-primary-600 dark:bg-primary-400'}`} style={{ width: `${paidPct}%` }} />
+                      <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 max-w-md overflow-hidden">
+                        <div className={`h-2 rounded-full transition-all duration-1000 ${debt.isPaid ? 'bg-gradient-to-r from-mint-500 to-mint-600' : 'bg-gradient-to-r from-primary-500 to-magenta-500'} progress-shimmer`} style={{ width: `${paidPct}%` }} />
                       </div>
                       <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">{paidPct}% paid off</p>
                     </div>
