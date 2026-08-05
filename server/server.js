@@ -10,6 +10,8 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
 
+const mongoose = require('mongoose');
+
 dotenv.config();
 
 const requiredEnv = ['MONGODB_URI', 'JWT_SECRET'];
@@ -30,6 +32,15 @@ if (process.env.NODE_ENV === 'production' && !clientOrigin) {
   logger.warn('CLIENT_URL not set — CORS will allow all origins. Set CLIENT_URL in Render env vars.');
 }
 
+const mongoHost = () => {
+  try {
+    return new URL(process.env.MONGODB_URI.replace('mongodb+srv://', 'https://')).host || process.env.MONGODB_URI.slice(0, 50);
+  } catch {
+    return process.env.MONGODB_URI.slice(0, 50);
+  }
+};
+logger.info(`MONGODB_URI host: ${mongoHost()}`);
+
 app.use(cors({
   origin: (origin, cb) => cb(null, origin || true),
   credentials: true,
@@ -47,14 +58,14 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: mongoose.connection.readyState === 1 ? 'ok' : 'degraded',
+    mongo: ['disconnected', 'connected', 'connecting', 'disconnecting'][mongoose.connection.readyState] || 'unknown',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 connectDB();
-
-if (process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
-  logger.warn('CLIENT_URL not set — CORS may block frontend requests');
-}
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/income', require('./routes/income'));
