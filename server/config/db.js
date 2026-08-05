@@ -9,7 +9,7 @@ const RETRY_DELAY = 5000;
 
 const connectDB = async (retries = 0) => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    const conn = await mongoose.connect(process.env.MONGODB_URI.trim(), {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
@@ -22,8 +22,8 @@ const connectDB = async (retries = 0) => {
       await new Promise((r) => setTimeout(r, RETRY_DELAY));
       return connectDB(retries + 1);
     }
-    logger.error('Failed to connect to MongoDB after retries. Exiting.');
-    process.exit(1);
+    logger.error('MongoDB connection failed. Keeping server alive, retrying every 30s...');
+    setTimeout(() => connectDB(), 30000);
   }
 };
 

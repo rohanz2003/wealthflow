@@ -30,16 +30,8 @@ if (process.env.NODE_ENV === 'production' && !clientOrigin) {
   logger.warn('CLIENT_URL not set — CORS will allow all origins. Set CLIENT_URL in Render env vars.');
 }
 
-const allowedOrigins = clientOrigin ? [clientOrigin, ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:5173', 'http://localhost:3000'] : [])] : [];
 app.use(cors({
-  origin: (origin, cb) => {
-    if (!origin || (allowedOrigins.length > 0 && allowedOrigins.includes(origin))) {
-      return cb(null, origin || true);
-    }
-    if (allowedOrigins.length === 0) return cb(null, origin || true);
-    logger.warn(`CORS blocked: ${origin}`);
-    cb(null, false);
-  },
+  origin: (origin, cb) => cb(null, origin || true),
   credentials: true,
 }));
 app.use(express.json({ limit: '10kb' }));
