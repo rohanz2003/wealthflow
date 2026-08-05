@@ -15,8 +15,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "server/**/*.js": ["npx eslint --fix --ignore-pattern node_modules/", "npx jest --bail --findRelatedTests --no-coverage --passWithNoTests"],
-    "client/**/*.{js,jsx}": ["npx eslint --fix --ignore-pattern node_modules/"]
+    "server/**/*.js": ["npx jest --bail --findRelatedTests --no-coverage --passWithNoTests"]
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

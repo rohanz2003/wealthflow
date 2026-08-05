@@ -1,40 +1,46 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
+const REVEAL_SELECTOR = '.reveal:not(.reveal-visible), .reveal-scale:not(.reveal-visible), .reveal-left:not(.reveal-visible), .reveal-right:not(.reveal-visible)';
+
 export default function RevealObserver() {
   const location = useLocation();
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add('reveal-visible');
-            observer.unobserve(entry.target);
+            io.unobserve(entry.target);
           }
         });
       },
       { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     );
 
-    const elements = document.querySelectorAll(
-      '.reveal:not(.reveal-visible), .reveal-scale:not(.reveal-visible), .reveal-left:not(.reveal-visible), .reveal-right:not(.reveal-visible)'
-    );
-    elements.forEach((el) => observer.observe(el));
+    const observeAll = () => {
+      document.querySelectorAll(REVEAL_SELECTOR).forEach((el) => io.observe(el));
+    };
 
-    const timer = setTimeout(() => {
-      elements.forEach((el) => {
+    observeAll();
+
+    const fallback = setTimeout(() => {
+      document.querySelectorAll(REVEAL_SELECTOR).forEach((el) => {
         const rect = el.getBoundingClientRect();
         if (rect.top < window.innerHeight * 0.9) {
           el.classList.add('reveal-visible');
-          observer.unobserve(el);
         }
       });
-    }, 300);
+    }, 1200);
+
+    const mo = new MutationObserver(observeAll);
+    mo.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      observer.disconnect();
-      clearTimeout(timer);
+      io.disconnect();
+      mo.disconnect();
+      clearTimeout(fallback);
     };
   }, [location.pathname]);
 
