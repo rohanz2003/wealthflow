@@ -140,44 +140,51 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 card p-4 sm:p-6 reveal reveal-delay-1">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3">30-Day Balance Trend</h3>
-          <div className="h-48 sm:h-56">
-            <Line data={lineData} options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: chartAnimation,
-              plugins: { legend: { display: false } },
-              scales: {
-                x: { grid: { display: false }, ticks: { color: '#8a86a3', maxTicksLimit: 7, font: { size: 10 } } },
-                y: { grid: { color: 'rgba(138, 134, 163, 0.18)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#8a86a3', font: { size: 10 } } },
-              },
-            }} />
+        <div className="lg:col-span-2 space-y-6">
+          <div className="card p-4 sm:p-5 reveal reveal-delay-1">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">30-Day Balance Trend</h3>
+              <span className="text-xs text-gray-400 dark:text-navy-500 font-medium">Last 30 days</span>
+            </div>
+            <div className="h-32 sm:h-40">
+              <Line data={lineData} options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: chartAnimation,
+                plugins: { legend: { display: false } },
+                scales: {
+                  x: { grid: { display: false }, ticks: { color: '#8a86a3', maxTicksLimit: 6, font: { size: 10 } } },
+                  y: { grid: { color: 'rgba(138, 134, 163, 0.18)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#8a86a3', font: { size: 10 }, maxTicksLimit: 5 } },
+                },
+              }} />
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-6">
-          <div className="card p-6 reveal reveal-delay-2">
+          <div className="card p-4 sm:p-6 reveal reveal-delay-2">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Expense Breakdown</h3>
             {Object.keys(expenseCategories).length > 0 ? (
-              <div className="flex justify-center">
-                <div className="w-48 h-48">
-                  <Doughnut data={doughnutData} options={{ cutout: '70%', animation: chartAnimation, plugins: { legend: { display: false } } }} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
+                <div className="flex justify-center">
+                  <div className="w-36 h-36 sm:w-40 sm:h-40">
+                    <Doughnut data={doughnutData} options={{ cutout: '72%', animation: chartAnimation, plugins: { legend: { display: false } } }} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {Object.entries(expenseCategories).slice(0, 6).map(([cat, amt]) => (
+                    <div key={cat} className="flex justify-between text-sm">
+                      <span className="text-gray-600 dark:text-navy-400">{cat}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(amt)}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : (
               <p className="text-gray-400 dark:text-navy-500 text-sm text-center py-8">No expenses recorded yet</p>
             )}
-            <div className="mt-4 space-y-2">
-              {Object.entries(expenseCategories).slice(0, 5).map(([cat, amt]) => (
-                <div key={cat} className="flex justify-between text-sm">
-                  <span className="text-gray-600 dark:text-navy-400">{cat}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(amt)}</span>
-                </div>
-              ))}
-            </div>
           </div>
+        </div>
 
+        <div className="space-y-6">
           {stability && (
             <div className="card p-6 reveal reveal-delay-3">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financial Stability</h3>
