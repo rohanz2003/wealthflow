@@ -57,20 +57,13 @@ export default function Navbar() {
                     ? 'bg-primary-50 dark:bg-navy-700 text-primary-700 dark:text-primary-300 shadow-sm scale-[1.02]'
                     : 'text-gray-600 dark:text-navy-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-navy-800 hover:scale-[1.03]'
                 }`}
+                title={l.label}
               >
-                <l.icon className={`mr-1.5 transition-transform duration-300 ${isActive(l.to) ? 'scale-110' : ''}`} size={18} />
-                {l.label}
+                <l.icon className={`mr-0 lg:mr-1.5 transition-transform duration-300 ${isActive(l.to) ? 'scale-110' : ''}`} size={18} />
+                <span className="hidden lg:inline">{l.label}</span>
               </Link>
             ))}
-            <button
-              onClick={toggle}
-              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="ml-1 p-2 rounded-xl text-gray-500 dark:text-navy-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-all duration-300 hover:rotate-12"
-              title={dark ? 'Light mode' : 'Dark mode'}
-            >
-              {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
-            </button>
-            <div className="ml-2 pl-3 border-l border-gray-100 dark:border-navy-700 flex items-center space-x-2">
+            <div className="ml-1 pl-3 border-l border-gray-100 dark:border-navy-700 flex items-center space-x-2">
               <Link to="/settings" className="flex items-center space-x-2 hover:opacity-90 transition-opacity group">
                 <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold shadow-glow">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
@@ -88,6 +81,14 @@ export default function Navbar() {
               >
                 <FiLogOut size={18} />
               </button>
+              <button
+                onClick={toggle}
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-navy-600 bg-white dark:bg-navy-800 text-gray-600 dark:text-sun-300 shadow-sm hover:bg-gray-50 dark:hover:bg-navy-700 hover:scale-110 hover:rotate-12 transition-all duration-300"
+                title={dark ? 'Light mode' : 'Dark mode'}
+              >
+                {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
+              </button>
             </div>
           </div>
 
@@ -97,11 +98,16 @@ export default function Navbar() {
                 {user?.name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
             </Link>
-            <button onClick={toggle} aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'} className="p-2 rounded-lg text-gray-500 dark:text-navy-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors">
-              {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
-            </button>
             <button onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} className="p-2 text-gray-600 dark:text-navy-300">
               {mobileOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+            </button>
+            <button
+              onClick={toggle}
+              aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-navy-600 bg-white dark:bg-navy-800 text-gray-600 dark:text-sun-300 shadow-sm transition-all duration-300"
+              title={dark ? 'Light mode' : 'Dark mode'}
+            >
+              {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
             </button>
           </div>
         </div>

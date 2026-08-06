@@ -1,10 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { FiPlus, FiTrash2, FiCheckCircle, FiClock, FiTarget } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiCheckCircle, FiClock, FiTarget, FiAlertCircle, FiArrowRight, FiZap, FiX } from 'react-icons/fi';
 import { habitTypeMeta } from '../utils/categoryMeta';
 
 const HABIT_TYPES = ['saving', 'budgeting', 'investing', 'tracking', 'learning'];
 const HABIT_FREQUENCIES = ['daily', 'weekly', 'monthly'];
+
+const FREQUENCY_LABELS = { daily: 'Every day', weekly: 'Every week', monthly: 'Every month' };
+const TYPE_LABELS = {
+  saving: 'Saving money',
+  budgeting: 'Budgeting',
+  investing: 'Investing',
+  tracking: 'Tracking spend',
+  learning: 'Financial learning',
+};
+
+const EXAMPLES = [
+  { name: 'Save a little every day', description: 'Put aside a small amount of money daily', type: 'saving', frequency: 'daily' },
+  { name: 'Log every expense', description: 'Record each purchase so you know where money goes', type: 'tracking', frequency: 'daily' },
+  { name: 'No impulse purchases', description: 'Wait 24 hours before any non-essential buy', type: 'budgeting', frequency: 'daily' },
+  { name: 'Review my budget weekly', description: 'Check the budget each week and adjust', type: 'budgeting', frequency: 'weekly' },
+  { name: 'Learn about investing', description: 'Read one article about money each week', type: 'learning', frequency: 'weekly' },
+];
+
+const WEEKDAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+function lastNDays(n) {
+  const days = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    days.push(d);
+  }
+  return days;
+}
 
 export default function HabitTracker() {
   const [habits, setHabits] = useState([]);
@@ -12,53 +42,92 @@ export default function HabitTracker() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', frequency: 'daily', type: 'saving' });
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [completingId, setCompletingId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [toast, setToast] = useState(null);
+  const toastTimer = useRef(null);
 
   useEffect(() => { fetchHabits(); }, []);
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 3200);
+  };
 
   const fetchHabits = async () => {
     try {
       const [habRes, statRes] = await Promise.all([axios.get('/api/habits'), axios.get('/api/habits/stats')]);
       setHabits(habRes.data.data || habRes.data || []);
       setStats(statRes.data);
-    } catch (err) { console.error('Error:', err); } finally { setLoading(false); }
+    } catch (err) {
+      console.error('Error:', err);
+      showToast('Could not load habits. Check your connection.', 'error');
+    } finally { setLoading(false); }
   };
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
+  const createHabit = async (payload, silent = false) => {
+    setCreating(true);
     try {
-      await axios.post('/api/habits', form);
+      await axios.post('/api/habits', payload);
       setForm({ name: '', description: '', frequency: 'daily', type: 'saving' });
       setShowForm(false);
-      fetchHabits();
-    } catch (err) { console.error('Error:', err); }
+      await fetchHabits();
+      if (!silent) showToast('Habit created! Complete it next time it is due.');
+    } catch (err) {
+      console.error('Error:', err);
+      showToast(err.response?.data?.message || 'Could not create the habit.', 'error');
+    } finally { setCreating(false); }
+  };
+
+  const handleCreate = (e) => {
+    e.preventDefault();
+    createHabit(form);
   };
 
   const handleComplete = async (id) => {
-    try { await axios.post(`/api/habits/${id}/complete`); fetchHabits(); } catch (err) { console.error('Error:', err); }
+    setCompletingId(id);
+    try {
+      await axios.post(`/api/habits/${id}/complete`);
+      await fetchHabits();
+      showToast('Nice! Habit completed for today.');
+    } catch (err) {
+      console.error('Error:', err);
+      showToast(err.response?.data?.message || 'Could not complete the habit.', 'error');
+    } finally { setCompletingId(null); }
   };
 
   const handleDelete = async (id) => {
-    try { await axios.delete(`/api/habits/${id}`); fetchHabits(); setDeleteConfirm(null); } catch (err) { console.error('Error:', err); }
+    try {
+      await axios.delete(`/api/habits/${id}`);
+      setDeleteConfirm(null);
+      await fetchHabits();
+      showToast('Habit deleted.');
+    } catch (err) { console.error('Error:', err); }
   };
 
   const toggleActive = async (habit) => {
-    try { await axios.put(`/api/habits/${habit._id}`, { isActive: !habit.isActive }); fetchHabits(); } catch (err) { console.error('Error:', err); }
+    try {
+      await axios.put(`/api/habits/${habit._id}`, { isActive: !habit.isActive });
+      await fetchHabits();
+    } catch (err) { console.error('Error:', err); }
   };
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" /></div>;
   }
 
-  const today = new Date().toDateString();
-  const completedToday = habits.filter((h) => h.history?.some((x) => new Date(x.date).toDateString() === today && x.completed)).length;
+  const todayStr = new Date().toDateString();
+  const completedToday = habits.filter((h) => h.history?.some((x) => new Date(x.date).toDateString() === todayStr && x.completed)).length;
+  const weekDays = lastNDays(7);
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up">
         <div>
           <h1 className="page-title">Financial Habits</h1>
-          <p className="page-subtitle">Build consistent financial behaviors</p>
+          <p className="page-subtitle">Small money actions that you repeat to build a healthy routine</p>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary text-sm w-full sm:w-auto justify-center">
           <FiPlus className="mr-2" size={18} /> New Habit
@@ -70,8 +139,8 @@ export default function HabitTracker() {
           {[
             { label: 'Active Habits', value: stats.active, color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-100 dark:bg-primary-900/30' },
             { label: 'Completed Today', value: completedToday, color: 'text-mint-600 dark:text-mint-400', bg: 'bg-mint-100 dark:bg-mint-900/30' },
-            { label: 'Total Streak', value: stats.totalStreak, color: 'text-sun-600 dark:text-sun-400', bg: 'bg-sun-100 dark:bg-sun-900/30' },
-            { label: 'Avg Completions', value: stats.completionRate, color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
+            { label: 'Longest Streak', value: Math.max(0, ...habits.map((h) => h.longestStreak || 0)), color: 'text-sun-600 dark:text-sun-400', bg: 'bg-sun-100 dark:bg-sun-900/30' },
+            { label: 'All-time Completions', value: habits.reduce((s, h) => s + (h.totalCompletions || 0), 0), color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
           ].map((s, i) => (
             <div key={i} className="stat-card reveal" style={{ transitionDelay: `${i * 0.08}s` }}>
               <div className="flex items-center justify-between mb-2">
@@ -85,38 +154,147 @@ export default function HabitTracker() {
       )}
 
       {showForm && (
-        <div className="card p-4 sm:p-6">
-          <form onSubmit={handleCreate} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-            <input type="text" required placeholder="Habit name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field" />
-            <input type="text" placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" />
-            <select value={form.frequency} onChange={(e) => setForm({ ...form, frequency: e.target.value })} className="select-field">
-              {HABIT_FREQUENCIES.map((f) => <option key={f} value={f}>{f}</option>)}
-            </select>
-            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="select-field">
-              {HABIT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <div className="flex space-x-2 sm:self-end">
-              <button type="submit" className="btn-primary text-sm">Create</button>
-              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary text-sm">Cancel</button>
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-content p-5 sm:p-6 mx-4 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Create a new habit</h3>
+              <button type="button" onClick={() => setShowForm(false)} className="p-2 rounded-xl text-gray-400 dark:text-navy-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors">
+                <FiX size={18} />
+              </button>
             </div>
-          </form>
+
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">What will you do?</label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  placeholder="e.g. Save $5 every day"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">Why it matters <span className="normal-case text-gray-400 dark:text-navy-500">(optional)</span></label>
+                <input
+                  type="text"
+                  placeholder="e.g. Build an emergency fund"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className="input-field"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">How often?</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {HABIT_FREQUENCIES.map((f) => (
+                    <button
+                      type="button"
+                      key={f}
+                      onClick={() => setForm({ ...form, frequency: f })}
+                      className={`py-2 rounded-xl text-sm font-medium border transition-all duration-200 ${
+                        form.frequency === f
+                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 shadow-sm scale-[1.02]'
+                          : 'border-gray-200 dark:border-navy-600 text-gray-500 dark:text-navy-300 hover:border-primary-300 dark:hover:border-primary-500'
+                      }`}
+                    >
+                      {FREQUENCY_LABELS[f]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">What kind of habit?</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {HABIT_TYPES.map((t) => {
+                    const m = habitTypeMeta[t];
+                    const Icon = m.icon;
+                    return (
+                      <button
+                        type="button"
+                        key={t}
+                        onClick={() => setForm({ ...form, type: t })}
+                        className={`flex items-center py-2 px-3 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                          form.type === t
+                            ? 'border-magenta-500 bg-magenta-50 dark:bg-magenta-900/20 text-magenta-700 dark:text-magenta-300 shadow-sm'
+                            : 'border-gray-200 dark:border-navy-600 text-gray-500 dark:text-navy-300 hover:border-magenta-300 dark:hover:border-magenta-500'
+                        }`}
+                      >
+                        <Icon className={`mr-2 ${form.type === t ? m.text : 'text-gray-400 dark:text-navy-500'}`} size={16} />
+                        {TYPE_LABELS[t]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-1">
+                <button type="submit" disabled={creating} className="btn-primary text-sm flex-1 justify-center disabled:opacity-60">
+                  {creating ? (
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                  ) : <FiCheckCircle className="mr-1.5" size={16} />}
+                  {creating ? 'Creating…' : 'Create Habit'}
+                </button>
+                <button type="button" onClick={() => setShowForm(false)} disabled={creating} className="btn-secondary text-sm px-4">Cancel</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
       <div className="space-y-3 sm:space-y-4">
         <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Your Habits</h2>
         {habits.length === 0 ? (
-          <div className="card p-8 sm:p-12 text-center">
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 animate-float">
-              <FiTarget size={26} />
+          <div className="card p-6 sm:p-10 text-center">
+            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center text-white shadow-glow animate-float">
+              <FiTarget size={28} />
             </div>
-            <p className="text-gray-400 dark:text-navy-500">No habits yet. Create your first financial habit!</p>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">Build better money habits</h3>
+            <p className="text-sm text-gray-500 dark:text-navy-400 max-w-md mx-auto mb-1">
+              A financial habit is a small action you repeat on a schedule &mdash; like saving a little every day, logging your spending, or reviewing your budget each week.
+            </p>
+            <div className="flex items-center justify-center flex-wrap gap-1.5 sm:gap-2 text-xs text-gray-500 dark:text-navy-400 my-5">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium">1. Create a habit</span>
+              <FiArrowRight size={14} className="text-gray-400 dark:text-navy-500" />
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400 font-medium">2. Complete it when due</span>
+              <FiArrowRight size={14} className="text-gray-400 dark:text-navy-500" />
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-sun-100 dark:bg-sun-900/30 text-sun-700 dark:text-sun-500 font-medium">3. Build a streak</span>
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-navy-500 mb-3">Or start with one of these</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {EXAMPLES.map((ex) => {
+                const m = habitTypeMeta[ex.type];
+                const Icon = m.icon;
+                return (
+                  <button
+                    key={ex.name}
+                    onClick={() => createHabit(ex, true)}
+                    disabled={creating}
+                    className="inline-flex items-center px-3 py-2 rounded-xl text-xs sm:text-sm font-medium border border-gray-200 dark:border-navy-600 bg-white dark:bg-navy-800 text-gray-600 dark:text-navy-300 hover:border-primary-400 dark:hover:border-primary-500 hover:text-primary-700 dark:hover:text-primary-300 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60"
+                  >
+                    <Icon className={`mr-1.5 ${m.text}`} size={15} />
+                    {ex.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         ) : (
           habits.map((habit, i) => {
-            const doneToday = habit.history?.some((h) => new Date(h.date).toDateString() === today && h.completed);
+            const doneToday = habit.history?.some((h) => new Date(h.date).toDateString() === todayStr && h.completed);
             const meta = habitTypeMeta[habit.type] || habitTypeMeta.tracking;
             const HabitIcon = meta.icon;
+            const days = weekDays.map((d) => ({
+              date: d,
+              done: habit.history?.some((h) => new Date(h.date).toDateString() === d.toDateString() && h.completed),
+              isToday: d.toDateString() === todayStr,
+            }));
+            const doneIn7 = days.filter((d) => d.done).length;
             return (
               <div key={habit._id} className={`card p-4 sm:p-5 card-hover reveal ${!habit.isActive ? 'opacity-60' : ''}`} style={{ transitionDelay: `${Math.min(i, 5) * 0.06}s` }}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -133,11 +311,11 @@ export default function HabitTracker() {
                       </div>
                       {habit.description && <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate">{habit.description}</p>}
                       <div className="flex items-center space-x-2 mt-1 flex-wrap gap-y-1">
-                        <span className="text-xs text-gray-400 dark:text-navy-500 capitalize">{habit.frequency}</span>
+                        <span className="text-xs text-gray-400 dark:text-navy-500">{FREQUENCY_LABELS[habit.frequency] || habit.frequency}</span>
                         <span className="text-xs text-gray-400 dark:text-navy-500">&middot;</span>
-                        <span className="text-xs text-gray-400 dark:text-navy-500 capitalize">{habit.type}</span>
+                        <span className="text-xs text-gray-400 dark:text-navy-500">{TYPE_LABELS[habit.type] || habit.type}</span>
                         <span className="text-xs text-gray-400 dark:text-navy-500">&middot;</span>
-                        <span className="text-xs font-medium text-sun-600 dark:text-sun-400">{habit.streak} day{habit.streak !== 1 ? 's' : ''}</span>
+                        <span className="text-xs font-medium text-sun-600 dark:text-sun-400">{habit.streak} day{habit.streak !== 1 ? 's' : ''} streak</span>
                         {habit.longestStreak > 0 && (
                           <><span className="text-xs text-gray-400 dark:text-navy-500">&middot;</span><span className="text-xs text-gray-500 dark:text-navy-400">Best: {habit.longestStreak}</span></>
                         )}
@@ -146,30 +324,54 @@ export default function HabitTracker() {
                   </div>
                   <div className="flex items-center space-x-2 self-end sm:self-center">
                     {habit.isActive && !doneToday && (
-                      <button onClick={() => handleComplete(habit._id)} className="btn-primary text-xs sm:text-sm px-3 py-1.5">
-                        <FiCheckCircle className="mr-1.5" size={14} /> Complete
+                      <button
+                        onClick={() => handleComplete(habit._id)}
+                        disabled={completingId === habit._id}
+                        className="btn-primary text-xs sm:text-sm px-3 py-1.5 disabled:opacity-60"
+                      >
+                        {completingId === habit._id ? (
+                          <span className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent align-middle mr-1.5" />
+                        ) : (
+                          <FiCheckCircle className="mr-1.5" size={14} />
+                        )}
+                        {completingId === habit._id ? 'Saving…' : 'Complete today'}
                       </button>
                     )}
                     {doneToday && (
                       <span className="inline-flex items-center px-3 py-1.5 bg-mint-100 dark:bg-mint-900/20 text-mint-700 dark:text-mint-400 rounded-xl text-xs sm:text-sm font-medium">
-                        <FiCheckCircle className="mr-1.5" size={14} /> Done
+                        <FiCheckCircle className="mr-1.5" size={14} /> Done today
                       </span>
                     )}
-                    <button onClick={() => toggleActive(habit)} aria-label={habit.isActive ? 'Pause' : 'Resume'} className="btn-ghost p-1.5">
+                    <button onClick={() => toggleActive(habit)} aria-label={habit.isActive ? 'Pause' : 'Resume'} className="btn-ghost p-1.5" title={habit.isActive ? 'Pause this habit' : 'Resume this habit'}>
                       <FiClock size={15} />
                     </button>
-                    <button onClick={() => setDeleteConfirm(habit._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400"><FiTrash2 size={15} /></button>
+                    <button onClick={() => setDeleteConfirm(habit._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400" title="Delete"><FiTrash2 size={15} /></button>
                   </div>
                 </div>
-                {habit.history?.length > 0 && (
-                  <div className="mt-3 flex items-center space-x-1 flex-wrap gap-1">
-                    {habit.history.slice(-14).map((h, i) => (
-                      <div key={i} className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-[10px] sm:text-xs flex items-center justify-center font-medium transition-transform duration-300 hover:scale-110 ${h.completed ? 'bg-gradient-to-br from-mint-500 to-mint-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-navy-700 text-gray-400 dark:text-navy-500'}`} title={new Date(h.date).toLocaleDateString()}>
-                        {new Date(h.date).getDate()}
+                <div className="mt-3 sm:mt-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] sm:text-xs text-gray-400 dark:text-navy-500">{doneIn7} of the last 7 days</span>
+                    <span className="text-[11px] sm:text-xs text-primary-500 dark:text-primary-400 font-medium flex items-center"><FiZap size={11} className="mr-1" /> Completed {habit.streak} in a row</span>
+                  </div>
+                  <div className="flex items-center space-x-1 flex-wrap gap-1">
+                    {days.map((d) => (
+                      <div
+                        key={d.date.toDateString()}
+                        title={`${d.date.toLocaleDateString()} — ${d.done ? 'Completed' : d.isToday ? 'Not completed yet today' : 'Not completed'}`}
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex flex-col items-center justify-center text-[10px] font-bold transition-transform duration-300 hover:scale-110 ${
+                          d.done
+                            ? 'bg-gradient-to-br from-mint-500 to-mint-600 text-white shadow-sm'
+                            : d.isToday
+                              ? 'bg-primary-100 dark:bg-navy-700 text-primary-600 dark:text-primary-300 ring-2 ring-primary-300 dark:ring-primary-600'
+                              : 'bg-gray-100 dark:bg-navy-700 text-gray-400 dark:text-navy-500'
+                        }`}
+                      >
+                        {WEEKDAY_INITIALS[d.date.getDay()]}
+                        <span className="text-[8px] opacity-80">{d.date.getDate()}</span>
                       </div>
                     ))}
                   </div>
-                )}
+                </div>
               </div>
             );
           })
@@ -186,6 +388,13 @@ export default function HabitTracker() {
               <button onClick={() => setDeleteConfirm(null)} className="btn-secondary text-sm flex-1 justify-center">Cancel</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className={`fixed bottom-6 right-6 z-[100] px-4 py-3 rounded-xl shadow-elevated text-sm font-medium animate-pop-in flex items-center space-x-2 ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-mint-600 text-white'}`}>
+          {toast.type === 'error' ? <FiAlertCircle size={16} /> : <FiCheckCircle size={16} />}
+          <span>{toast.msg}</span>
         </div>
       )}
     </div>

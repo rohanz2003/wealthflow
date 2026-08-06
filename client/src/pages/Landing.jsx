@@ -64,19 +64,29 @@ export default function Landing() {
               <a href="#features" className="text-sm text-gray-600 dark:text-navy-300 hover:text-primary-600 dark:hover:text-primary-300 transition-all duration-200 hover:-translate-y-0.5">Features</a>
               <a href="#how" className="text-sm text-gray-600 dark:text-navy-300 hover:text-primary-600 dark:hover:text-primary-300 transition-all duration-200 hover:-translate-y-0.5">How it works</a>
               <a href="#stats" className="text-sm text-gray-600 dark:text-navy-300 hover:text-primary-600 dark:hover:text-primary-300 transition-all duration-200 hover:-translate-y-0.5">Stats</a>
-              <button onClick={toggle} className="p-2 rounded-xl text-gray-500 dark:text-navy-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-all duration-300 hover:rotate-12">
-                {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
-              </button>
               <Link to="/login" className="text-sm font-medium text-gray-700 dark:text-navy-200 hover:text-primary-600 dark:hover:text-primary-300 transition-colors">Sign in</Link>
               <Link to="/register" className="btn-primary text-sm">Get Started Free</Link>
+              <button
+                onClick={toggle}
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-navy-600 bg-white dark:bg-navy-800 text-gray-600 dark:text-sun-300 shadow-sm hover:bg-gray-50 dark:hover:bg-navy-700 hover:scale-110 hover:rotate-12 transition-all duration-300"
+                title={dark ? 'Light mode' : 'Dark mode'}
+              >
+                {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
+              </button>
             </div>
 
             <div className="flex items-center space-x-2 md:hidden">
-              <button onClick={toggle} className="p-2 rounded-lg text-gray-500 dark:text-navy-300 hover:bg-gray-100 dark:hover:bg-navy-800">
-                {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
-              </button>
               <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-gray-600 dark:text-navy-300">
                 {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+              </button>
+              <button
+                onClick={toggle}
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-navy-600 bg-white dark:bg-navy-800 text-gray-600 dark:text-sun-300 shadow-sm transition-all duration-300"
+                title={dark ? 'Light mode' : 'Dark mode'}
+              >
+                {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
               </button>
             </div>
           </div>
