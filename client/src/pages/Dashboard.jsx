@@ -165,12 +165,12 @@ export default function Dashboard() {
             {Object.keys(expenseCategories).length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
                 <div className="flex justify-center">
-                  <div className="w-36 h-36 sm:w-40 sm:h-40">
+                  <div className="w-52 h-52 sm:w-64 sm:h-64">
                     <Doughnut data={doughnutData} options={{ cutout: '72%', animation: chartAnimation, plugins: { legend: { display: false } } }} />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {Object.entries(expenseCategories).slice(0, 6).map(([cat, amt]) => (
+                  {Object.entries(expenseCategories).slice(0, 8).map(([cat, amt]) => (
                     <div key={cat} className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-navy-400">{cat}</span>
                       <span className="font-medium text-gray-900 dark:text-white">{formatCurrency(amt)}</span>

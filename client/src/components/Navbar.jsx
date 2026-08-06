@@ -1,8 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { FiHome, FiDollarSign, FiCheckCircle, FiTarget, FiTrendingUp, FiLogOut, FiMenu, FiX, FiShield, FiMoon, FiSun, FiSettings, FiPieChart, FiBarChart2, FiTrendingDown, FiGrid, FiChevronDown } from 'react-icons/fi';
-import { useState, useEffect, useRef } from 'react';
+import { FiHome, FiDollarSign, FiCheckCircle, FiTarget, FiTrendingUp, FiLogOut, FiMenu, FiX, FiShield, FiMoon, FiSun, FiSettings, FiPieChart, FiBarChart2, FiTrendingDown } from 'react-icons/fi';
+import { useState } from 'react';
 import Logo from './Logo';
 
 export default function Navbar() {
@@ -11,16 +11,6 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   const links = [
     { to: '/dashboard', label: 'Dashboard', icon: FiHome },
@@ -36,10 +26,6 @@ export default function Navbar() {
   if (user?.role === 'admin') {
     links.push({ to: '/admin', label: 'Admin', icon: FiShield });
   }
-
-  const mainLinks = links.slice(0, 5);
-  const allTabs = [...links, { to: '/settings', label: 'Settings', icon: FiSettings }];
-  const isMoreActive = allTabs.slice(5).some((t) => location.pathname === t.to);
 
   const handleLogout = () => {
     logout();
@@ -62,7 +48,7 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center space-x-0.5">
-            {mainLinks.map((l) => (
+            {links.map((l) => (
               <Link
                 key={l.to}
                 to={l.to}
@@ -77,43 +63,6 @@ export default function Navbar() {
                 <span className="hidden lg:inline">{l.label}</span>
               </Link>
             ))}
-            <div className="relative" ref={moreRef}>
-              <button
-                onClick={() => setMoreOpen(!moreOpen)}
-                className={`flex items-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                  isMoreActive
-                    ? 'bg-primary-50 dark:bg-navy-700 text-primary-700 dark:text-primary-300 shadow-sm'
-                    : 'text-gray-600 dark:text-navy-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-navy-800'
-                }`}
-                title="All tabs"
-              >
-                <FiGrid className="mr-0 lg:mr-1.5" size={18} />
-                <span className="hidden lg:inline">More</span>
-                <FiChevronDown size={14} className={`ml-1 transition-transform duration-300 ${moreOpen ? 'rotate-180' : ''}`} />
-              </button>
-              {moreOpen && (
-                <div className="absolute right-0 top-full mt-2 w-60 card p-2 shadow-elevated animate-fade-down origin-top">
-                  <div className="grid grid-cols-1 gap-0.5">
-                    {allTabs.map((t) => (
-                      <Link
-                        key={t.to}
-                        to={t.to}
-                        onClick={() => setMoreOpen(false)}
-                        className={`flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                          isActive(t.to)
-                            ? 'bg-primary-50 dark:bg-navy-700 text-primary-700 dark:text-primary-300'
-                            : 'text-gray-600 dark:text-navy-300 hover:bg-gray-50 dark:hover:bg-navy-800 hover:translate-x-0.5'
-                        }`}
-                      >
-                        <t.icon className="mr-3" size={17} />
-                        {t.label}
-                        {isActive(t.to) && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary-500" />}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
             <div className="ml-1 pl-3 border-l border-gray-100 dark:border-navy-700 flex items-center space-x-2">
               <Link to="/settings" className="flex items-center space-x-2 hover:opacity-90 transition-opacity group">
                 <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold shadow-glow">
