@@ -34,7 +34,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const strength = useMemo(() => getStrength(form.password), [form.password]);
-  const allMet = requirements.every((r) => r.test(form.password));
   const passwordsMatch = form.password === form.confirmPassword;
 
   const handleSubmit = async (e) => {
@@ -44,8 +43,9 @@ export default function Register() {
       setError('Passwords do not match');
       return;
     }
-    if (form.password.length < 8) {
-      setError('Password must be at least 8 characters');
+    const failed = requirements.find((r) => !r.test(form.password));
+    if (failed) {
+      setError(`Password must contain ${failed.label.toLowerCase()}`);
       return;
     }
     setLoading(true);

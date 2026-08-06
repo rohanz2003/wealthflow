@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const auth = require('../middleware/auth');
 const Debt = require('../models/Debt');
+const cache = require('../utils/cache');
 
 const router = express.Router();
 
@@ -40,6 +41,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
       const debt = await Debt.create({ user: req.userId, ...req.body });
+      cache.invalidateUserCache(req.userId);
       res.status(201).json(debt);
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -52,24 +54,41 @@ const ALLOWED_DEBT_FIELDS = ['name', 'type', 'totalAmount', 'remainingAmount', '
 router.put('/:id', auth, async (req, res) => {
   try {
     const { totalAmount, remainingAmount, interestRate, minimumPayment } = req.body;
-    if (totalAmount !== undefined && (typeof totalAmount !== 'number' || totalAmount <= 0)) {
-      return res.status(400).json({ message: 'Total amount must be a positive number' });
+    if (totalAmount !== undefined) {
+      const num = Number(totalAmount);
+      if ((typeof totalAmount !== 'number' && typeof totalAmount !== 'string') || !Number.isFinite(num) || num <= 0) {
+        return res.status(400).json({ message: 'Total amount must be a positive number' });
+      }
+      req.body.totalAmount = num;
     }
-    if (remainingAmount !== undefined && (typeof remainingAmount !== 'number' || remainingAmount < 0)) {
-      return res.status(400).json({ message: 'Remaining amount must be a non-negative number' });
+    if (remainingAmount !== undefined) {
+      const num = Number(remainingAmount);
+      if ((typeof remainingAmount !== 'number' && typeof remainingAmount !== 'string') || !Number.isFinite(num) || num < 0) {
+        return res.status(400).json({ message: 'Remaining amount must be a non-negative number' });
+      }
+      req.body.remainingAmount = num;
     }
-    if (interestRate !== undefined && typeof interestRate !== 'number') {
-      return res.status(400).json({ message: 'Interest rate must be a number' });
+    if (interestRate !== undefined) {
+      const num = Number(interestRate);
+      if ((typeof interestRate !== 'number' && typeof interestRate !== 'string') || !Number.isFinite(num)) {
+        return res.status(400).json({ message: 'Interest rate must be a number' });
+      }
+      req.body.interestRate = num;
     }
-    if (minimumPayment !== undefined && (typeof minimumPayment !== 'number' || minimumPayment < 0)) {
-      return res.status(400).json({ message: 'Minimum payment must be a non-negative number' });
+    if (minimumPayment !== undefined) {
+      const num = Number(minimumPayment);
+      if ((typeof minimumPayment !== 'number' && typeof minimumPayment !== 'string') || !Number.isFinite(num) || num < 0) {
+        return res.status(400).json({ message: 'Minimum payment must be a non-negative number' });
+      }
+      req.body.minimumPayment = num;
     }
     const debt = await Debt.findOne({ _id: req.params.id, user: req.userId });
     if (!debt) return res.status(404).json({ message: 'Debt not found' });
     ALLOWED_DEBT_FIELDS.forEach((f) => {
-      if (req.body[f] !== undefined) debt[f] = req.body[f];
+      if (req.body[f] !== undefined && req.body[f] !== '') debt[f] = req.body[f];
     });
     await debt.save();
+    cache.invalidateUserCache(req.userId);
     res.json(debt);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -80,6 +99,7 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const debt = await Debt.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!debt) return res.status(404).json({ message: 'Debt not found' });
+    cache.invalidateUserCache(req.userId);
     res.json({ message: 'Debt deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -2,6 +2,8 @@ import {
   FiTruck, FiHome, FiZap, FiFilm, FiShoppingBag, FiHeart, FiBookOpen,
   FiShield, FiShoppingCart, FiCoffee, FiMoreHorizontal, FiGlobe, FiSun, FiTrendingUp,
   FiCreditCard, FiTarget, FiUser, FiFileText, FiDollarSign, FiBarChart2, FiCheckSquare, FiTag,
+  FiSend, FiNavigation, FiRepeat, FiActivity, FiSmile, FiGift, FiDroplet, FiBriefcase,
+  FiPenTool, FiLayers, FiAward, FiPercent, FiCornerUpLeft, FiAlertTriangle, FiTool, FiMonitor,
 } from 'react-icons/fi';
 
 const COLORS = {
@@ -25,7 +27,9 @@ export const expenseCategoryMeta = {
   Food: meta(FiShoppingBag, 'magenta'),
   Dining: meta(FiCoffee, 'sun'),
   Groceries: meta(FiShoppingCart, 'mint'),
+  'Food Delivery': meta(FiSend, 'orange'),
   Transport: meta(FiTruck, 'blue'),
+  Fuel: meta(FiZap, 'sun'),
   Rent: meta(FiHome, 'violet'),
   Utilities: meta(FiZap, 'sun'),
   Entertainment: meta(FiFilm, 'purple'),
@@ -33,17 +37,43 @@ export const expenseCategoryMeta = {
   Healthcare: meta(FiHeart, 'red'),
   Education: meta(FiBookOpen, 'orange'),
   Insurance: meta(FiShield, 'mint'),
+  Travel: meta(FiNavigation, 'cyan'),
+  Subscriptions: meta(FiRepeat, 'violet'),
+  Fitness: meta(FiActivity, 'mint'),
+  Pets: meta(FiSmile, 'red'),
+  Gifts: meta(FiGift, 'magenta'),
+  'Personal Care': meta(FiDroplet, 'cyan'),
+  Other: meta(FiMoreHorizontal, 'gray'),
+};
+
+export const incomeCategoryMeta = {
+  Salary: meta(FiBriefcase, 'violet'),
+  Freelance: meta(FiPenTool, 'blue'),
+  Investment: meta(FiTrendingUp, 'magenta'),
+  Business: meta(FiLayers, 'sun'),
+  Rental: meta(FiHome, 'cyan'),
+  Gift: meta(FiGift, 'magenta'),
+  Bonus: meta(FiAward, 'sun'),
+  Dividends: meta(FiBarChart2, 'mint'),
+  Interest: meta(FiPercent, 'blue'),
+  Refund: meta(FiCornerUpLeft, 'mint'),
+  'Side Hustle': meta(FiZap, 'orange'),
   Other: meta(FiMoreHorizontal, 'gray'),
 };
 
 export const goalCategoryMeta = {
   'Emergency Fund': meta(FiShield, 'mint'),
   Vacation: meta(FiGlobe, 'cyan'),
+  Travel: meta(FiNavigation, 'blue'),
   Education: meta(FiBookOpen, 'orange'),
   Home: meta(FiHome, 'violet'),
+  Renovation: meta(FiTool, 'orange'),
   Vehicle: meta(FiTruck, 'blue'),
+  Wedding: meta(FiHeart, 'magenta'),
+  Business: meta(FiBriefcase, 'violet'),
   Retirement: meta(FiSun, 'sun'),
   Investment: meta(FiTrendingUp, 'magenta'),
+  Gadgets: meta(FiMonitor, 'cyan'),
   'Debt Payment': meta(FiCreditCard, 'red'),
   Other: meta(FiTarget, 'gray'),
 };
@@ -63,6 +93,8 @@ export const debtTypeMeta = {
   Mortgage: meta(FiHome, 'violet'),
   'Auto Loan': meta(FiTruck, 'cyan'),
   Medical: meta(FiHeart, 'red'),
+  'Business Loan': meta(FiBriefcase, 'violet'),
+  'Payday Loan': meta(FiAlertTriangle, 'red'),
   Other: meta(FiFileText, 'gray'),
 };
 

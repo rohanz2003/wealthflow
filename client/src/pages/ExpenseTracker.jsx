@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatCurrency } from '../utils/formatCurrency';
 import { FiPlus, FiEdit2, FiTrash2, FiFilter, FiSearch, FiX, FiArrowUpCircle, FiArrowDownCircle } from 'react-icons/fi';
-import { categoryIcon, expenseCategoryMeta } from '../utils/categoryMeta';
+import { categoryIcon, expenseCategoryMeta, incomeCategoryMeta } from '../utils/categoryMeta';
+import Select from '../components/Select';
 
-const CATEGORIES = ['Food', 'Transport', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Groceries', 'Dining', 'Other'];
+const CATEGORIES = ['Food', 'Groceries', 'Dining', 'Food Delivery', 'Transport', 'Fuel', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Travel', 'Subscriptions', 'Fitness', 'Pets', 'Gifts', 'Personal Care', 'Other'];
+const INCOME_CATEGORIES = ['Salary', 'Freelance', 'Investment', 'Business', 'Rental', 'Gift', 'Bonus', 'Dividends', 'Interest', 'Refund', 'Side Hustle', 'Other'];
 
 export default function ExpenseTracker() {
   const [expenses, setExpenses] = useState([]);
@@ -36,13 +38,20 @@ export default function ExpenseTracker() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const amount = Number(form.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      console.error('Invalid amount');
+      return;
+    }
     try {
       if (activeTab === 'expenses') {
-        if (editing) await axios.put(`/api/expenses/${editing}`, form);
-        else await axios.post('/api/expenses', form);
+        const payload = { title: form.title, amount, category: form.category, date: form.date, description: form.description };
+        if (editing) await axios.put(`/api/expenses/${editing}`, payload);
+        else await axios.post('/api/expenses', payload);
       } else {
-        if (editing) await axios.put(`/api/income/${editing}`, { source: form.source, amount: form.amount, category: form.category, date: form.date, description: form.description });
-        else await axios.post('/api/income', { source: form.source, amount: form.amount, category: form.category, date: form.date, description: form.description });
+        const payload = { source: form.source, amount, category: form.category, date: form.date, description: form.description };
+        if (editing) await axios.put(`/api/income/${editing}`, payload);
+        else await axios.post('/api/income', payload);
       }
       resetForm();
       fetchData();
@@ -141,9 +150,13 @@ export default function ExpenseTracker() {
                 : <input type="text" required placeholder="Income source" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} className="input-field" />
               }
               <input type="number" required min="0" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input-field" />
-              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="select-field">
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <Select
+                value={form.category}
+                onChange={(v) => setForm({ ...form, category: v })}
+                options={activeTab === 'expenses' ? CATEGORIES : INCOME_CATEGORIES}
+                iconMap={activeTab === 'expenses' ? expenseCategoryMeta : incomeCategoryMeta}
+                placeholder="Category"
+              />
               <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input-field" />
               <input type="text" placeholder="Description (optional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" />
               <div className="flex space-x-2 sm:self-end">
@@ -161,10 +174,14 @@ export default function ExpenseTracker() {
           </div>
           <div className="flex items-center space-x-2">
             <FiFilter className="text-gray-400 dark:text-navy-500 shrink-0" size={16} />
-            <select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="select-field text-sm py-2">
-              <option value="">All Categories</option>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
+            <Select
+              value={filterCat}
+              onChange={setFilterCat}
+              options={['', ...(activeTab === 'expenses' ? CATEGORIES : INCOME_CATEGORIES)]}
+              iconMap={activeTab === 'expenses' ? expenseCategoryMeta : incomeCategoryMeta}
+              placeholder="All Categories"
+              className="w-44 sm:w-52"
+            />
           </div>
         </div>
 

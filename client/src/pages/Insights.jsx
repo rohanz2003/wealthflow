@@ -41,6 +41,7 @@ export default function Insights() {
 
   const recIcons = { warning: FiAlertTriangle, alert: FiAlertTriangle, suggestion: FiStar };
   const recColors = { warning: 'text-sun-600 dark:text-sun-400 bg-sun-50 dark:bg-sun-900/20 border-sun-200 dark:border-sun-800', alert: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800', suggestion: 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800' };
+  const fundColor = { excellent: 'text-mint-600 dark:text-mint-400', adequate: 'text-sun-600 dark:text-sun-400', minimal: 'text-red-600 dark:text-red-400', none: 'text-red-600 dark:text-red-400' }[stability?.emergencyFundAdequate || 'none'] || 'text-red-600 dark:text-red-400';
 
   return (
     <div className="space-y-6">
@@ -118,7 +119,7 @@ export default function Insights() {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-600 dark:text-navy-400">Emergency Fund</span>
-                <span className={`font-semibold ${stability?.emergencyFundAdequate === 'excellent' ? 'text-mint-600' : stability?.emergencyFundAdequate === 'adequate' ? 'text-sun-600' : 'text-red-600'} dark:text-${{ excellent: 'mint-400', adequate: 'sun-400', minimal: 'red-400', none: 'red-400' }[stability?.emergencyFundAdequate || 'none']}`}>
+                <span className={`font-semibold ${fundColor}`}>
                   {stability?.emergencyFundMonths || 0} months ({stability?.emergencyFundAdequate})
                 </span>
               </div>

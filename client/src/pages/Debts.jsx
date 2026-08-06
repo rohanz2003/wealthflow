@@ -3,8 +3,9 @@ import axios from 'axios';
 import { formatCurrency } from '../utils/formatCurrency';
 import { FiPlus, FiEdit2, FiTrash2, FiTrendingDown, FiFileText } from 'react-icons/fi';
 import { categoryIcon, debtTypeMeta } from '../utils/categoryMeta';
+import Select from '../components/Select';
 
-const DEBT_TYPES = ['Credit Card', 'Student Loan', 'Personal Loan', 'Mortgage', 'Auto Loan', 'Medical', 'Other'];
+const DEBT_TYPES = ['Credit Card', 'Student Loan', 'Personal Loan', 'Mortgage', 'Auto Loan', 'Medical', 'Business Loan', 'Payday Loan', 'Other'];
 
 export default function Debts() {
   const [data, setData] = useState({ debts: [], totalDebt: 0, totalOriginal: 0, paidOff: 0, active: 0 });
@@ -30,12 +31,14 @@ export default function Debts() {
     e.preventDefault();
     try {
       const payload = {
-        ...form,
+        name: form.name,
+        type: form.type,
         totalAmount: Number(form.totalAmount),
         remainingAmount: Number(form.remainingAmount),
         interestRate: Number(form.interestRate) || 0,
         minimumPayment: Number(form.minimumPayment) || 0,
       };
+      if (form.dueDate) payload.dueDate = form.dueDate;
       if (editing) {
         await axios.put(`/api/debts/${editing}`, payload);
       } else {
@@ -109,9 +112,13 @@ export default function Debts() {
         <div className="card p-6">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <input type="text" required placeholder="Debt name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-field" />
-            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="select-field">
-              {DEBT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
+            <Select
+              value={form.type}
+              onChange={(v) => setForm({ ...form, type: v })}
+              options={DEBT_TYPES}
+              iconMap={debtTypeMeta}
+              placeholder="Debt type"
+            />
             <input type="number" required min="1" placeholder="Total amount $" value={form.totalAmount} onChange={(e) => setForm({ ...form, totalAmount: e.target.value })} className="input-field" />
             <input type="number" required min="0" placeholder="Remaining $" value={form.remainingAmount} onChange={(e) => setForm({ ...form, remainingAmount: e.target.value })} className="input-field" />
             <input type="number" min="0" step="0.01" placeholder="Interest rate %" value={form.interestRate} onChange={(e) => setForm({ ...form, interestRate: e.target.value })} className="input-field" />

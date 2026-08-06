@@ -2,6 +2,8 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Habit = require('../models/Habit');
 const auth = require('../middleware/auth');
+const cache = require('../utils/cache');
+const { HABIT_TYPES, HABIT_FREQUENCIES } = require('../../shared/constants');
 
 const router = express.Router();
 
@@ -26,6 +28,8 @@ router.post(
   auth,
   [
     body('name').trim().notEmpty().withMessage('Habit name is required'),
+    body('type').optional().isIn(HABIT_TYPES).withMessage('Invalid habit type'),
+    body('frequency').optional().isIn(HABIT_FREQUENCIES).withMessage('Invalid habit frequency'),
   ],
   async (req, res) => {
     try {
@@ -34,6 +38,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
       const habit = await Habit.create({ ...req.body, user: req.userId });
+      cache.invalidateUserCache(req.userId);
       res.status(201).json(habit);
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -51,6 +56,7 @@ router.put('/:id', auth, async (req, res) => {
       if (req.body[f] !== undefined) habit[f] = req.body[f];
     });
     await habit.save();
+    cache.invalidateUserCache(req.userId);
     res.json(habit);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -61,6 +67,7 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const habit = await Habit.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!habit) return res.status(404).json({ message: 'Habit not found' });
+    cache.invalidateUserCache(req.userId);
     res.json({ message: 'Habit deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -110,6 +117,7 @@ router.post('/:id/complete', auth, async (req, res) => {
     }
 
     await habit.save();
+    cache.invalidateUserCache(req.userId);
     res.json(habit);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -135,8 +135,8 @@ export default function Login() {
 
           <div className="mt-6 p-4 bg-gray-50 dark:bg-navy-800 rounded-xl border border-gray-100 dark:border-navy-700">
             <p className="text-xs text-gray-500 dark:text-navy-400 font-semibold mb-2">Demo Credentials:</p>
-            <p className="text-xs text-gray-400 dark:text-navy-500">Admin: admin@wealthflow.com / admin123</p>
-            <p className="text-xs text-gray-400 dark:text-navy-500">User: user@wealthflow.com / user123</p>
+            <p className="text-xs text-gray-400 dark:text-navy-500">Admin: admin@wealthflow.com / Admin@123</p>
+            <p className="text-xs text-gray-400 dark:text-navy-500">User: ravi@wealthflow.com / User@123</p>
           </div>
         </div>
       </div>

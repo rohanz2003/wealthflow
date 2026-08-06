@@ -16,6 +16,13 @@ export default function WealthAnalytics() {
   const [incomes, setIncomes] = useState([]);
   const [totalSavings, setTotalSavings] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,8 +91,6 @@ export default function WealthAnalytics() {
       { label: 'Net Savings', data: monthlySavingsData, borderColor: '#6554ff', backgroundColor: 'rgba(101, 84, 255, 0.1)', fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5 },
     ],
   };
-
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
   const monthlyChartOpts = {
     responsive: true,

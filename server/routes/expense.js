@@ -2,8 +2,11 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Expense = require('../models/Expense');
 const auth = require('../middleware/auth');
+const cache = require('../utils/cache');
 
 const router = express.Router();
+
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -24,7 +27,7 @@ router.get('/', auth, async (req, res) => {
       filter.date = dateFilter;
     }
     if (category) filter.category = category;
-    if (search) filter.title = { $regex: search, $options: 'i' };
+    if (search) filter.title = { $regex: escapeRegex(search), $options: 'i' };
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
     const skip = (page - 1) * limit;
@@ -53,6 +56,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
       const expense = await Expense.create({ ...req.body, user: req.userId });
+      cache.invalidateUserCache(req.userId);
       res.status(201).json(expense);
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -81,15 +85,20 @@ const ALLOWED_EXPENSE_FIELDS = ['title', 'amount', 'category', 'date', 'descript
 router.put('/:id', auth, async (req, res) => {
   try {
     const { amount } = req.body;
-    if (amount !== undefined && (typeof amount !== 'number' || amount < 0)) {
-      return res.status(400).json({ message: 'Amount must be a non-negative number' });
+    if (amount !== undefined) {
+      const num = Number(amount);
+      if ((typeof amount !== 'number' && typeof amount !== 'string') || !Number.isFinite(num) || num < 0) {
+        return res.status(400).json({ message: 'Amount must be a non-negative number' });
+      }
+      req.body.amount = num;
     }
     let expense = await Expense.findOne({ _id: req.params.id, user: req.userId });
     if (!expense) return res.status(404).json({ message: 'Expense not found' });
     ALLOWED_EXPENSE_FIELDS.forEach((f) => {
-      if (req.body[f] !== undefined) expense[f] = req.body[f];
+      if (req.body[f] !== undefined && req.body[f] !== '') expense[f] = req.body[f];
     });
     await expense.save();
+    cache.invalidateUserCache(req.userId);
     res.json(expense);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -100,6 +109,7 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const expense = await Expense.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!expense) return res.status(404).json({ message: 'Expense not found' });
+    cache.invalidateUserCache(req.userId);
     res.json({ message: 'Expense deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -3,8 +3,9 @@ import axios from 'axios';
 import { formatCurrency } from '../utils/formatCurrency';
 import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiPieChart } from 'react-icons/fi';
 import { categoryIcon, expenseCategoryMeta } from '../utils/categoryMeta';
+import Select from '../components/Select';
 
-const EXPENSE_CATEGORIES = ['Food', 'Transport', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Groceries', 'Dining', 'Other'];
+const EXPENSE_CATEGORIES = ['Food', 'Groceries', 'Dining', 'Food Delivery', 'Transport', 'Fuel', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Travel', 'Subscriptions', 'Fitness', 'Pets', 'Gifts', 'Personal Care', 'Other'];
 
 export default function Budgets() {
   const [data, setData] = useState({ budgets: [], totalBudgeted: 0, totalSpent: 0, totalRemaining: 0, categoriesWithoutBudget: [] });
@@ -30,11 +31,13 @@ export default function Budgets() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const monthlyLimit = Number(form.monthlyLimit);
+    if (!Number.isFinite(monthlyLimit) || monthlyLimit < 1) return;
     try {
       if (editing) {
-        await axios.put(`/api/budgets/${editing}`, { monthlyLimit: form.monthlyLimit });
+        await axios.put(`/api/budgets/${editing}`, { monthlyLimit });
       } else {
-        await axios.post('/api/budgets', { category: form.category, monthlyLimit: form.monthlyLimit, month, year });
+        await axios.post('/api/budgets', { category: form.category, monthlyLimit, month, year });
       }
       resetForm();
       fetchBudgets();
@@ -63,16 +66,18 @@ export default function Budgets() {
           <p className="page-subtitle">Set monthly spending limits for each category</p>
         </div>
         <div className="flex items-center space-x-3">
-          <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="select-field text-sm w-28">
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>{new Date(2024, i).toLocaleString('en-US', { month: 'long' })}</option>
-            ))}
-          </select>
-          <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="select-field text-sm w-24">
-            {Array.from({ length: 5 }, (_, i) => (
-              <option key={i} value={new Date().getFullYear() - 2 + i}>{new Date().getFullYear() - 2 + i}</option>
-            ))}
-          </select>
+          <Select
+            value={String(month)}
+            onChange={(v) => setMonth(Number(v))}
+            options={Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: new Date(2024, i).toLocaleString('en-US', { month: 'long' }) }))}
+            className="w-32"
+          />
+          <Select
+            value={String(year)}
+            onChange={(v) => setYear(Number(v))}
+            options={Array.from({ length: 5 }, (_, i) => String(new Date().getFullYear() - 2 + i))}
+            className="w-24"
+          />
           <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-sm">
             <FiPlus className="mr-2" size={18} /> Add Budget
           </button>
@@ -110,12 +115,14 @@ export default function Budgets() {
                 {editing ? form.category : ''}
               </div>
             ) : (
-              <select required value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="select-field">
-                <option value="">Select category</option>
-                {EXPENSE_CATEGORIES.map((c) => (
-                  <option key={c} value={c} disabled={data.budgets.some((b) => b.category === c)}>{c}</option>
-                ))}
-              </select>
+              <Select
+                value={form.category}
+                onChange={(v) => setForm({ ...form, category: v })}
+                options={EXPENSE_CATEGORIES}
+                iconMap={expenseCategoryMeta}
+                disabledOptions={data.budgets.map((b) => b.category)}
+                placeholder="Select category"
+              />
             )}
             <input type="number" required min="1" placeholder="Monthly limit $" value={form.monthlyLimit} onChange={(e) => setForm({ ...form, monthlyLimit: e.target.value })} className="input-field" />
             <div className="flex space-x-2">

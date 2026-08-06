@@ -39,8 +39,16 @@ function del(key) {
   cache.delete(key);
 }
 
+function invalidateUserCache(userId) {
+  if (!userId) return;
+  const idStr = String(userId);
+  for (const key of [...cache.keys()]) {
+    if (key.includes(idStr)) cache.delete(key);
+  }
+}
+
 function clear() {
   cache.clear();
 }
 
-module.exports = { get, set, del, clear };
+module.exports = { get, set, del, clear, invalidateUserCache };

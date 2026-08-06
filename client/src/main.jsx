@@ -16,15 +16,38 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+let refreshPromise = null;
+
 axios.interceptors.response.use(
   (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      const url = err.config?.url || '';
-      if (!url.includes('/auth/login') && !url.includes('/auth/register')) {
+  async (err) => {
+    const status = err.response?.status;
+    const url = err.config?.url || '';
+    const isAuthUrl = url.includes('/auth/login') || url.includes('/auth/register');
+
+    if (status === 401 && !isAuthUrl && !err.config?._retried) {
+      const original = err.config;
+      original._retried = true;
+      try {
+        if (!refreshPromise) {
+          refreshPromise = axios.post('/api/auth/refresh', {}, { withCredentials: true }).finally(() => {
+            refreshPromise = null;
+          });
+        }
+        await refreshPromise;
+        localStorage.removeItem('wf_token');
+        delete original.headers.Authorization;
+        return axios(original);
+      } catch {
         localStorage.removeItem('wf_token');
         window.dispatchEvent(new Event('wf_unauthorized'));
+        return Promise.reject(err);
       }
+    }
+
+    if (status === 401 && !isAuthUrl) {
+      localStorage.removeItem('wf_token');
+      window.dispatchEvent(new Event('wf_unauthorized'));
     }
     return Promise.reject(err);
   }

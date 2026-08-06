@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Investment = require('../models/Investment');
 const auth = require('../middleware/auth');
+const cache = require('../utils/cache');
 
 const router = express.Router();
 
@@ -36,6 +37,7 @@ router.post(
       }
       if (!req.body.currentValue) req.body.currentValue = req.body.amount;
       const investment = await Investment.create({ ...req.body, user: req.userId });
+      cache.invalidateUserCache(req.userId);
       res.status(201).json(investment);
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -48,21 +50,26 @@ const ALLOWED_INVESTMENT_FIELDS = ['name', 'type', 'amount', 'currentValue', 're
 router.put('/:id', auth, async (req, res) => {
   try {
     const { amount, currentValue, returnRate } = req.body;
-    if (amount !== undefined && (typeof amount !== 'number' || amount < 0)) {
+    const isNumStr = (v) => (typeof v === 'number' || typeof v === 'string') && Number.isFinite(Number(v));
+    if (amount !== undefined && (!isNumStr(amount) || Number(amount) < 0)) {
       return res.status(400).json({ message: 'Amount must be a non-negative number' });
     }
-    if (currentValue !== undefined && (typeof currentValue !== 'number' || currentValue < 0)) {
+    if (currentValue !== undefined && (!isNumStr(currentValue) || Number(currentValue) < 0)) {
       return res.status(400).json({ message: 'Current value must be a non-negative number' });
     }
-    if (returnRate !== undefined && (typeof returnRate !== 'number')) {
+    if (returnRate !== undefined && !isNumStr(returnRate)) {
       return res.status(400).json({ message: 'Return rate must be a number' });
     }
+    ['amount', 'currentValue', 'returnRate'].forEach((f) => {
+      if (req.body[f] !== undefined) req.body[f] = Number(req.body[f]);
+    });
     let investment = await Investment.findOne({ _id: req.params.id, user: req.userId });
     if (!investment) return res.status(404).json({ message: 'Investment not found' });
     ALLOWED_INVESTMENT_FIELDS.forEach((f) => {
-      if (req.body[f] !== undefined) investment[f] = req.body[f];
+      if (req.body[f] !== undefined && req.body[f] !== '') investment[f] = req.body[f];
     });
     await investment.save();
+    cache.invalidateUserCache(req.userId);
     res.json(investment);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -73,6 +80,7 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const investment = await Investment.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!investment) return res.status(404).json({ message: 'Investment not found' });
+    cache.invalidateUserCache(req.userId);
     res.json({ message: 'Investment deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

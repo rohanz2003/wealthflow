@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const auth = require('../middleware/auth');
 const Budget = require('../models/Budget');
 const Expense = require('../models/Expense');
+const cache = require('../utils/cache');
 
 const router = express.Router();
 
@@ -90,6 +91,7 @@ router.post(
       if (existing) {
         existing.monthlyLimit = req.body.monthlyLimit;
         await existing.save();
+        cache.invalidateUserCache(req.userId);
         return res.json(existing);
       }
 
@@ -100,6 +102,7 @@ router.post(
         month,
         year,
       });
+      cache.invalidateUserCache(req.userId);
       res.status(201).json(budget);
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
@@ -110,13 +113,18 @@ router.post(
 router.put('/:id', auth, async (req, res) => {
   try {
     const { monthlyLimit } = req.body;
-    if (monthlyLimit !== undefined && (typeof monthlyLimit !== 'number' || monthlyLimit < 1)) {
-      return res.status(400).json({ message: 'Monthly limit must be a number >= 1' });
+    if (monthlyLimit !== undefined) {
+      const num = Number(monthlyLimit);
+      if ((typeof monthlyLimit !== 'number' && typeof monthlyLimit !== 'string') || !Number.isFinite(num) || num < 1) {
+        return res.status(400).json({ message: 'Monthly limit must be a number >= 1' });
+      }
+      req.body.monthlyLimit = num;
     }
     const budget = await Budget.findOne({ _id: req.params.id, user: req.userId });
     if (!budget) return res.status(404).json({ message: 'Budget not found' });
-    if (monthlyLimit !== undefined) budget.monthlyLimit = monthlyLimit;
+    if (req.body.monthlyLimit !== undefined) budget.monthlyLimit = req.body.monthlyLimit;
     await budget.save();
+    cache.invalidateUserCache(req.userId);
     res.json(budget);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -127,6 +135,7 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const budget = await Budget.findOneAndDelete({ _id: req.params.id, user: req.userId });
     if (!budget) return res.status(404).json({ message: 'Budget not found' });
+    cache.invalidateUserCache(req.userId);
     res.json({ message: 'Budget deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -21,6 +21,14 @@ requiredEnv.forEach((v) => {
 
 const clientOrigin = (process.env.CLIENT_URL || '').replace(/\/+$/, '');
 
+const allowedOrigins = [
+  clientOrigin,
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+].filter(Boolean);
+
 const app = express();
 
 app.set('trust proxy', 1);
@@ -42,7 +50,10 @@ const mongoHost = () => {
 logger.info(`MONGODB_URI host: ${mongoHost()}`);
 
 app.use(cors({
-  origin: (origin, cb) => cb(null, origin || true),
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(null, false);
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10kb' }));
