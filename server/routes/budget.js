@@ -60,8 +60,8 @@ router.get('/', auth, async (req, res) => {
       month,
       year,
     });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -104,8 +104,8 @@ router.post(
       });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(budget);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
+    } catch {
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );
@@ -126,8 +126,8 @@ router.put('/:id', auth, async (req, res) => {
     await budget.save();
     cache.invalidateUserCache(req.userId);
     res.json(budget);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -137,8 +137,8 @@ router.delete('/:id', auth, async (req, res) => {
     if (!budget) return res.status(404).json({ message: 'Budget not found' });
     cache.invalidateUserCache(req.userId);
     res.json({ message: 'Budget deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

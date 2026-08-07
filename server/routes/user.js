@@ -34,8 +34,8 @@ router.get('/export', auth, async (req, res) => {
       debts,
     };
     res.json(data);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -54,8 +54,8 @@ router.delete('/account', auth, async (req, res) => {
     res.clearCookie('token');
     res.clearCookie('refreshToken', { path: '/api/auth' });
     res.json({ message: 'Account and all data permanently deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

@@ -8,18 +8,12 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('wf_token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
     fetchUser();
     window.addEventListener('wf_unauthorized', handleUnauthorized);
     return () => window.removeEventListener('wf_unauthorized', handleUnauthorized);
   }, []);
 
   const handleUnauthorized = () => {
-    localStorage.removeItem('wf_token');
     setUser(null);
   };
 
@@ -36,7 +30,6 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const res = await axios.post('/api/auth/login', { email, password }, { withCredentials: true });
-    if (res.data.token) localStorage.setItem('wf_token', res.data.token);
     const u = res.data.user;
     setUser(u);
     return u;
@@ -44,7 +37,6 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password) => {
     const res = await axios.post('/api/auth/register', { name, email, password }, { withCredentials: true });
-    if (res.data.token) localStorage.setItem('wf_token', res.data.token);
     const u = res.data.user;
     setUser(u);
     return u;
@@ -55,7 +47,6 @@ export function AuthProvider({ children }) {
       await axios.post('/api/auth/logout', {}, { withCredentials: true });
     } catch {
     }
-    localStorage.removeItem('wf_token');
     setUser(null);
   };
 

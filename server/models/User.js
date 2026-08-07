@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  previousRefreshToken: {
+    type: String,
+    default: null,
+  },
   loginAttempts: {
     type: Number,
     default: 0,

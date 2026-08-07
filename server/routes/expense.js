@@ -3,8 +3,11 @@ const { body, validationResult } = require('express-validator');
 const Expense = require('../models/Expense');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
+const pick = require('../utils/pick');
 
 const router = express.Router();
+
+const ALLOWED_EXPENSE_FIELDS = ['title', 'amount', 'category', 'date', 'description', 'isRecurring'];
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -36,8 +39,8 @@ router.get('/', auth, async (req, res) => {
       Expense.countDocuments(filter),
     ]);
     res.json({ data: expenses, total, page, limit, totalPages: Math.ceil(total / limit) });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -55,11 +58,11 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const expense = await Expense.create({ ...req.body, user: req.userId });
+      const expense = await Expense.create({ ...pick(req.body, ALLOWED_EXPENSE_FIELDS), user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(expense);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
+    } catch {
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );
@@ -75,12 +78,10 @@ router.get('/summary', auth, async (req, res) => {
       byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
     });
     res.json({ total, byCategory, count: expenses.length });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
-
-const ALLOWED_EXPENSE_FIELDS = ['title', 'amount', 'category', 'date', 'description', 'isRecurring'];
 
 router.put('/:id', auth, async (req, res) => {
   try {
@@ -100,8 +101,8 @@ router.put('/:id', auth, async (req, res) => {
     await expense.save();
     cache.invalidateUserCache(req.userId);
     res.json(expense);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -111,8 +112,8 @@ router.delete('/:id', auth, async (req, res) => {
     if (!expense) return res.status(404).json({ message: 'Expense not found' });
     cache.invalidateUserCache(req.userId);
     res.json({ message: 'Expense deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

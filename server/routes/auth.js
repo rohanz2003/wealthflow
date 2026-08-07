@@ -60,7 +60,7 @@ router.post(
     const { name, email, password } = req.body;
     const existing = await User.findOne({ email });
     if (existing) {
-      return res.status(400).json({ message: 'Email already registered' });
+      return res.status(400).json({ message: 'Registration failed. Please check your information.' });
     }
     const user = await User.create({ name, email, password });
     const accessToken = generateToken(user);
@@ -116,18 +116,26 @@ router.post(
   })
 );
 
-router.post('/refresh', asyncHandler(async (req, res) => {
+router.post('/refresh', authLimiter, asyncHandler(async (req, res) => {
   const refreshToken = req.body.refreshToken || req.cookies?.refreshToken;
   if (!refreshToken) {
     return res.status(401).json({ message: 'Refresh token required' });
   }
   const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-  const user = await User.findOne({ refreshToken: hash });
+  const user = await User.findOne({ $or: [{ refreshToken: hash }, { previousRefreshToken: hash }] });
   if (!user) {
     return res.status(401).json({ message: 'Invalid refresh token' });
   }
+  if (user.previousRefreshToken === hash) {
+    user.refreshToken = null;
+    user.previousRefreshToken = null;
+    await user.save();
+    return res.status(401).json({ message: 'Invalid refresh token' });
+  }
+  const oldHash = user.refreshToken;
   const accessToken = generateToken(user);
   const newRefreshToken = user.generateRefreshToken();
+  user.previousRefreshToken = oldHash;
   await user.save();
   setTokenCookies(res, accessToken, newRefreshToken);
   res.json({ message: 'Token refreshed' });
@@ -136,6 +144,7 @@ router.post('/refresh', asyncHandler(async (req, res) => {
 router.post('/logout', auth, asyncHandler(async (req, res) => {
   const isProduction = process.env.NODE_ENV === 'production';
   req.user.refreshToken = null;
+  req.user.previousRefreshToken = null;
   await req.user.save();
   res.clearCookie('token', { secure: isProduction, sameSite: isProduction ? 'none' : 'strict' });
   res.clearCookie('refreshToken', { path: '/api/auth', secure: isProduction, sameSite: isProduction ? 'none' : 'strict' });
@@ -173,6 +182,7 @@ router.put('/password', auth, asyncHandler(async (req, res) => {
   user.password = newPassword;
   const isProduction = process.env.NODE_ENV === 'production';
   user.refreshToken = null;
+  user.previousRefreshToken = null;
   await user.save();
   res.clearCookie('token', { secure: isProduction, sameSite: isProduction ? 'none' : 'strict' });
   res.clearCookie('refreshToken', { path: '/api/auth', secure: isProduction, sameSite: isProduction ? 'none' : 'strict' });

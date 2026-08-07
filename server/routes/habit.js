@@ -3,9 +3,13 @@ const { body, validationResult } = require('express-validator');
 const Habit = require('../models/Habit');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
+const pick = require('../utils/pick');
 const { HABIT_TYPES, HABIT_FREQUENCIES } = require('../../shared/constants');
 
 const router = express.Router();
+
+const ALLOWED_HABIT_FIELDS = ['name', 'description', 'frequency', 'type', 'isActive'];
+const MAX_HISTORY_ENTRIES = 365;
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -18,8 +22,8 @@ router.get('/', auth, async (req, res) => {
       Habit.countDocuments(filter),
     ]);
     res.json({ data: habits, total, page, limit, totalPages: Math.ceil(total / limit) });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -37,16 +41,14 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const habit = await Habit.create({ ...req.body, user: req.userId });
+      const habit = await Habit.create({ ...pick(req.body, ALLOWED_HABIT_FIELDS), user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(habit);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
+    } catch {
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-const ALLOWED_HABIT_FIELDS = ['name', 'description', 'frequency', 'type', 'isActive'];
 
 router.put('/:id', auth, async (req, res) => {
   try {
@@ -58,8 +60,8 @@ router.put('/:id', auth, async (req, res) => {
     await habit.save();
     cache.invalidateUserCache(req.userId);
     res.json(habit);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -69,8 +71,8 @@ router.delete('/:id', auth, async (req, res) => {
     if (!habit) return res.status(404).json({ message: 'Habit not found' });
     cache.invalidateUserCache(req.userId);
     res.json({ message: 'Habit deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -91,6 +93,9 @@ router.post('/:id/complete', auth, async (req, res) => {
     }
 
     habit.history.push({ date: today, completed: true });
+    if (habit.history.length > MAX_HISTORY_ENTRIES) {
+      habit.history = habit.history.slice(-MAX_HISTORY_ENTRIES);
+    }
     habit.totalCompletions += 1;
 
     const yesterday = new Date(today);
@@ -106,8 +111,6 @@ router.post('/:id/complete', auth, async (req, res) => {
 
     if (lastEntry && new Date(lastEntry.date).setHours(0, 0, 0, 0) === yesterday.getTime()) {
       habit.streak += 1;
-    } else if (!lastEntry) {
-      habit.streak = 1;
     } else {
       habit.streak = 1;
     }
@@ -119,8 +122,8 @@ router.post('/:id/complete', auth, async (req, res) => {
     await habit.save();
     cache.invalidateUserCache(req.userId);
     res.json(habit);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -130,12 +133,21 @@ router.get('/stats', auth, async (req, res) => {
     const total = habits.length;
     const active = habits.filter((h) => h.isActive).length;
     const totalStreak = habits.reduce((sum, h) => sum + h.streak, 0);
-    const completionRate = total > 0
-      ? habits.reduce((sum, h) => sum + h.totalCompletions, 0) / total
+    const now = Date.now();
+    const totalCompletions = habits.reduce((sum, h) => sum + h.totalCompletions, 0);
+    const totalExpected = habits.reduce((sum, h) => {
+      if (!h.isActive) return sum;
+      const daysSinceCreation = Math.max(1, Math.ceil((now - new Date(h.createdAt).getTime()) / (1000 * 60 * 60 * 24)));
+      if (h.frequency === 'weekly') return sum + Math.ceil(daysSinceCreation / 7);
+      if (h.frequency === 'monthly') return sum + Math.ceil(daysSinceCreation / 30);
+      return sum + daysSinceCreation;
+    }, 0);
+    const completionRate = totalExpected > 0
+      ? Math.min(100, Math.round((totalCompletions / totalExpected) * 100))
       : 0;
-    res.json({ total, active, totalStreak, completionRate: Math.round(completionRate * 10) / 10 });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.json({ total, active, totalStreak, totalCompletions, completionRate });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

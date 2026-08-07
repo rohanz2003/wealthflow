@@ -8,6 +8,7 @@ const Habit = require('../models/Habit');
 const SavingsGoal = require('../models/SavingsGoal');
 const Investment = require('../models/Investment');
 const cache = require('../utils/cache');
+const logger = require('../utils/logger');
 
 const router = express.Router();
 
@@ -92,8 +93,8 @@ router.get('/kpis', auth, async (req, res) => {
 
     cache.set(cacheKey, result, 60 * 1000);
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -152,8 +153,8 @@ router.get('/monthly-activity', auth, async (req, res) => {
 
     cache.set(cacheKey, result, 60 * 1000);
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -222,8 +223,8 @@ router.get('/admin/kpis', auth, admin, async (req, res) => {
 
     cache.set(cacheKey, result, 120 * 1000);
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -312,8 +313,8 @@ router.get('/spending-insights', auth, async (req, res) => {
 
     cache.set(cacheKey, result, 120 * 1000);
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -370,8 +371,8 @@ router.get('/goal-projections', auth, async (req, res) => {
 
     cache.set(cacheKey, result, 60 * 1000);
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -406,37 +407,47 @@ router.get('/wealth-projections', auth, async (req, res) => {
 
     const years = [1, 3, 5, 10, 20];
     const projectionScenarios = [];
+    const hasSurplus = monthlySavings > 0;
 
-    for (const savingsRate of [monthlySavings, monthlySavings * 0.75, monthlySavings * 1.25]) {
-      if (savingsRate <= 0) continue;
+    const scenarioRates = hasSurplus
+      ? [monthlySavings, monthlySavings * 0.75, monthlySavings * 1.25]
+      : [0];
+
+    for (const savingsRate of scenarioRates) {
       const points = years.map((y) => {
         const periods = y * 12;
-        const monthlyRate = avgReturn / 100 / 12;
-        const fv = currentInvestments * Math.pow(1 + monthlyRate, periods) +
-          savingsRate * ((Math.pow(1 + monthlyRate, periods) - 1) / monthlyRate);
+        let fv;
+        if (avgReturn > 0) {
+          const monthlyRate = avgReturn / 100 / 12;
+          fv = currentInvestments * Math.pow(1 + monthlyRate, periods) +
+            savingsRate * ((Math.pow(1 + monthlyRate, periods) - 1) / monthlyRate);
+        } else {
+          fv = currentInvestments + savingsRate * periods;
+        }
         return { year: y, projectedValue: Math.round(fv + goalSavings + monthlyIncome * y * 12) };
       });
       projectionScenarios.push({
-        label: savingsRate >= monthlySavings * 1.2 ? 'Aggressive' : savingsRate <= monthlySavings * 0.8 ? 'Conservative' : 'Current',
+        label: savingsRate >= monthlySavings * 1.2 ? 'Aggressive' : savingsRate <= monthlySavings * 0.75 ? 'Conservative' : 'Current',
         monthlySavings: Math.round(savingsRate),
         points,
       });
     }
 
-    const avgReturnLabel = avgReturn > 0 ? `${avgReturn.toFixed(1)}%` : '7.0%';
+    const avgReturnLabel = avgReturn > 0 ? `${avgReturn.toFixed(1)}%` : '0.0%';
 
     const result = {
       currentInvestments,
       currentNetWorth: Math.round(currentNetWorth),
       monthlySavings: Math.round(monthlySavings),
+      hasSurplus,
       avgReturnRate: avgReturnLabel,
       projectionScenarios,
     };
 
     cache.set(cacheKey, result, 120 * 1000);
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -453,7 +464,7 @@ router.get('/stability', auth, async (req, res) => {
     const [monthlyExpenses, goals, debts, habits, investments, incomes] = await Promise.all([
       Expense.find({ user: userId, date: { $gte: startOfMonth } }).lean(),
       SavingsGoal.find({ user: userId }).lean(),
-      require('../models/Debt').find({ user: userId }).lean().catch((err) => { console.error('Debt fetch error:', err); return []; }),
+      require('../models/Debt').find({ user: userId }).lean().catch((err) => { logger.error('Debt fetch error:', err); return []; }),
       Habit.find({ user: userId }).lean(),
       Investment.find({ user: userId }).lean(),
       Income.find({ user: userId, date: { $gte: startOfMonth } }).lean(),
@@ -499,8 +510,8 @@ router.get('/stability', auth, async (req, res) => {
 
     cache.set(cacheKey, result, 120 * 1000);
     res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

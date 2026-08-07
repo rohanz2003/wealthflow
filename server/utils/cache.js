@@ -45,6 +45,7 @@ function invalidateUserCache(userId) {
   for (const key of [...cache.keys()]) {
     if (key.includes(idStr)) cache.delete(key);
   }
+  cache.delete('admin:kpis');
 }
 
 function clear() {

@@ -3,8 +3,11 @@ const { body, validationResult } = require('express-validator');
 const Investment = require('../models/Investment');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
+const pick = require('../utils/pick');
 
 const router = express.Router();
+
+const ALLOWED_INVESTMENT_FIELDS = ['name', 'type', 'amount', 'currentValue', 'returnRate', 'date', 'notes'];
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -17,8 +20,8 @@ router.get('/', auth, async (req, res) => {
       Investment.countDocuments(filter),
     ]);
     res.json({ data: investments, total, page, limit, totalPages: Math.ceil(total / limit) });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -35,17 +38,16 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      if (!req.body.currentValue) req.body.currentValue = req.body.amount;
-      const investment = await Investment.create({ ...req.body, user: req.userId });
+      const data = pick(req.body, ALLOWED_INVESTMENT_FIELDS);
+      if (data.currentValue === undefined) data.currentValue = data.amount;
+      const investment = await Investment.create({ ...data, user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(investment);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
+    } catch {
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-const ALLOWED_INVESTMENT_FIELDS = ['name', 'type', 'amount', 'currentValue', 'returnRate', 'date', 'notes'];
 
 router.put('/:id', auth, async (req, res) => {
   try {
@@ -71,8 +73,8 @@ router.put('/:id', auth, async (req, res) => {
     await investment.save();
     cache.invalidateUserCache(req.userId);
     res.json(investment);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -82,8 +84,8 @@ router.delete('/:id', auth, async (req, res) => {
     if (!investment) return res.status(404).json({ message: 'Investment not found' });
     cache.invalidateUserCache(req.userId);
     res.json({ message: 'Investment deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

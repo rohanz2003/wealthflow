@@ -38,8 +38,8 @@ router.get('/users', auth, admin, async (req, res) => {
     }));
 
     res.json(usersWithStats);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -57,8 +57,8 @@ router.delete('/users/:id', auth, admin, async (req, res) => {
       Debt.deleteMany({ user: req.params.id }),
     ]);
     res.json({ message: 'User and all associated data deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -118,8 +118,8 @@ router.get('/analytics', auth, admin, async (req, res) => {
       incomeByCategory,
       recentUsers,
     });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

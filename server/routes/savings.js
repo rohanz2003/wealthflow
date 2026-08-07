@@ -3,8 +3,12 @@ const { body, validationResult } = require('express-validator');
 const SavingsGoal = require('../models/SavingsGoal');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
+const pick = require('../utils/pick');
 
 const router = express.Router();
+
+const ALLOWED_GOAL_FIELDS = ['title', 'description', 'targetAmount', 'currentAmount', 'category', 'targetDate'];
+const ALLOWED_GOAL_CREATE_FIELDS = ['title', 'description', 'targetAmount', 'category', 'targetDate'];
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -17,8 +21,8 @@ router.get('/', auth, async (req, res) => {
       SavingsGoal.countDocuments(filter),
     ]);
     res.json({ data: goals, total, page, limit, totalPages: Math.ceil(total / limit) });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -35,16 +39,14 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const goal = await SavingsGoal.create({ ...req.body, user: req.userId });
+      const goal = await SavingsGoal.create({ ...pick(req.body, ALLOWED_GOAL_CREATE_FIELDS), user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(goal);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
+    } catch {
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-const ALLOWED_GOAL_FIELDS = ['title', 'description', 'targetAmount', 'currentAmount', 'category', 'targetDate'];
 
 router.put('/:id', auth, async (req, res) => {
   try {
@@ -74,8 +76,8 @@ router.put('/:id', auth, async (req, res) => {
     await goal.save();
     cache.invalidateUserCache(req.userId);
     res.json(goal);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -85,8 +87,8 @@ router.delete('/:id', auth, async (req, res) => {
     if (!goal) return res.status(404).json({ message: 'Goal not found' });
     cache.invalidateUserCache(req.userId);
     res.json({ message: 'Goal deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

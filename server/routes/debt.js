@@ -3,8 +3,11 @@ const { body, validationResult } = require('express-validator');
 const auth = require('../middleware/auth');
 const Debt = require('../models/Debt');
 const cache = require('../utils/cache');
+const pick = require('../utils/pick');
 
 const router = express.Router();
+
+const ALLOWED_DEBT_FIELDS = ['name', 'type', 'totalAmount', 'remainingAmount', 'interestRate', 'minimumPayment', 'dueDate', 'isPaid'];
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -21,8 +24,8 @@ router.get('/', auth, async (req, res) => {
     const paidOff = debts.filter((d) => d.isPaid).length;
     const active = debts.filter((d) => !d.isPaid).length;
     res.json({ data: debts, total, page, limit, totalPages: Math.ceil(total / limit), totalDebt, totalOriginal, paidOff, active });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -40,16 +43,14 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const debt = await Debt.create({ user: req.userId, ...req.body });
+      const debt = await Debt.create({ ...pick(req.body, ALLOWED_DEBT_FIELDS), user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(debt);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
+    } catch {
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-const ALLOWED_DEBT_FIELDS = ['name', 'type', 'totalAmount', 'remainingAmount', 'interestRate', 'minimumPayment', 'dueDate', 'isPaid'];
 
 router.put('/:id', auth, async (req, res) => {
   try {
@@ -90,8 +91,8 @@ router.put('/:id', auth, async (req, res) => {
     await debt.save();
     cache.invalidateUserCache(req.userId);
     res.json(debt);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -101,8 +102,8 @@ router.delete('/:id', auth, async (req, res) => {
     if (!debt) return res.status(404).json({ message: 'Debt not found' });
     cache.invalidateUserCache(req.userId);
     res.json({ message: 'Debt deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

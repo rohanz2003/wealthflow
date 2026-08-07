@@ -19,7 +19,11 @@ const auth = async (req, res, next) => {
     if (user.isLocked) {
       return res.status(423).json({ message: 'Account is temporarily locked. Try again later.' });
     }
-    User.findByIdAndUpdate(user._id, { lastActive: new Date() }).catch((err) => logger.error('lastActive update failed:', err));
+    const now = Date.now();
+    if (!user._lastActiveUpdatedAt || now - user._lastActiveUpdatedAt > 10 * 60 * 1000) {
+      user._lastActiveUpdatedAt = now;
+      User.findByIdAndUpdate(user._id, { lastActive: new Date() }).catch((err) => logger.error('lastActive update failed:', err));
+    }
     req.user = user;
     req.userId = user._id;
     next();

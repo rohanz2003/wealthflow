@@ -3,11 +3,14 @@ const { body, validationResult } = require('express-validator');
 const Income = require('../models/Income');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
+const pick = require('../utils/pick');
 const { INCOME_CATEGORIES } = require('../../shared/constants');
 
 const router = express.Router();
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const ALLOWED_INCOME_FIELDS = ['source', 'amount', 'category', 'date', 'description'];
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -22,8 +25,8 @@ router.get('/', auth, async (req, res) => {
       Income.countDocuments(filter),
     ]);
     res.json({ data: incomes, total, page, limit, totalPages: Math.ceil(total / limit) });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -41,16 +44,14 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const income = await Income.create({ ...req.body, user: req.userId });
+      const income = await Income.create({ ...pick(req.body, ALLOWED_INCOME_FIELDS), user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(income);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error', error: error.message });
+    } catch {
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );
-
-const ALLOWED_INCOME_FIELDS = ['source', 'amount', 'category', 'date', 'description'];
 
 router.put('/:id', auth, async (req, res) => {
   try {
@@ -73,8 +74,8 @@ router.put('/:id', auth, async (req, res) => {
     await income.save();
     cache.invalidateUserCache(req.userId);
     res.json(income);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -84,8 +85,8 @@ router.delete('/:id', auth, async (req, res) => {
     if (!income) return res.status(404).json({ message: 'Income record not found' });
     cache.invalidateUserCache(req.userId);
     res.json({ message: 'Income record deleted' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
