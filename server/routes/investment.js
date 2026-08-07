@@ -4,10 +4,11 @@ const Investment = require('../models/Investment');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
 const pick = require('../utils/pick');
+const { CURRENCIES } = require('../../shared/constants');
 
 const router = express.Router();
 
-const ALLOWED_INVESTMENT_FIELDS = ['name', 'type', 'amount', 'currentValue', 'returnRate', 'date', 'notes'];
+const ALLOWED_INVESTMENT_FIELDS = ['name', 'type', 'amount', 'currentValue', 'returnRate', 'date', 'notes', 'currency'];
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -31,6 +32,7 @@ router.post(
   [
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('amount').isNumeric().withMessage('Amount must be a number'),
+    body('currency').optional().isIn(CURRENCIES).withMessage('Invalid currency'),
   ],
   async (req, res) => {
     try {
@@ -39,6 +41,7 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
       const data = pick(req.body, ALLOWED_INVESTMENT_FIELDS);
+      if (data.currency === undefined) data.currency = req.user.currency || 'INR';
       if (data.currentValue === undefined) data.currentValue = data.amount;
       const investment = await Investment.create({ ...data, user: req.userId });
       cache.invalidateUserCache(req.userId);

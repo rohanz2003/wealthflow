@@ -8,6 +8,7 @@ const SavingsGoal = require('../models/SavingsGoal');
 const Investment = require('../models/Investment');
 const Debt = require('../models/Debt');
 const cache = require('../utils/cache');
+const { convert } = require('../utils/currency');
 const {
   calculateSavingsRate,
   calculateHealthScore,
@@ -40,17 +41,20 @@ router.get('/', auth, asyncHandler(async (req, res) => {
   const monthlyExpenses = expenses.filter((e) => e.date >= startOfMonth);
   const monthlyIncomes = incomes.filter((i) => i.date >= startOfMonth);
 
+  const base = req.user.currency || 'INR';
+  const toBase = (item) => convert(item.amount, item.currency, base);
+
   const summary = {
-    monthlyExpense: monthlyExpenses.reduce((s, e) => s + e.amount, 0),
-    monthlyIncome: monthlyIncomes.reduce((s, i) => s + i.amount, 0),
-    totalSavings: goals.reduce((s, g) => s + g.currentAmount, 0),
-    totalInvested: investments.reduce((s, i) => s + i.currentValue, 0),
+    monthlyExpense: monthlyExpenses.reduce((s, e) => s + toBase(e), 0),
+    monthlyIncome: monthlyIncomes.reduce((s, i) => s + toBase(i), 0),
+    totalSavings: goals.reduce((s, g) => s + convert(g.currentAmount, g.currency, base), 0),
+    totalInvested: investments.reduce((s, i) => s + convert(i.currentValue, i.currency, base), 0),
   };
 
-  const totalDebt = debts.reduce((s, d) => s + d.remainingAmount, 0);
+  const totalDebt = debts.reduce((s, d) => s + convert(d.remainingAmount, d.currency, base), 0);
   const netWorth = summary.totalSavings + summary.totalInvested - totalDebt;
   const savingsRate = calculateSavingsRate(summary.monthlyIncome, summary.monthlyExpense);
-  const expenseCategories = aggregateByCategory(expenses, 'category', 'amount');
+  const expenseCategories = aggregateByCategory(expenses, 'category', 'amount', toBase);
   const expenseRatio = summary.monthlyIncome > 0 ? summary.monthlyExpense / summary.monthlyIncome : 0;
 
   const last30Days = Array.from({ length: 30 }, (_, i) => {
@@ -59,7 +63,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
 
-  const dailyMap = buildDailyBalanceMap(expenses, incomes);
+  const dailyMap = buildDailyBalanceMap(expenses, incomes, toBase);
   const dailyBalances = last30Days.map((_, i) => {
     const d = new Date(now);
     d.setDate(d.getDate() - (29 - i));

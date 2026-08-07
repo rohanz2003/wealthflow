@@ -4,13 +4,13 @@ const Income = require('../models/Income');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
 const pick = require('../utils/pick');
-const { INCOME_CATEGORIES } = require('../../shared/constants');
+const { INCOME_CATEGORIES, CURRENCIES } = require('../../shared/constants');
 
 const router = express.Router();
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const ALLOWED_INCOME_FIELDS = ['source', 'amount', 'category', 'date', 'description'];
+const ALLOWED_INCOME_FIELDS = ['source', 'amount', 'category', 'date', 'description', 'currency'];
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -37,6 +37,7 @@ router.post(
     body('source').trim().notEmpty().withMessage('Source is required'),
     body('amount').isNumeric().withMessage('Amount must be a number'),
     body('category').optional().isIn(INCOME_CATEGORIES).withMessage('Invalid income category'),
+    body('currency').optional().isIn(CURRENCIES).withMessage('Invalid currency'),
   ],
   async (req, res) => {
     try {
@@ -44,7 +45,9 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const income = await Income.create({ ...pick(req.body, ALLOWED_INCOME_FIELDS), user: req.userId });
+      const data = pick(req.body, ALLOWED_INCOME_FIELDS);
+      if (data.currency === undefined) data.currency = req.user.currency || 'INR';
+      const income = await Income.create({ ...data, user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(income);
     } catch {

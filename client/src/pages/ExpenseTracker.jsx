@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { formatCurrency } from '../utils/formatCurrency';
+import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
+import { currencyOptions, convert } from '../utils/currency';
 import { FiPlus, FiEdit2, FiTrash2, FiFilter, FiSearch, FiX, FiArrowUpCircle, FiArrowDownCircle } from 'react-icons/fi';
 import { categoryIcon, expenseCategoryMeta, incomeCategoryMeta } from '../utils/categoryMeta';
 import Select from '../components/Select';
@@ -16,7 +17,7 @@ export default function ExpenseTracker() {
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('');
-  const [form, setForm] = useState({ title: '', amount: '', category: 'Other', date: new Date().toISOString().split('T')[0], description: '', source: '' });
+  const [form, setForm] = useState({ title: '', amount: '', category: 'Other', date: new Date().toISOString().split('T')[0], description: '', source: '', currency: getBaseCurrency() });
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
@@ -31,7 +32,7 @@ export default function ExpenseTracker() {
   };
 
   const resetForm = () => {
-    setForm({ title: '', amount: '', category: 'Other', date: new Date().toISOString().split('T')[0], description: '', source: '' });
+    setForm({ title: '', amount: '', category: 'Other', date: new Date().toISOString().split('T')[0], description: '', source: '', currency: getBaseCurrency() });
     setEditing(null);
     setShowForm(false);
   };
@@ -45,11 +46,11 @@ export default function ExpenseTracker() {
     }
     try {
       if (activeTab === 'expenses') {
-        const payload = { title: form.title, amount, category: form.category, date: form.date, description: form.description };
+        const payload = { title: form.title, amount, category: form.category, date: form.date, description: form.description, currency: form.currency };
         if (editing) await axios.put(`/api/expenses/${editing}`, payload);
         else await axios.post('/api/expenses', payload);
       } else {
-        const payload = { source: form.source, amount, category: form.category, date: form.date, description: form.description };
+        const payload = { source: form.source, amount, category: form.category, date: form.date, description: form.description, currency: form.currency };
         if (editing) await axios.put(`/api/income/${editing}`, payload);
         else await axios.post('/api/income', payload);
       }
@@ -60,8 +61,8 @@ export default function ExpenseTracker() {
 
   const handleEdit = (item) => {
     setForm(activeTab === 'expenses'
-      ? { title: item.title, amount: item.amount.toString(), category: item.category, date: item.date.split('T')[0], description: item.description, source: '' }
-      : { title: '', amount: item.amount.toString(), category: item.category, date: item.date.split('T')[0], description: item.description, source: item.source });
+      ? { title: item.title, amount: item.amount.toString(), category: item.category, date: item.date.split('T')[0], description: item.description, source: '', currency: item.currency || getBaseCurrency() }
+      : { title: '', amount: item.amount.toString(), category: item.category, date: item.date.split('T')[0], description: item.description, source: item.source, currency: item.currency || getBaseCurrency() });
     setEditing(item._id);
     setShowForm(true);
   };
@@ -82,8 +83,9 @@ export default function ExpenseTracker() {
     return matchSearch && matchCat;
   });
 
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const totalIncomes = incomes.reduce((s, i) => s + i.amount, 0);
+  const base = getBaseCurrency();
+  const totalExpenses = expenses.reduce((s, e) => s + convert(e.amount, e.currency, base), 0);
+  const totalIncomes = incomes.reduce((s, i) => s + convert(i.amount, i.currency, base), 0);
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" /></div>;
@@ -151,11 +153,18 @@ export default function ExpenseTracker() {
               }
               <input type="number" required min="0" step="0.01" placeholder="Amount" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="input-field" />
               <Select
+                value={form.currency}
+                onChange={(v) => setForm({ ...form, currency: v })}
+                options={currencyOptions()}
+                placeholder="Currency"
+              />
+              <Select
                 value={form.category}
                 onChange={(v) => setForm({ ...form, category: v })}
                 options={activeTab === 'expenses' ? CATEGORIES : INCOME_CATEGORIES}
                 iconMap={activeTab === 'expenses' ? expenseCategoryMeta : incomeCategoryMeta}
                 placeholder="Category"
+                allowCustom
               />
               <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input-field" />
               <input type="text" placeholder="Description (optional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" />
@@ -212,7 +221,7 @@ export default function ExpenseTracker() {
                   </div>
                   <div className="flex items-center space-x-2 sm:space-x-3 shrink-0 ml-2">
                     <span className={`text-sm sm:text-base font-semibold ${activeTab === 'income' ? 'text-mint-600 dark:text-mint-400' : 'text-magenta-600 dark:text-magenta-400'}`}>
-                      {activeTab === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
+                      {activeTab === 'income' ? '+' : '-'}{formatCurrency(item.amount, item.currency)}
                     </span>
                     <button onClick={() => handleEdit(item)} aria-label="Edit" className="btn-ghost p-1.5"><FiEdit2 size={15} /></button>
                     <button onClick={() => setDeleteConfirm(item._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400"><FiTrash2 size={15} /></button>

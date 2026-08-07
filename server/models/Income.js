@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { INCOME_CATEGORIES } = require('../../shared/constants');
+const { INCOME_CATEGORIES, CURRENCIES } = require('../../shared/constants');
 
 const incomeSchema = new mongoose.Schema({
   user: {
@@ -30,6 +30,11 @@ const incomeSchema = new mongoose.Schema({
     type: String,
     trim: true,
     default: '',
+  },
+  currency: {
+    type: String,
+    enum: CURRENCIES,
+    default: 'INR',
   },
   createdAt: {
     type: Date,

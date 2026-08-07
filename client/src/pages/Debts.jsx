@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { formatCurrency } from '../utils/formatCurrency';
+import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
+import { currencyOptions } from '../utils/currency';
 import { FiPlus, FiEdit2, FiTrash2, FiTrendingDown, FiFileText } from 'react-icons/fi';
 import { categoryIcon, debtTypeMeta } from '../utils/categoryMeta';
 import Select from '../components/Select';
@@ -11,7 +12,7 @@ export default function Debts() {
   const [data, setData] = useState({ debts: [], totalDebt: 0, totalOriginal: 0, paidOff: 0, active: 0 });
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: '', type: 'Other', totalAmount: '', remainingAmount: '', interestRate: '', minimumPayment: '', dueDate: '' });
+  const [form, setForm] = useState({ name: '', type: 'Other', totalAmount: '', remainingAmount: '', interestRate: '', minimumPayment: '', dueDate: '', currency: getBaseCurrency() });
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
@@ -22,7 +23,7 @@ export default function Debts() {
   };
 
   const resetForm = () => {
-    setForm({ name: '', type: 'Other', totalAmount: '', remainingAmount: '', interestRate: '', minimumPayment: '', dueDate: '' });
+    setForm({ name: '', type: 'Other', totalAmount: '', remainingAmount: '', interestRate: '', minimumPayment: '', dueDate: '', currency: getBaseCurrency() });
     setEditing(null);
     setShowForm(false);
   };
@@ -37,6 +38,7 @@ export default function Debts() {
         remainingAmount: Number(form.remainingAmount),
         interestRate: Number(form.interestRate) || 0,
         minimumPayment: Number(form.minimumPayment) || 0,
+        currency: form.currency,
       };
       if (form.dueDate) payload.dueDate = form.dueDate;
       if (editing) {
@@ -54,6 +56,7 @@ export default function Debts() {
       name: d.name, type: d.type, totalAmount: d.totalAmount.toString(),
       remainingAmount: d.remainingAmount.toString(), interestRate: d.interestRate?.toString() || '',
       minimumPayment: d.minimumPayment?.toString() || '', dueDate: d.dueDate ? d.dueDate.split('T')[0] : '',
+      currency: d.currency || getBaseCurrency(),
     });
     setEditing(d._id);
     setShowForm(true);
@@ -118,11 +121,18 @@ export default function Debts() {
               options={DEBT_TYPES}
               iconMap={debtTypeMeta}
               placeholder="Debt type"
+              allowCustom
             />
             <input type="number" required min="1" placeholder="Total amount $" value={form.totalAmount} onChange={(e) => setForm({ ...form, totalAmount: e.target.value })} className="input-field" />
             <input type="number" required min="0" placeholder="Remaining $" value={form.remainingAmount} onChange={(e) => setForm({ ...form, remainingAmount: e.target.value })} className="input-field" />
             <input type="number" min="0" step="0.01" placeholder="Interest rate %" value={form.interestRate} onChange={(e) => setForm({ ...form, interestRate: e.target.value })} className="input-field" />
             <input type="number" min="0" placeholder="Min payment $" value={form.minimumPayment} onChange={(e) => setForm({ ...form, minimumPayment: e.target.value })} className="input-field" />
+            <Select
+              value={form.currency}
+              onChange={(v) => setForm({ ...form, currency: v })}
+              options={currencyOptions()}
+              placeholder="Currency"
+            />
             <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} className="input-field" />
             <div className="flex space-x-2">
               <button type="submit" className="btn-primary text-sm">{editing ? 'Update' : 'Add'}</button>
@@ -160,13 +170,13 @@ export default function Debts() {
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                         <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency(debt.remainingAmount)} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> {formatCurrency(debt.totalAmount)}
+                          {formatCurrency(debt.remainingAmount, debt.currency)} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> {formatCurrency(debt.totalAmount, debt.currency)}
                         </span>
                         {debt.interestRate > 0 && (
                           <span className="text-xs text-gray-400 dark:text-navy-500">{debt.interestRate}% APR</span>
                         )}
                         {debt.minimumPayment > 0 && (
-                          <span className="text-xs text-gray-400 dark:text-navy-500">Min: {formatCurrency(debt.minimumPayment)}/mo</span>
+                          <span className="text-xs text-gray-400 dark:text-navy-500">Min: {formatCurrency(debt.minimumPayment, debt.currency)}/mo</span>
                         )}
                         {debt.dueDate && (
                           <span className="text-xs text-gray-400 dark:text-navy-500">Due: {new Date(debt.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>

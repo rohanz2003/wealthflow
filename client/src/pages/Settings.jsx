@@ -6,7 +6,8 @@ import {
   FiDownload, FiTrash2, FiAlertTriangle, FiCheck, FiX, FiCalendar, FiClock,
   FiBriefcase, FiDollarSign, FiEdit2, FiSave, FiMail, FiShield, FiStar, FiAward,
 } from 'react-icons/fi';
-import { formatCurrency } from '../utils/formatCurrency';
+import { formatCurrency, setBaseCurrency } from '../utils/formatCurrency';
+import { CURRENCY_INFO, CURRENCIES } from '../utils/currency';
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -14,7 +15,7 @@ export default function Settings() {
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
-  const [profileForm, setProfileForm] = useState({ occupation: '', monthlyIncome: '', bio: '' });
+  const [profileForm, setProfileForm] = useState({ occupation: '', monthlyIncome: '', bio: '', currency: 'INR' });
   const [profileMsg, setProfileMsg] = useState('');
   const [profileError, setProfileError] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
@@ -34,6 +35,7 @@ export default function Settings() {
         occupation: res.data.profile?.occupation || '',
         monthlyIncome: res.data.profile?.monthlyIncome?.toString() || '',
         bio: res.data.profile?.bio || '',
+        currency: res.data.currency || 'INR',
       });
     }).catch(() => {}).finally(() => setProfileLoading(false));
   }, []);
@@ -48,7 +50,9 @@ export default function Settings() {
         occupation: profileForm.occupation,
         monthlyIncome: Number(profileForm.monthlyIncome) || 0,
         bio: profileForm.bio,
+        currency: profileForm.currency,
       });
+      setBaseCurrency(res.data.currency);
       setProfile(res.data);
       setProfileMsg('Profile updated');
       setTimeout(() => setProfileMsg(''), 3000);
@@ -127,6 +131,8 @@ export default function Settings() {
   const occupation = p.profile?.occupation || '';
   const monthlyIncome = p.profile?.monthlyIncome || 0;
   const bio = p.profile?.bio || '';
+  const currency = p.currency || 'INR';
+  const currencyInfo = CURRENCY_INFO[currency] || CURRENCY_INFO.INR;
 
   return (
     <div className="space-y-6">
@@ -173,7 +179,7 @@ export default function Settings() {
           </div>
 
           {!editingProfile && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mt-6">
               <div className="p-3 sm:p-4 bg-gray-50 dark:bg-navy-800 rounded-xl card-hover transition-transform duration-300 hover:-translate-y-0.5 animate-fade-up" style={{ animationDelay: '0.1s' }}>
                 <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiCalendar className="mr-1" size={12} /> Joined</p>
                 <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{joinedDate ? joinedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}</p>
@@ -189,6 +195,10 @@ export default function Settings() {
               <div className="p-3 sm:p-4 bg-gray-50 dark:bg-navy-800 rounded-xl card-hover transition-transform duration-300 hover:-translate-y-0.5 animate-fade-up" style={{ animationDelay: '0.28s' }}>
                 <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiDollarSign className="mr-1" size={12} /> Monthly Income</p>
                 <p className="text-sm font-semibold text-mint-600 dark:text-mint-400 mt-1">{monthlyIncome > 0 ? formatCurrency(monthlyIncome) : '-'}</p>
+              </div>
+              <div className="p-3 sm:p-4 bg-gray-50 dark:bg-navy-800 rounded-xl card-hover transition-transform duration-300 hover:-translate-y-0.5 animate-fade-up" style={{ animationDelay: '0.34s' }}>
+                <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiDollarSign className="mr-1" size={12} /> Currency</p>
+                <p className="text-sm font-semibold text-primary-600 dark:text-primary-400 mt-1">{currencyInfo.symbol} {currency} — {currencyInfo.name}</p>
               </div>
             </div>
           )}
@@ -209,8 +219,16 @@ export default function Settings() {
                 <input type="text" id="profile-occupation" value={profileForm.occupation} onChange={(e) => setProfileForm({ ...profileForm, occupation: e.target.value })} className="input-field" placeholder="e.g. Software Engineer" />
               </div>
               <div>
-                <label htmlFor="profile-income" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Monthly Income (₹)</label>
+                <label htmlFor="profile-income" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Monthly Income ({currencyInfo.symbol})</label>
                 <input type="number" id="profile-income" min="0" value={profileForm.monthlyIncome} onChange={(e) => setProfileForm({ ...profileForm, monthlyIncome: e.target.value })} className="input-field" placeholder="e.g. 50000" />
+              </div>
+              <div>
+                <label htmlFor="profile-currency" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Country / Currency</label>
+                <select id="profile-currency" value={profileForm.currency} onChange={(e) => setProfileForm({ ...profileForm, currency: e.target.value })} className="input-field">
+                  {CURRENCIES.map((code) => (
+                    <option key={code} value={code}>{CURRENCY_INFO[code].symbol} {code} — {CURRENCY_INFO[code].name}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div>

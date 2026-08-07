@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { formatCurrency } from '../utils/formatCurrency';
+import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
+import { currencyOptions, convert } from '../utils/currency';
 import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiTarget } from 'react-icons/fi';
 import { categoryIcon, goalCategoryMeta } from '../utils/categoryMeta';
 import Select from '../components/Select';
@@ -11,7 +12,7 @@ export default function SavingsGoals() {
   const [goals, setGoals] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ title: '', description: '', targetAmount: '', category: 'Other', targetDate: '' });
+  const [form, setForm] = useState({ title: '', description: '', targetAmount: '', category: 'Other', targetDate: '', currency: getBaseCurrency() });
   const [projections, setProjections] = useState(null);
   const [loading, setLoading] = useState(true);
   const [addFundsFor, setAddFundsFor] = useState(null);
@@ -33,13 +34,13 @@ export default function SavingsGoals() {
 
   const fetchGoals = fetchData;
 
-  const resetForm = () => { setForm({ title: '', description: '', targetAmount: '', category: 'Other', targetDate: '' }); setEditing(null); setShowForm(false); };
+  const resetForm = () => { setForm({ title: '', description: '', targetAmount: '', category: 'Other', targetDate: '', currency: getBaseCurrency() }); setEditing(null); setShowForm(false); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const targetAmount = Number(form.targetAmount);
     if (!Number.isFinite(targetAmount) || targetAmount <= 0) return;
-    const payload = { title: form.title, description: form.description, targetAmount, category: form.category };
+    const payload = { title: form.title, description: form.description, targetAmount, category: form.category, currency: form.currency };
     if (form.targetDate) payload.targetDate = form.targetDate;
     try {
       if (editing) await axios.put(`/api/savings/${editing}`, payload);
@@ -50,7 +51,7 @@ export default function SavingsGoals() {
   };
 
   const handleEdit = (goal) => {
-    setForm({ title: goal.title, description: goal.description, targetAmount: goal.targetAmount.toString(), category: goal.category, targetDate: goal.targetDate ? goal.targetDate.split('T')[0] : '' });
+    setForm({ title: goal.title, description: goal.description, targetAmount: goal.targetAmount.toString(), category: goal.category, targetDate: goal.targetDate ? goal.targetDate.split('T')[0] : '', currency: goal.currency || getBaseCurrency() });
     setEditing(goal._id);
     setShowForm(true);
   };
@@ -69,8 +70,9 @@ export default function SavingsGoals() {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" /></div>;
   }
 
-  const totalTarget = goals.reduce((s, g) => s + g.targetAmount, 0);
-  const totalSaved = goals.reduce((s, g) => s + g.currentAmount, 0);
+  const base = getBaseCurrency();
+  const totalTarget = goals.reduce((s, g) => s + convert(g.targetAmount, g.currency, base), 0);
+  const totalSaved = goals.reduce((s, g) => s + convert(g.currentAmount, g.currency, base), 0);
   const overallProgress = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
 
   return (
@@ -114,13 +116,20 @@ export default function SavingsGoals() {
         <div className="card p-4 sm:p-6">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <input type="text" required placeholder="Goal title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="input-field" />
-            <input type="number" required min="1" placeholder="Target amount $" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} className="input-field" />
+            <input type="number" required min="1" placeholder="Target amount" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} className="input-field" />
+            <Select
+              value={form.currency}
+              onChange={(v) => setForm({ ...form, currency: v })}
+              options={currencyOptions()}
+              placeholder="Currency"
+            />
             <Select
               value={form.category}
               onChange={(v) => setForm({ ...form, category: v })}
               options={GOAL_CATEGORIES}
               iconMap={goalCategoryMeta}
               placeholder="Category"
+              allowCustom
             />
             <input type="text" placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" />
             <input type="date" value={form.targetDate} onChange={(e) => setForm({ ...form, targetDate: e.target.value })} className="input-field" />
@@ -170,7 +179,7 @@ export default function SavingsGoals() {
 
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {formatCurrency(goal.currentAmount)} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> {formatCurrency(goal.targetAmount)}
+                    {formatCurrency(goal.currentAmount, goal.currency)} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> {formatCurrency(goal.targetAmount, goal.currency)}
                   </span>
                   {goal.targetDate && (
                     <span className="text-xs text-gray-400 dark:text-navy-500 flex items-center"><FiCalendar className="mr-1" size={14} /> {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
@@ -180,7 +189,7 @@ export default function SavingsGoals() {
                   <div className={`h-2 sm:h-2.5 rounded-full transition-all duration-1000 ${goal.isCompleted ? 'bg-gradient-to-r from-mint-500 to-mint-600' : 'bg-gradient-to-r from-primary-500 to-magenta-500'} progress-shimmer`} style={{ width: `${progress}%` }} />
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-                  <p className="text-xs text-gray-400 dark:text-navy-500">{progress}% complete · {formatCurrency(remaining)} remaining</p>
+                  <p className="text-xs text-gray-400 dark:text-navy-500">{progress}% complete · {formatCurrency(remaining, goal.currency)} remaining</p>
                   {proj && !goal.isCompleted && (
                     <>
                       {proj.monthsToGoal ? (
@@ -218,7 +227,7 @@ export default function SavingsGoals() {
           <div className="modal-content p-5 sm:p-6 mx-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Add Funds</h3>
             <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">{addFundsFor.title}</p>
-            <input type="number" min="0.01" step="0.01" required placeholder="Amount to add $" value={addAmount} onChange={(e) => setAddAmount(e.target.value)} className="input-field mb-4" autoFocus />
+            <input type="number" min="0.01" step="0.01" required placeholder={`Amount to add (${addFundsFor.currency || 'INR'})`} value={addAmount} onChange={(e) => setAddAmount(e.target.value)} className="input-field mb-4" autoFocus />
             <div className="flex space-x-3">
               <button onClick={() => handleAddFunds(addFundsFor)} disabled={!addAmount || Number(addAmount) <= 0} className="btn-primary text-sm flex-1 justify-center">Add</button>
               <button onClick={() => { setAddFundsFor(null); setAddAmount(''); }} className="btn-secondary text-sm flex-1 justify-center">Cancel</button>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { formatCurrency } from '../utils/formatCurrency';
+import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
+import { CURRENCY_INFO, convert } from '../utils/currency';
 import { FiTrendingUp, FiDollarSign, FiBarChart2, FiPieChart, FiActivity } from 'react-icons/fi';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler } from 'chart.js';
@@ -43,7 +44,7 @@ export default function WealthAnalytics() {
         setExpenses(expRes.data.data || expRes.data || []);
         setIncomes(incRes.data.data || incRes.data || []);
         const goals = goalRes.data.data || goalRes.data || [];
-        setTotalSavings(goals.reduce((s, g) => s + g.currentAmount, 0));
+        setTotalSavings(goals.reduce((s, g) => s + convert(g.currentAmount, g.currency, getBaseCurrency()), 0));
       } catch (err) { console.error('Error:', err); } finally { if (!cancelled) setLoading(false); }
     };
     fetchData();
@@ -54,16 +55,18 @@ export default function WealthAnalytics() {
     return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-[3px] border-primary-200 dark:border-navy-600 border-t-primary-600 dark:border-t-primary-400" /></div>;
   }
 
-  const totalInvested = investments.reduce((s, i) => s + i.currentValue, 0);
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-  const totalIncome = incomes.reduce((s, i) => s + i.amount, 0);
+  const base = getBaseCurrency();
+  const baseSymbol = CURRENCY_INFO[base]?.symbol || '₹';
+  const totalInvested = investments.reduce((s, i) => s + convert(i.currentValue, i.currency, base), 0);
+  const totalExpenses = expenses.reduce((s, e) => s + convert(e.amount, e.currency, base), 0);
+  const totalIncome = incomes.reduce((s, i) => s + convert(i.amount, i.currency, base), 0);
 
   const expenseByCat = {};
-  expenses.forEach((e) => { expenseByCat[e.category] = (expenseByCat[e.category] || 0) + e.amount; });
+  expenses.forEach((e) => { expenseByCat[e.category] = (expenseByCat[e.category] || 0) + convert(e.amount, e.currency, base); });
   const incomeByCat = {};
-  incomes.forEach((i) => { incomeByCat[i.category] = (incomeByCat[i.category] || 0) + i.amount; });
+  incomes.forEach((i) => { incomeByCat[i.category] = (incomeByCat[i.category] || 0) + convert(i.amount, i.currency, base); });
   const investmentByType = {};
-  investments.forEach((inv) => { investmentByType[inv.type] = (investmentByType[inv.type] || 0) + inv.currentValue; });
+  investments.forEach((inv) => { investmentByType[inv.type] = (investmentByType[inv.type] || 0) + convert(inv.currentValue, inv.currency, base); });
 
   const monthlyIncomeData = months.map((m) => m.income);
   const monthlyExpenseData = months.map((m) => m.expense);
@@ -101,7 +104,7 @@ export default function WealthAnalytics() {
     },
     scales: {
       x: { grid: { display: false }, ticks: { color: '#94a3b8', maxRotation: isMobile ? 45 : 0, font: { size: isMobile ? 9 : 12 } } },
-      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: isMobile ? 9 : 12 } } },
+      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `${baseSymbol}${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: isMobile ? 9 : 12 } } },
     },
   };
 
@@ -125,7 +128,7 @@ export default function WealthAnalytics() {
     plugins: { legend: { display: false } },
     scales: {
       x: { grid: { display: false }, ticks: { color: '#94a3b8', maxRotation: isMobile ? 45 : 0, font: { size: isMobile ? 9 : 12 } } },
-      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: isMobile ? 9 : 12 } } },
+      y: { grid: { color: 'rgba(148, 163, 184, 0.2)' }, ticks: { callback: (v) => `${baseSymbol}${(v / 1000).toFixed(0)}k`, color: '#94a3b8', font: { size: isMobile ? 9 : 12 } } },
     },
   };
 

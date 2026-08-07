@@ -4,10 +4,12 @@ const auth = require('../middleware/auth');
 const Debt = require('../models/Debt');
 const cache = require('../utils/cache');
 const pick = require('../utils/pick');
+const { convert } = require('../utils/currency');
+const { CURRENCIES } = require('../../shared/constants');
 
 const router = express.Router();
 
-const ALLOWED_DEBT_FIELDS = ['name', 'type', 'totalAmount', 'remainingAmount', 'interestRate', 'minimumPayment', 'dueDate', 'isPaid'];
+const ALLOWED_DEBT_FIELDS = ['name', 'type', 'totalAmount', 'remainingAmount', 'interestRate', 'minimumPayment', 'dueDate', 'isPaid', 'currency'];
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -19,8 +21,9 @@ router.get('/', auth, async (req, res) => {
       Debt.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       Debt.countDocuments(filter),
     ]);
-    const totalDebt = debts.reduce((s, d) => s + d.remainingAmount, 0);
-    const totalOriginal = debts.reduce((s, d) => s + d.totalAmount, 0);
+    const base = req.user.currency || 'INR';
+    const totalDebt = debts.reduce((s, d) => s + convert(d.remainingAmount, d.currency, base), 0);
+    const totalOriginal = debts.reduce((s, d) => s + convert(d.totalAmount, d.currency, base), 0);
     const paidOff = debts.filter((d) => d.isPaid).length;
     const active = debts.filter((d) => !d.isPaid).length;
     res.json({ data: debts, total, page, limit, totalPages: Math.ceil(total / limit), totalDebt, totalOriginal, paidOff, active });
@@ -36,6 +39,7 @@ router.post(
     body('name').trim().notEmpty().withMessage('Debt name is required'),
     body('totalAmount').isNumeric().withMessage('Total amount is required'),
     body('remainingAmount').isNumeric().withMessage('Remaining amount is required'),
+    body('currency').optional().isIn(CURRENCIES).withMessage('Invalid currency'),
   ],
   async (req, res) => {
     try {
@@ -43,7 +47,9 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const debt = await Debt.create({ ...pick(req.body, ALLOWED_DEBT_FIELDS), user: req.userId });
+      const data = pick(req.body, ALLOWED_DEBT_FIELDS);
+      if (data.currency === undefined) data.currency = req.user.currency || 'INR';
+      const debt = await Debt.create({ ...data, user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(debt);
     } catch {

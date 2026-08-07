@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { CATEGORIES } = require('../../shared/constants');
+const { CATEGORIES, CURRENCIES } = require('../../shared/constants');
 
 const expenseSchema = new mongoose.Schema({
   user: {
@@ -34,6 +34,11 @@ const expenseSchema = new mongoose.Schema({
   isRecurring: {
     type: Boolean,
     default: false,
+  },
+  currency: {
+    type: String,
+    enum: CURRENCIES,
+    default: 'INR',
   },
   createdAt: {
     type: Date,

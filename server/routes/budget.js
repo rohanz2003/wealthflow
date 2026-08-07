@@ -4,6 +4,8 @@ const auth = require('../middleware/auth');
 const Budget = require('../models/Budget');
 const Expense = require('../models/Expense');
 const cache = require('../utils/cache');
+const { convert } = require('../utils/currency');
+const { CURRENCIES } = require('../../shared/constants');
 
 const router = express.Router();
 
@@ -23,18 +25,21 @@ router.get('/', auth, async (req, res) => {
       date: { $gte: startOfMonth, $lt: startOfNext },
     }).lean();
 
-    const spentByCategory = {};
+    const base = req.user.currency || 'INR';
+
+    const spentBaseByCategory = {};
     expenses.forEach((e) => {
-      spentByCategory[e.category] = (spentByCategory[e.category] || 0) + e.amount;
+      spentBaseByCategory[e.category] = (spentBaseByCategory[e.category] || 0) + convert(e.amount, e.currency, base);
     });
 
     let totalBudgeted = 0;
     let totalSpent = 0;
 
     const result = budgets.map((b) => {
-      const spent = spentByCategory[b.category] || 0;
-      totalBudgeted += b.monthlyLimit;
-      totalSpent += spent;
+      const spentBase = spentBaseByCategory[b.category] || 0;
+      const spent = convert(spentBase, base, b.currency || 'INR');
+      totalBudgeted += convert(b.monthlyLimit, b.currency || 'INR', base);
+      totalSpent += spentBase;
       return {
         ...b,
         spent,
@@ -44,11 +49,11 @@ router.get('/', auth, async (req, res) => {
       };
     });
 
-    const categoriesWithoutBudget = Object.keys(spentByCategory).filter(
+    const categoriesWithoutBudget = Object.keys(spentBaseByCategory).filter(
       (cat) => !budgets.some((b) => b.category === cat)
     ).map((cat) => ({
       category: cat,
-      spent: spentByCategory[cat],
+      spent: spentBaseByCategory[cat],
     }));
 
     res.json({
@@ -71,6 +76,7 @@ router.post(
   [
     body('category').trim().notEmpty().withMessage('Category is required'),
     body('monthlyLimit').isNumeric().withMessage('Monthly limit must be a number'),
+    body('currency').optional().isIn(CURRENCIES).withMessage('Invalid currency'),
   ],
   async (req, res) => {
     try {
@@ -101,6 +107,7 @@ router.post(
         monthlyLimit: req.body.monthlyLimit,
         month,
         year,
+        currency: req.body.currency || req.user.currency || 'INR',
       });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(budget);
@@ -123,6 +130,12 @@ router.put('/:id', auth, async (req, res) => {
     const budget = await Budget.findOne({ _id: req.params.id, user: req.userId });
     if (!budget) return res.status(404).json({ message: 'Budget not found' });
     if (req.body.monthlyLimit !== undefined) budget.monthlyLimit = req.body.monthlyLimit;
+    if (req.body.currency !== undefined) {
+      if (!CURRENCIES.includes(req.body.currency)) {
+        return res.status(400).json({ message: 'Invalid currency' });
+      }
+      budget.currency = req.body.currency;
+    }
     await budget.save();
     cache.invalidateUserCache(req.userId);
     res.json(budget);

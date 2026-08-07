@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { CURRENCIES } = require('../../shared/constants');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -30,6 +31,11 @@ const userSchema = new mongoose.Schema({
     monthlyIncome: { type: Number, default: 0 },
     bio: { type: String, default: '' },
     avatar: { type: String, default: '' },
+  },
+  currency: {
+    type: String,
+    enum: CURRENCIES,
+    default: 'INR',
   },
   refreshToken: {
     type: String,

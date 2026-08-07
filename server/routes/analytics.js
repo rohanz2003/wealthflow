@@ -9,6 +9,7 @@ const SavingsGoal = require('../models/SavingsGoal');
 const Investment = require('../models/Investment');
 const cache = require('../utils/cache');
 const logger = require('../utils/logger');
+const { convert } = require('../utils/currency');
 
 const router = express.Router();
 
@@ -56,10 +57,10 @@ router.get('/kpis', auth, async (req, res) => {
     const completedGoals = goals.filter((g) => g.isCompleted).length;
     const goalCompletionRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
 
-    const monthlyExpenseTotal = monthlyExpenses.reduce((s, e) => s + e.amount, 0);
-    const monthlyIncomeTotal = monthlyIncomes.reduce((s, i) => s + i.amount, 0);
+    const monthlyExpenseTotal = monthlyExpenses.reduce((s, e) => s + convert(e.amount, e.currency, req.user.currency), 0);
+    const monthlyIncomeTotal = monthlyIncomes.reduce((s, i) => s + convert(i.amount, i.currency, req.user.currency), 0);
 
-    const investmentTotal = investments.reduce((s, i) => s + i.currentValue, 0);
+    const investmentTotal = investments.reduce((s, i) => s + convert(i.currentValue, i.currency, req.user.currency), 0);
 
     const monthlyExpenseCount = monthlyExpenses.length;
     const monthlyIncomeCount = monthlyIncomes.length;
@@ -105,6 +106,7 @@ router.get('/monthly-activity', auth, async (req, res) => {
     if (cached) return res.json(cached);
 
     const userId = req.userId;
+    const base = req.user.currency || 'INR';
     const now = new Date();
     const twelveMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
 
@@ -130,7 +132,7 @@ router.get('/monthly-activity', auth, async (req, res) => {
       const d = new Date(e.date);
       const key = d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
       if (monthlyMap[key]) {
-        monthlyMap[key].expense += e.amount;
+        monthlyMap[key].expense += convert(e.amount, e.currency, base);
         monthlyMap[key].count += 1;
       }
     });
@@ -139,7 +141,7 @@ router.get('/monthly-activity', auth, async (req, res) => {
       const d = new Date(i.date);
       const key = d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
       if (monthlyMap[key]) {
-        monthlyMap[key].income += i.amount;
+        monthlyMap[key].income += convert(i.amount, i.currency, base);
         monthlyMap[key].count += 1;
       }
     });
@@ -235,6 +237,7 @@ router.get('/spending-insights', auth, async (req, res) => {
     if (cached) return res.json(cached);
 
     const userId = req.userId;
+    const base = req.user.currency || 'INR';
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
@@ -249,9 +252,9 @@ router.get('/spending-insights', auth, async (req, res) => {
     const previousExpenses = await Expense.find({ user: userId, date: { $gte: sixMonthsAgo, $lt: threeMonthsAgo } }).lean();
 
     const currentByCat = {};
-    currentExpenses.forEach((e) => { currentByCat[e.category] = (currentByCat[e.category] || 0) + e.amount; });
+    currentExpenses.forEach((e) => { currentByCat[e.category] = (currentByCat[e.category] || 0) + convert(e.amount, e.currency, base); });
     const prevByCat = {};
-    previousExpenses.forEach((e) => { prevByCat[e.category] = (prevByCat[e.category] || 0) + e.amount; });
+    previousExpenses.forEach((e) => { prevByCat[e.category] = (prevByCat[e.category] || 0) + convert(e.amount, e.currency, base); });
 
     const anomalies = [];
     Object.entries(currentByCat).forEach(([cat, amount]) => {
@@ -268,8 +271,8 @@ router.get('/spending-insights', auth, async (req, res) => {
       }
     });
 
-    const currentTotal = currentExpenses.reduce((s, e) => s + e.amount, 0);
-    const prevTotal = recentExpenses.reduce((s, e) => s + e.amount, 0);
+    const currentTotal = currentExpenses.reduce((s, e) => s + convert(e.amount, e.currency, base), 0);
+    const prevTotal = recentExpenses.reduce((s, e) => s + convert(e.amount, e.currency, base), 0);
     const prevMonthlyAvg = prevTotal / 3;
     const spendingTrend = prevMonthlyAvg > 0
       ? Math.round(((currentTotal - prevMonthlyAvg) / prevMonthlyAvg) * 100)
@@ -284,7 +287,7 @@ router.get('/spending-insights', auth, async (req, res) => {
         percentOfTotal: currentTotal > 0 ? Math.round((amt / currentTotal) * 100) : 0,
       }));
 
-    const monthlyIncome = incomes.reduce((s, i) => s + i.amount, 0);
+    const monthlyIncome = incomes.reduce((s, i) => s + convert(i.amount, i.currency, base), 0);
     const expenseRatio = monthlyIncome > 0 ? Math.round((currentTotal / monthlyIncome) * 100) : 0;
 
     const recommendations = [];
@@ -325,6 +328,7 @@ router.get('/goal-projections', auth, async (req, res) => {
     if (cached) return res.json(cached);
 
     const userId = req.userId;
+    const base = req.user.currency || 'INR';
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -334,12 +338,12 @@ router.get('/goal-projections', auth, async (req, res) => {
       Income.find({ user: userId, date: { $gte: startOfMonth } }).lean(),
     ]);
 
-    const monthlyIncome = monthlyIncomes.reduce((s, i) => s + i.amount, 0);
-    const monthlyExpense = monthlyExpenses.reduce((s, e) => s + e.amount, 0);
+    const monthlyIncome = monthlyIncomes.reduce((s, i) => s + convert(i.amount, i.currency, base), 0);
+    const monthlyExpense = monthlyExpenses.reduce((s, e) => s + convert(e.amount, e.currency, base), 0);
     const monthlySurplus = Math.max(0, monthlyIncome - monthlyExpense);
 
     const projections = goals.map((g) => {
-      const remaining = g.targetAmount - g.currentAmount;
+      const remaining = convert(g.targetAmount, g.currency, base) - convert(g.currentAmount, g.currency, base);
       let monthsToGoal = remaining > 0 && monthlySurplus > 0
         ? Math.ceil(remaining / monthlySurplus)
         : null;
@@ -383,6 +387,7 @@ router.get('/wealth-projections', auth, async (req, res) => {
     if (cached) return res.json(cached);
 
     const userId = req.userId;
+    const base = req.user.currency || 'INR';
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -393,16 +398,16 @@ router.get('/wealth-projections', auth, async (req, res) => {
       Income.find({ user: userId, date: { $gte: startOfMonth } }).lean(),
     ]);
 
-    const monthlyIncome = monthlyIncomes.reduce((s, i) => s + i.amount, 0);
-    const monthlyExpense = monthlyExpenses.reduce((s, e) => s + e.amount, 0);
+    const monthlyIncome = monthlyIncomes.reduce((s, i) => s + convert(i.amount, i.currency, base), 0);
+    const monthlyExpense = monthlyExpenses.reduce((s, e) => s + convert(e.amount, e.currency, base), 0);
     const monthlySavings = Math.max(0, monthlyIncome - monthlyExpense);
 
-    const currentInvestments = investments.reduce((s, i) => s + i.currentValue, 0);
+    const currentInvestments = investments.reduce((s, i) => s + convert(i.currentValue, i.currency, base), 0);
     const avgReturn = investments.length > 0
       ? investments.reduce((s, i) => s + (i.returnRate || 0), 0) / investments.length
       : 7;
 
-    const goalSavings = goals.reduce((s, g) => s + g.currentAmount, 0);
+    const goalSavings = goals.reduce((s, g) => s + convert(g.currentAmount, g.currency, base), 0);
     const currentNetWorth = monthlyIncome + currentInvestments + goalSavings - monthlyExpense;
 
     const years = [1, 3, 5, 10, 20];
@@ -458,6 +463,7 @@ router.get('/stability', auth, async (req, res) => {
     if (cached) return res.json(cached);
 
     const userId = req.userId;
+    const base = req.user.currency || 'INR';
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -470,11 +476,11 @@ router.get('/stability', auth, async (req, res) => {
       Income.find({ user: userId, date: { $gte: startOfMonth } }).lean(),
     ]);
 
-    const monthlyExpense = monthlyExpenses.reduce((s, e) => s + e.amount, 0);
-    const monthlyIncome = incomes.reduce((s, i) => s + i.amount, 0);
-    const totalSavings = goals.reduce((s, g) => s + g.currentAmount, 0);
-    const totalInvested = investments.reduce((s, i) => s + i.currentValue, 0);
-    const totalDebt = debts.reduce((s, d) => s + d.remainingAmount, 0);
+    const monthlyExpense = monthlyExpenses.reduce((s, e) => s + convert(e.amount, e.currency, base), 0);
+    const monthlyIncome = incomes.reduce((s, i) => s + convert(i.amount, i.currency, base), 0);
+    const totalSavings = goals.reduce((s, g) => s + convert(g.currentAmount, g.currency, base), 0);
+    const totalInvested = investments.reduce((s, i) => s + convert(i.currentValue, i.currency, base), 0);
+    const totalDebt = debts.reduce((s, d) => s + convert(d.remainingAmount, d.currency, base), 0);
     const totalAssets = totalSavings + totalInvested;
     const netWorth = totalAssets - totalDebt;
 

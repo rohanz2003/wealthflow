@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { formatCurrency } from '../utils/formatCurrency';
+import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
+import { CURRENCY_INFO } from '../utils/currency';
 import { FiDollarSign, FiTrendingUp, FiTarget, FiCheckCircle, FiAward } from 'react-icons/fi';
 import { Doughnut, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Title, Filler } from 'chart.js';
@@ -109,6 +110,8 @@ export default function Dashboard() {
     worth: netWorth,
   };
 
+  const baseSymbol = CURRENCY_INFO[getBaseCurrency()]?.symbol || '₹';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -154,7 +157,7 @@ export default function Dashboard() {
                 plugins: { legend: { display: false } },
                 scales: {
                   x: { grid: { display: false }, ticks: { color: '#8a86a3', maxTicksLimit: 6, font: { size: 10 } } },
-                  y: { grid: { color: 'rgba(138, 134, 163, 0.18)' }, ticks: { callback: (v) => `₹${(v / 1000).toFixed(0)}k`, color: '#8a86a3', font: { size: 10 }, maxTicksLimit: 5 } },
+                  y: { grid: { color: 'rgba(138, 134, 163, 0.18)' }, ticks: { callback: (v) => `${baseSymbol}${(v / 1000).toFixed(0)}k`, color: '#8a86a3', font: { size: 10 }, maxTicksLimit: 5 } },
                 },
               }} />
             </div>

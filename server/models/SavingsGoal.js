@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { GOAL_CATEGORIES } = require('../../shared/constants');
+const { GOAL_CATEGORIES, CURRENCIES } = require('../../shared/constants');
 
 const savingsGoalSchema = new mongoose.Schema({
   user: {
@@ -38,6 +38,11 @@ const savingsGoalSchema = new mongoose.Schema({
   isCompleted: {
     type: Boolean,
     default: false,
+  },
+  currency: {
+    type: String,
+    enum: CURRENCIES,
+    default: 'INR',
   },
   createdAt: {
     type: Date,

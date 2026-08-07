@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { CURRENCIES } = require('../../shared/constants');
 
 const budgetSchema = new mongoose.Schema({
   user: {
@@ -23,6 +24,11 @@ const budgetSchema = new mongoose.Schema({
   year: {
     type: Number,
     required: true,
+  },
+  currency: {
+    type: String,
+    enum: CURRENCIES,
+    default: 'INR',
   },
   createdAt: {
     type: Date,

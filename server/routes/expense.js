@@ -4,10 +4,12 @@ const Expense = require('../models/Expense');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
 const pick = require('../utils/pick');
+const { convert } = require('../utils/currency');
+const { CURRENCIES } = require('../../shared/constants');
 
 const router = express.Router();
 
-const ALLOWED_EXPENSE_FIELDS = ['title', 'amount', 'category', 'date', 'description', 'isRecurring'];
+const ALLOWED_EXPENSE_FIELDS = ['title', 'amount', 'category', 'date', 'description', 'isRecurring', 'currency'];
 
 const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -51,6 +53,7 @@ router.post(
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('amount').isNumeric().withMessage('Amount must be a number'),
     body('category').notEmpty().withMessage('Category is required'),
+    body('currency').optional().isIn(CURRENCIES).withMessage('Invalid currency'),
   ],
   async (req, res) => {
     try {
@@ -58,7 +61,9 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const expense = await Expense.create({ ...pick(req.body, ALLOWED_EXPENSE_FIELDS), user: req.userId });
+      const data = pick(req.body, ALLOWED_EXPENSE_FIELDS);
+      if (data.currency === undefined) data.currency = req.user.currency || 'INR';
+      const expense = await Expense.create({ ...data, user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(expense);
     } catch {
@@ -72,10 +77,12 @@ router.get('/summary', auth, async (req, res) => {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const expenses = await Expense.find({ user: req.userId, date: { $gte: startOfMonth } });
-    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const base = req.user.currency || 'INR';
+    const toBase = (e) => convert(e.amount, e.currency, base);
+    const total = expenses.reduce((sum, e) => sum + toBase(e), 0);
     const byCategory = {};
     expenses.forEach((e) => {
-      byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
+      byCategory[e.category] = (byCategory[e.category] || 0) + toBase(e);
     });
     res.json({ total, byCategory, count: expenses.length });
   } catch {

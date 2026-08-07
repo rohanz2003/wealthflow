@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const auth = require('../middleware/auth');
 const asyncHandler = require('../utils/asyncHandler');
+const { CURRENCIES } = require('../../shared/constants');
 
 const router = express.Router();
 
@@ -51,6 +52,7 @@ router.post(
       .matches(/[A-Z]/).withMessage('Password must contain an uppercase letter')
       .matches(/[a-z]/).withMessage('Password must contain a lowercase letter')
       .matches(/[0-9]/).withMessage('Password must contain a number'),
+    body('currency').optional().isIn(CURRENCIES).withMessage('Invalid currency'),
   ],
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
@@ -62,14 +64,14 @@ router.post(
     if (existing) {
       return res.status(400).json({ message: 'Registration failed. Please check your information.' });
     }
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name, email, password, currency: req.body.currency });
     const accessToken = generateToken(user);
     const refreshToken = user.generateRefreshToken();
     await user.save();
     setTokenCookies(res, accessToken, refreshToken);
     res.status(201).json({
       token: accessToken,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, currency: user.currency },
     });
   })
 );
@@ -111,7 +113,7 @@ router.post(
     setTokenCookies(res, accessToken, refreshToken);
     res.json({
       token: accessToken,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, currency: user.currency },
     });
   })
 );
@@ -157,12 +159,19 @@ router.get('/me', auth, asyncHandler(async (req, res) => {
 }));
 
 router.put('/profile', auth, asyncHandler(async (req, res) => {
-  const { occupation, monthlyIncome, bio } = req.body;
+  const { occupation, monthlyIncome, bio, currency } = req.body;
+  const update = { profile: { occupation, monthlyIncome, bio } };
+  if (currency !== undefined) {
+    if (!CURRENCIES.includes(currency)) {
+      return res.status(400).json({ message: 'Invalid currency' });
+    }
+    update.currency = currency;
+  }
   const user = await User.findByIdAndUpdate(
     req.userId,
-    { profile: { occupation, monthlyIncome, bio } },
+    update,
     { new: true }
-  ).select('-password -refreshToken');
+  ).select('-password -refreshToken -previousRefreshToken');
   res.json(user);
 }));
 

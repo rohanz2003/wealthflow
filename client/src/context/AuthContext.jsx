@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { setBaseCurrency } from '../utils/formatCurrency';
 
 const AuthContext = createContext(null);
 
@@ -20,6 +21,7 @@ export function AuthProvider({ children }) {
   const fetchUser = async () => {
     try {
       const res = await axios.get('/api/auth/me', { withCredentials: true });
+      setBaseCurrency(res.data.currency);
       setUser(res.data);
     } catch {
       setUser(null);
@@ -31,13 +33,15 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const res = await axios.post('/api/auth/login', { email, password }, { withCredentials: true });
     const u = res.data.user;
+    setBaseCurrency(u.currency);
     setUser(u);
     return u;
   };
 
-  const register = async (name, email, password) => {
-    const res = await axios.post('/api/auth/register', { name, email, password }, { withCredentials: true });
+  const register = async (name, email, password, currency) => {
+    const res = await axios.post('/api/auth/register', { name, email, password, currency }, { withCredentials: true });
     const u = res.data.user;
+    setBaseCurrency(u.currency);
     setUser(u);
     return u;
   };

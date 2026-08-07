@@ -41,23 +41,23 @@ function calculateGoalProgress(currentAmount, targetAmount) {
   return Math.min(100, Math.round((currentAmount / targetAmount) * 100));
 }
 
-function aggregateByCategory(items, keyField, valueField) {
+function aggregateByCategory(items, keyField, valueField, transform) {
   return items.reduce((acc, item) => {
     const key = item[keyField];
-    acc[key] = (acc[key] || 0) + item[valueField];
+    acc[key] = (acc[key] || 0) + (transform ? transform(item) : item[valueField]);
     return acc;
   }, {});
 }
 
-function buildDailyBalanceMap(expenses, incomes) {
+function buildDailyBalanceMap(expenses, incomes, transform) {
   const map = new Map();
   expenses.forEach((e) => {
     const key = new Date(e.date).toDateString();
-    map.set(key, (map.get(key) || 0) - e.amount);
+    map.set(key, (map.get(key) || 0) - (transform ? transform(e) : e.amount));
   });
   incomes.forEach((i) => {
     const key = new Date(i.date).toDateString();
-    map.set(key, (map.get(key) || 0) + i.amount);
+    map.set(key, (map.get(key) || 0) + (transform ? transform(i) : i.amount));
   });
   return map;
 }

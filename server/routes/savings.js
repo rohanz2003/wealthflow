@@ -4,11 +4,12 @@ const SavingsGoal = require('../models/SavingsGoal');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
 const pick = require('../utils/pick');
+const { CURRENCIES } = require('../../shared/constants');
 
 const router = express.Router();
 
-const ALLOWED_GOAL_FIELDS = ['title', 'description', 'targetAmount', 'currentAmount', 'category', 'targetDate'];
-const ALLOWED_GOAL_CREATE_FIELDS = ['title', 'description', 'targetAmount', 'category', 'targetDate'];
+const ALLOWED_GOAL_FIELDS = ['title', 'description', 'targetAmount', 'currentAmount', 'category', 'targetDate', 'currency'];
+const ALLOWED_GOAL_CREATE_FIELDS = ['title', 'description', 'targetAmount', 'category', 'targetDate', 'currency'];
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -32,6 +33,7 @@ router.post(
   [
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('targetAmount').isNumeric().withMessage('Target amount must be a number'),
+    body('currency').optional().isIn(CURRENCIES).withMessage('Invalid currency'),
   ],
   async (req, res) => {
     try {
@@ -39,7 +41,9 @@ router.post(
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
       }
-      const goal = await SavingsGoal.create({ ...pick(req.body, ALLOWED_GOAL_CREATE_FIELDS), user: req.userId });
+      const data = pick(req.body, ALLOWED_GOAL_CREATE_FIELDS);
+      if (data.currency === undefined) data.currency = req.user.currency || 'INR';
+      const goal = await SavingsGoal.create({ ...data, user: req.userId });
       cache.invalidateUserCache(req.userId);
       res.status(201).json(goal);
     } catch {

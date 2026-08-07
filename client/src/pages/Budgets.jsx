@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { formatCurrency } from '../utils/formatCurrency';
+import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
+import { currencyOptions } from '../utils/currency';
 import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiPieChart } from 'react-icons/fi';
 import { categoryIcon, expenseCategoryMeta } from '../utils/categoryMeta';
 import Select from '../components/Select';
@@ -12,7 +13,7 @@ export default function Budgets() {
   const [showForm, setShowForm] = useState(false);
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
-  const [form, setForm] = useState({ category: '', monthlyLimit: '' });
+  const [form, setForm] = useState({ category: '', monthlyLimit: '', currency: getBaseCurrency() });
   const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -27,7 +28,7 @@ export default function Budgets() {
 
   useEffect(() => { fetchBudgets(); }, [fetchBudgets]);
 
-  const resetForm = () => { setForm({ category: '', monthlyLimit: '' }); setEditing(null); setShowForm(false); };
+  const resetForm = () => { setForm({ category: '', monthlyLimit: '', currency: getBaseCurrency() }); setEditing(null); setShowForm(false); };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,9 +36,9 @@ export default function Budgets() {
     if (!Number.isFinite(monthlyLimit) || monthlyLimit < 1) return;
     try {
       if (editing) {
-        await axios.put(`/api/budgets/${editing}`, { monthlyLimit });
+        await axios.put(`/api/budgets/${editing}`, { monthlyLimit, currency: form.currency });
       } else {
-        await axios.post('/api/budgets', { category: form.category, monthlyLimit, month, year });
+        await axios.post('/api/budgets', { category: form.category, monthlyLimit, month, year, currency: form.currency });
       }
       resetForm();
       fetchBudgets();
@@ -45,7 +46,7 @@ export default function Budgets() {
   };
 
   const handleEdit = (b) => {
-    setForm({ category: b.category, monthlyLimit: b.monthlyLimit.toString() });
+    setForm({ category: b.category, monthlyLimit: b.monthlyLimit.toString(), currency: b.currency || getBaseCurrency() });
     setEditing(b._id);
     setShowForm(true);
   };
@@ -122,9 +123,16 @@ export default function Budgets() {
                 iconMap={expenseCategoryMeta}
                 disabledOptions={data.budgets.map((b) => b.category)}
                 placeholder="Select category"
+                allowCustom
               />
             )}
-            <input type="number" required min="1" placeholder="Monthly limit $" value={form.monthlyLimit} onChange={(e) => setForm({ ...form, monthlyLimit: e.target.value })} className="input-field" />
+            <input type="number" required min="1" placeholder="Monthly limit" value={form.monthlyLimit} onChange={(e) => setForm({ ...form, monthlyLimit: e.target.value })} className="input-field" />
+            <Select
+              value={form.currency}
+              onChange={(v) => setForm({ ...form, currency: v })}
+              options={currencyOptions()}
+              placeholder="Currency"
+            />
             <div className="flex space-x-2">
               <button type="submit" className="btn-primary text-sm">{editing ? 'Update' : 'Set Budget'}</button>
               <button type="button" onClick={resetForm} className="px-4 py-2 bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-navy-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-navy-600 transition-colors">Cancel</button>
@@ -163,11 +171,11 @@ export default function Budgets() {
                     )}
                   </div>
                   <div className="flex items-center space-x-3 mt-1">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(b.spent)}</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(b.spent, b.currency)}</span>
                     <span className="text-sm text-gray-400 dark:text-navy-500">of</span>
-                    <span className="text-sm text-gray-500 dark:text-navy-400">{formatCurrency(b.monthlyLimit)}</span>
+                    <span className="text-sm text-gray-500 dark:text-navy-400">{formatCurrency(b.monthlyLimit, b.currency)}</span>
                     <span className={`text-sm font-medium ${b.remaining >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
-                      ({b.remaining >= 0 ? `${formatCurrency(b.remaining)} left` : `${formatCurrency(Math.abs(b.remaining))} over`})
+                      ({b.remaining >= 0 ? `${formatCurrency(b.remaining, b.currency)} left` : `${formatCurrency(Math.abs(b.remaining), b.currency)} over`})
                     </span>
                   </div>
                   <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2.5 max-w-md overflow-hidden">
@@ -197,7 +205,7 @@ export default function Budgets() {
               <div key={c.category} className="flex items-center space-x-2 px-3 py-2 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
                 <span className="text-sm font-medium text-gray-700 dark:text-navy-200">{c.category}</span>
                 <span className="text-sm text-gray-500 dark:text-navy-400">{formatCurrency(c.spent)}</span>
-                <button onClick={() => { setForm({ category: c.category, monthlyLimit: '' }); setEditing(null); setShowForm(true); }} className="text-primary-600 dark:text-primary-400 hover:text-primary-700 text-xs font-medium">
+                <button onClick={() => { setForm({ category: c.category, monthlyLimit: '', currency: getBaseCurrency() }); setEditing(null); setShowForm(true); }} className="text-primary-600 dark:text-primary-400 hover:text-primary-700 text-xs font-medium">
                   + Set Budget
                 </button>
               </div>
