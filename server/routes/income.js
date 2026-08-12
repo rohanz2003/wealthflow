@@ -21,7 +21,7 @@ router.get('/', auth, async (req, res) => {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
     const skip = (page - 1) * limit;
     const [incomes, total] = await Promise.all([
-      Income.find(filter).sort({ date: -1 }).skip(skip).limit(limit),
+      Income.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
       Income.countDocuments(filter),
     ]);
     res.json({ data: incomes, total, page, limit, totalPages: Math.ceil(total / limit) });

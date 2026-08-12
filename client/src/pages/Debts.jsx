@@ -123,10 +123,10 @@ export default function Debts() {
               placeholder="Debt type"
               allowCustom
             />
-            <input type="number" required min="1" placeholder="Total amount $" value={form.totalAmount} onChange={(e) => setForm({ ...form, totalAmount: e.target.value })} className="input-field" />
-            <input type="number" required min="0" placeholder="Remaining $" value={form.remainingAmount} onChange={(e) => setForm({ ...form, remainingAmount: e.target.value })} className="input-field" />
+            <input type="number" required min="1" placeholder="Total amount " value={form.totalAmount} onChange={(e) => setForm({ ...form, totalAmount: e.target.value })} className="input-field" />
+            <input type="number" required min="0" placeholder="Remaining " value={form.remainingAmount} onChange={(e) => setForm({ ...form, remainingAmount: e.target.value })} className="input-field" />
             <input type="number" min="0" step="0.01" placeholder="Interest rate %" value={form.interestRate} onChange={(e) => setForm({ ...form, interestRate: e.target.value })} className="input-field" />
-            <input type="number" min="0" placeholder="Min payment $" value={form.minimumPayment} onChange={(e) => setForm({ ...form, minimumPayment: e.target.value })} className="input-field" />
+            <input type="number" min="0" placeholder="Min payment " value={form.minimumPayment} onChange={(e) => setForm({ ...form, minimumPayment: e.target.value })} className="input-field" />
             <Select
               value={form.currency}
               onChange={(v) => setForm({ ...form, currency: v })}

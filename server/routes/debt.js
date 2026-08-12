@@ -17,15 +17,16 @@ router.get('/', auth, async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
     const skip = (page - 1) * limit;
-    const [debts, total] = await Promise.all([
+    const [debts, total, allDebts, paidOff, active] = await Promise.all([
       Debt.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
       Debt.countDocuments(filter),
+      Debt.find(filter).select('totalAmount remainingAmount currency isPaid').lean(),
+      Debt.countDocuments({ ...filter, isPaid: true }),
+      Debt.countDocuments({ ...filter, isPaid: false }),
     ]);
     const base = req.user.currency || 'INR';
-    const totalDebt = debts.reduce((s, d) => s + convert(d.remainingAmount, d.currency, base), 0);
-    const totalOriginal = debts.reduce((s, d) => s + convert(d.totalAmount, d.currency, base), 0);
-    const paidOff = debts.filter((d) => d.isPaid).length;
-    const active = debts.filter((d) => !d.isPaid).length;
+    const totalDebt = allDebts.reduce((s, d) => s + convert(d.remainingAmount, d.currency, base), 0);
+    const totalOriginal = allDebts.reduce((s, d) => s + convert(d.totalAmount, d.currency, base), 0);
     res.json({ data: debts, total, page, limit, totalPages: Math.ceil(total / limit), totalDebt, totalOriginal, paidOff, active });
   } catch {
     res.status(500).json({ message: 'Server error' });
@@ -37,8 +38,11 @@ router.post(
   auth,
   [
     body('name').trim().notEmpty().withMessage('Debt name is required'),
+    body('type').optional().trim().notEmpty().withMessage('Debt type is required').isLength({ max: 30 }).withMessage('Debt type must be 30 characters or less'),
     body('totalAmount').isNumeric().withMessage('Total amount is required'),
     body('remainingAmount').isNumeric().withMessage('Remaining amount is required'),
+    body('interestRate').optional().isNumeric().withMessage('Interest rate must be a number'),
+    body('minimumPayment').optional().isNumeric().withMessage('Minimum payment must be a number'),
     body('currency').optional().isIn(CURRENCIES).withMessage('Invalid currency'),
   ],
   async (req, res) => {
@@ -94,6 +98,7 @@ router.put('/:id', auth, async (req, res) => {
     ALLOWED_DEBT_FIELDS.forEach((f) => {
       if (req.body[f] !== undefined && req.body[f] !== '') debt[f] = req.body[f];
     });
+    if (req.body.dueDate === '') debt.dueDate = undefined;
     await debt.save();
     cache.invalidateUserCache(req.userId);
     res.json(debt);

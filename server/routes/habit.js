@@ -4,7 +4,7 @@ const Habit = require('../models/Habit');
 const auth = require('../middleware/auth');
 const cache = require('../utils/cache');
 const pick = require('../utils/pick');
-const { HABIT_TYPES, HABIT_FREQUENCIES } = require('../../shared/constants');
+const { HABIT_FREQUENCIES } = require('../../shared/constants');
 
 const router = express.Router();
 
@@ -32,7 +32,7 @@ router.post(
   auth,
   [
     body('name').trim().notEmpty().withMessage('Habit name is required'),
-    body('type').optional().isIn(HABIT_TYPES).withMessage('Invalid habit type'),
+    body('type').optional().trim().notEmpty().withMessage('Habit type is required').isLength({ max: 30 }).withMessage('Habit type must be 30 characters or less'),
     body('frequency').optional().isIn(HABIT_FREQUENCIES).withMessage('Invalid habit frequency'),
   ],
   async (req, res) => {

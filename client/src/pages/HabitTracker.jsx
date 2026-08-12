@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { FiPlus, FiTrash2, FiCheckCircle, FiClock, FiTarget, FiAlertCircle, FiArrowRight, FiZap, FiX } from 'react-icons/fi';
 import { habitTypeMeta } from '../utils/categoryMeta';
+import Select from '../components/Select';
 
 const HABIT_TYPES = ['saving', 'budgeting', 'investing', 'tracking', 'learning'];
 const HABIT_FREQUENCIES = ['daily', 'weekly', 'monthly'];
@@ -37,6 +39,7 @@ function lastNDays(n) {
 }
 
 export default function HabitTracker() {
+  const location = useLocation();
   const [habits, setHabits] = useState([]);
   const [stats, setStats] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -46,9 +49,31 @@ export default function HabitTracker() {
   const [completingId, setCompletingId] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [toast, setToast] = useState(null);
+  const [highlightId, setHighlightId] = useState(null);
+  const [revealedIds, setRevealedIds] = useState([]);
   const toastTimer = useRef(null);
 
   useEffect(() => { fetchHabits(); }, []);
+
+  useEffect(() => {
+    const id = location.state?.highlight;
+    if (!id) return;
+    setHighlightId(id);
+    setRevealedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    window.history.replaceState({}, '');
+  }, []);
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = setTimeout(() => setHighlightId(null), 3000);
+    return () => clearTimeout(timer);
+  }, [highlightId]);
+
+  useEffect(() => {
+    if (!highlightId) return;
+    const el = document.getElementById(`habit-${highlightId}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlightId, habits, loading]);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -154,96 +179,72 @@ export default function HabitTracker() {
       )}
 
       {showForm && (
-        <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal-content p-5 sm:p-6 mx-4 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Create a new habit</h3>
-              <button type="button" onClick={() => setShowForm(false)} className="p-2 rounded-xl text-gray-400 dark:text-navy-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors">
-                <FiX size={18} />
-              </button>
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Create a new habit</h3>
+            <button type="button" onClick={() => setShowForm(false)} className="p-2 rounded-xl text-gray-400 dark:text-navy-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors">
+              <FiX size={18} />
+            </button>
+          </div>
+
+          <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">What will you do?</label>
+              <input
+                type="text"
+                required
+                autoFocus
+                placeholder="e.g. Save $5 every day"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="input-field"
+              />
             </div>
 
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">What will you do?</label>
-                <input
-                  type="text"
-                  required
-                  autoFocus
-                  placeholder="e.g. Save $5 every day"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="input-field"
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">Why it matters <span className="normal-case text-gray-400 dark:text-navy-500">(optional)</span></label>
+              <input
+                type="text"
+                placeholder="e.g. Build an emergency fund"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                className="input-field"
+              />
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">Why it matters <span className="normal-case text-gray-400 dark:text-navy-500">(optional)</span></label>
-                <input
-                  type="text"
-                  placeholder="e.g. Build an emergency fund"
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="input-field"
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">How often?</label>
+              <Select
+                value={form.frequency}
+                onChange={(v) => setForm({ ...form, frequency: v })}
+                options={HABIT_FREQUENCIES.map((f) => ({ value: f, label: FREQUENCY_LABELS[f] }))}
+                placeholder="Frequency"
+              />
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">How often?</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {HABIT_FREQUENCIES.map((f) => (
-                    <button
-                      type="button"
-                      key={f}
-                      onClick={() => setForm({ ...form, frequency: f })}
-                      className={`py-2 rounded-xl text-sm font-medium border transition-all duration-200 ${
-                        form.frequency === f
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 shadow-sm scale-[1.02]'
-                          : 'border-gray-200 dark:border-navy-600 text-gray-500 dark:text-navy-300 hover:border-primary-300 dark:hover:border-primary-500'
-                      }`}
-                    >
-                      {FREQUENCY_LABELS[f]}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">What kind of habit?</label>
+              <Select
+                value={form.type}
+                onChange={(v) => setForm({ ...form, type: v })}
+                options={HABIT_TYPES.map((t) => ({ value: t, label: TYPE_LABELS[t] }))}
+                iconMap={habitTypeMeta}
+                placeholder="Habit type"
+                allowCustom
+                customLabel="Other (type your own)"
+              />
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-navy-400 mb-1.5">What kind of habit?</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {HABIT_TYPES.map((t) => {
-                    const m = habitTypeMeta[t];
-                    const Icon = m.icon;
-                    return (
-                      <button
-                        type="button"
-                        key={t}
-                        onClick={() => setForm({ ...form, type: t })}
-                        className={`flex items-center py-2 px-3 rounded-lg text-sm font-medium border transition-all duration-200 ${
-                          form.type === t
-                            ? 'border-magenta-500 bg-magenta-50 dark:bg-magenta-900/20 text-magenta-700 dark:text-magenta-300 shadow-sm'
-                            : 'border-gray-200 dark:border-navy-600 text-gray-500 dark:text-navy-300 hover:border-magenta-300 dark:hover:border-magenta-500'
-                        }`}
-                      >
-                        <Icon className={`mr-2 ${form.type === t ? m.text : 'text-gray-400 dark:text-navy-500'}`} size={16} />
-                        {TYPE_LABELS[t]}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex space-x-3 pt-1">
-                <button type="submit" disabled={creating} className="btn-primary text-sm flex-1 justify-center disabled:opacity-60">
-                  {creating ? (
-                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                  ) : <FiCheckCircle className="mr-1.5" size={16} />}
-                  {creating ? 'Creating…' : 'Create Habit'}
-                </button>
-                <button type="button" onClick={() => setShowForm(false)} disabled={creating} className="btn-secondary text-sm px-4">Cancel</button>
-              </div>
-            </form>
-          </div>
+            <div className="flex space-x-2 md:col-span-2 lg:col-span-4">
+              <button type="submit" disabled={creating} className="btn-primary text-sm disabled:opacity-60">
+                {creating ? (
+                  <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                ) : <FiCheckCircle className="mr-1.5" size={16} />}
+                {creating ? 'Creating…' : 'Create Habit'}
+              </button>
+              <button type="button" onClick={() => setShowForm(false)} disabled={creating} className="px-4 py-2 bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-navy-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-navy-600 transition-colors">Cancel</button>
+            </div>
+          </form>
         </div>
       )}
 
@@ -296,7 +297,7 @@ export default function HabitTracker() {
             }));
             const doneIn7 = days.filter((d) => d.done).length;
             return (
-              <div key={habit._id} className={`card p-4 sm:p-5 card-hover reveal ${!habit.isActive ? 'opacity-60' : ''}`} style={{ transitionDelay: `${Math.min(i, 5) * 0.06}s` }}>
+              <div key={habit._id} id={`habit-${habit._id}`} className={`card p-4 sm:p-5 card-hover reveal scroll-mt-24 ${!habit.isActive ? 'opacity-60' : ''} ${highlightId === habit._id || revealedIds.includes(habit._id) ? 'reveal-visible' : ''} ${highlightId === habit._id ? 'animate-highlight border-primary-400 dark:border-primary-500 ring-2 ring-primary-400/40' : ''}`} style={{ transitionDelay: `${Math.min(i, 5) * 0.06}s` }}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
                     <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 hover:scale-110 hover:rotate-6 ${doneToday ? 'bg-mint-100 dark:bg-mint-900/30 text-mint-600 dark:text-mint-400' : meta.bg + ' ' + meta.text}`}>

@@ -15,7 +15,7 @@ router.get('/', auth, async (req, res) => {
     const month = parseInt(req.query.month) || now.getMonth() + 1;
     const year = parseInt(req.query.year) || now.getFullYear();
 
-    const budgets = await Budget.find({ user: req.userId, month, year }).lean();
+    const budgets = await Budget.find({ user: req.userId, month, year }).sort({ createdAt: -1 }).lean();
 
     const startOfMonth = new Date(year, month - 1, 1);
     const startOfNext = new Date(year, month, 1);

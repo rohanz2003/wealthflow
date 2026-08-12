@@ -279,7 +279,12 @@ export default function Dashboard() {
             {recentHabits.map((habit) => {
               const doneToday = habit.history?.some((h) => new Date(h.date).toDateString() === today && h.completed);
               return (
-                <div key={habit._id} className={`p-4 rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${doneToday ? 'bg-mint-50 dark:bg-mint-900/20 border-mint-200 dark:border-mint-800' : 'bg-gray-50 dark:bg-navy-800 border-gray-200 dark:border-navy-700'}`}>
+                <Link
+                  key={habit._id}
+                  to="/habits"
+                  state={{ highlight: habit._id }}
+                  className={`block p-4 rounded-2xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated hover:border-primary-300 dark:hover:border-primary-500 ${doneToday ? 'bg-mint-50 dark:bg-mint-900/20 border-mint-200 dark:border-mint-800' : 'bg-gray-50 dark:bg-navy-800 border-gray-200 dark:border-navy-700'}`}
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-gray-900 dark:text-white">{habit.name}</p>
@@ -292,7 +297,7 @@ export default function Dashboard() {
                   <p className="mt-2 text-sm text-gray-500 dark:text-navy-400 flex items-center">
                     <FiAward className={`mr-1 ${habit.streak > 0 ? 'text-sun-500' : 'text-gray-400'}`} size={14} /> {habit.streak} day streak
                   </p>
-                </div>
+                </Link>
               );
             })}
           </div>

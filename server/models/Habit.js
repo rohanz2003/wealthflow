@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { HABIT_TYPES, HABIT_FREQUENCIES } = require('../../shared/constants');
+const { HABIT_FREQUENCIES } = require('../../shared/constants');
 
 const habitSchema = new mongoose.Schema({
   user: {
@@ -24,7 +24,7 @@ const habitSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: HABIT_TYPES,
+    trim: true,
     default: 'saving',
   },
   streak: {

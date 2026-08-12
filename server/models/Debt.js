@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { DEBT_TYPES, CURRENCIES } = require('../../shared/constants');
+const { CURRENCIES } = require('../../shared/constants');
 
 const debtSchema = new mongoose.Schema({
   user: {
@@ -14,7 +14,7 @@ const debtSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: DEBT_TYPES,
+    trim: true,
     default: 'Other',
   },
   totalAmount: {
