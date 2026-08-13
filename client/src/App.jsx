@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import MobileNav from './components/MobileNav';
 import PrivateRoute from './components/PrivateRoute';
 import RevealObserver from './components/RevealObserver';
 import Logo from './components/Logo';
@@ -35,9 +36,10 @@ function AppLayout({ children }) {
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Navbar />
-      <main key={location.pathname} className="page-container animate-page-in">
+      <main key={location.pathname} className="page-container animate-page-in pb-24 md:pb-0">
         {children}
       </main>
+      <MobileNav />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FiDownload, FiTrash2, FiAlertTriangle, FiCheck, FiX, FiCalendar, FiClock,
   FiBriefcase, FiDollarSign, FiEdit2, FiSave, FiMail, FiShield, FiStar, FiAward,
+  FiLogOut,
 } from 'react-icons/fi';
 import { formatCurrency, setBaseCurrency } from '../utils/formatCurrency';
 import { CURRENCY_INFO, CURRENCIES } from '../utils/currency';
@@ -62,6 +63,11 @@ export default function Settings() {
     } finally {
       setProfileSaving(false);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   const handleExport = async () => {
@@ -136,14 +142,19 @@ export default function Settings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between animate-fade-up">
-        <div>
+      <div className="flex items-center justify-between gap-3 animate-fade-up">
+        <div className="min-w-0">
           <h1 className="page-title">Profile</h1>
           <p className="page-subtitle">Manage your account, profile and data</p>
         </div>
-        <button onClick={() => setEditingProfile(!editingProfile)} className="btn-outline text-sm">
-          <FiEdit2 className="mr-1.5" size={14} /> {editingProfile ? 'Cancel' : 'Edit Profile'}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={handleLogout} className="btn-outline text-xs px-3 py-1.5 whitespace-nowrap md:hidden">
+            <FiLogOut className="mr-1.5" size={14} /> Sign Out
+          </button>
+          <button onClick={() => setEditingProfile(!editingProfile)} className="btn-outline text-sm whitespace-nowrap">
+            <FiEdit2 className="mr-1.5" size={14} /> {editingProfile ? 'Cancel' : 'Edit Profile'}
+          </button>
+        </div>
       </div>
 
       <div className="card overflow-hidden reveal">

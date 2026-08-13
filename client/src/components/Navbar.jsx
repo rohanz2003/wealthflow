@@ -1,8 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { FiHome, FiDollarSign, FiCheckCircle, FiTarget, FiTrendingUp, FiLogOut, FiMenu, FiX, FiShield, FiMoon, FiSun, FiSettings, FiPieChart, FiBarChart2, FiTrendingDown } from 'react-icons/fi';
-import { useState } from 'react';
+import { FiHome, FiDollarSign, FiCheckCircle, FiTarget, FiTrendingUp, FiLogOut, FiShield, FiMoon, FiSun, FiPieChart, FiBarChart2, FiTrendingDown } from 'react-icons/fi';
 import Logo from './Logo';
 
 export default function Navbar() {
@@ -10,7 +9,6 @@ export default function Navbar() {
   const { dark, toggle } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const links = [
     { to: '/dashboard', label: 'Dashboard', icon: FiHome },
@@ -98,9 +96,6 @@ export default function Navbar() {
                 {user?.name?.charAt(0)?.toUpperCase() || 'U'}
               </div>
             </Link>
-            <button onClick={() => setMobileOpen(!mobileOpen)} aria-label={mobileOpen ? 'Close menu' : 'Open menu'} className="p-2 text-gray-600 dark:text-navy-300">
-              {mobileOpen ? <FiX size={22} /> : <FiMenu size={22} />}
-            </button>
             <button
               onClick={toggle}
               aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -112,48 +107,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-
-      {mobileOpen && (
-        <div className="md:hidden border-t border-gray-100 dark:border-navy-800 bg-white dark:bg-navy-950 shadow-elevated animate-fade-down origin-top">
-          <div className="px-3 py-2 space-y-0.5">
-            {links.map((l, i) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 animate-fade-up ${
-                  isActive(l.to)
-                    ? 'bg-primary-50 dark:bg-navy-700 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-navy-300 hover:bg-gray-50 dark:hover:bg-navy-800'
-                }`}
-                style={{ animationDelay: `${i * 0.04}s` }}
-              >
-                <l.icon className="mr-3" size={18} />
-                {l.label}
-              </Link>
-            ))}
-            <div className="border-t border-gray-100 dark:border-navy-700 my-1 pt-1">
-              <Link
-                to="/settings"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive('/settings')
-                    ? 'bg-primary-50 dark:bg-navy-700 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-navy-300 hover:bg-gray-50 dark:hover:bg-navy-800'
-                }`}
-              >
-                <FiSettings className="mr-3" size={18} /> Settings
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <FiLogOut className="mr-3" size={18} /> Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
