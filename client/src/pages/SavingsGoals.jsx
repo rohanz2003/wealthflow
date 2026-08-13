@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
 import { currencyOptions, convert } from '../utils/currency';
-import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiTarget } from 'react-icons/fi';
-import { categoryIcon, goalCategoryMeta } from '../utils/categoryMeta';
+import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { goalCategoryMeta } from '../utils/categoryMeta';
 import Select from '../components/Select';
 
 const GOAL_CATEGORIES = ['Emergency Fund', 'Vacation', 'Travel', 'Education', 'Home', 'Renovation', 'Vehicle', 'Wedding', 'Business', 'Retirement', 'Investment', 'Gadgets', 'Debt Payment', 'Other'];
@@ -77,13 +77,13 @@ export default function SavingsGoals() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up">
-        <div>
+      <div className="flex items-start justify-between gap-3 animate-fade-up">
+        <div className="min-w-0">
           <h1 className="page-title">Savings Goals</h1>
           <p className="page-subtitle">Set and track your financial goals</p>
         </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-sm w-full sm:w-auto justify-center">
-          <FiPlus className="mr-2" size={18} /> New Goal
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap shrink-0">
+          <FiPlus className="mr-1.5" size={14} /> New Goal
         </button>
       </div>
 
@@ -144,9 +144,6 @@ export default function SavingsGoals() {
       <div className="space-y-3 sm:space-y-4">
         {goals.length === 0 ? (
           <div className="card p-8 sm:p-12 text-center">
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 animate-float">
-              <FiTarget size={26} />
-            </div>
             <p className="text-gray-400 dark:text-navy-500">No savings goals yet. Start by creating one!</p>
           </div>
         ) : (
@@ -154,22 +151,15 @@ export default function SavingsGoals() {
             const progress = goal.targetAmount > 0 ? Math.min(100, Math.round((goal.currentAmount / goal.targetAmount) * 100)) : 0;
             const remaining = goal.targetAmount - goal.currentAmount;
             const proj = projections?.projections?.find((p) => p._id === goal._id);
-            const cat = categoryIcon(goal.category, goalCategoryMeta);
-            const GoalIcon = cat.icon;
             return (
               <div key={goal._id} className={`card p-4 sm:p-6 card-hover reveal ${goal.isCompleted ? 'border-mint-300 dark:border-mint-700 bg-mint-50/30 dark:bg-mint-900/10' : ''}`} style={{ transitionDelay: `${Math.min(gi, 5) * 0.06}s` }}>
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start space-x-3 sm:space-x-4 min-w-0">
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 hover:scale-110 hover:rotate-6 ${goal.isCompleted ? 'bg-mint-100 dark:bg-mint-900/30 text-mint-600 dark:text-mint-400' : cat.bg + ' ' + cat.text}`}>
-                      <GoalIcon size={22} />
+                  <div className="min-w-0">
+                    <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                      <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">{goal.title}</h3>
+                      {goal.isCompleted && <span className="badge-green">Completed</span>}
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">{goal.title}</h3>
-                        {goal.isCompleted && <span className="badge-green">Completed</span>}
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate mt-0.5">{goal.category}{goal.description ? ` · ${goal.description}` : ''}</p>
-                    </div>
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate mt-0.5">{goal.category}{goal.description ? ` · ${goal.description}` : ''}</p>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                     <button onClick={() => handleEdit(goal)} aria-label="Edit" className="btn-ghost p-1.5" title="Edit"><FiEdit2 size={15} /></button>
@@ -182,7 +172,7 @@ export default function SavingsGoals() {
                     {formatCurrency(goal.currentAmount, goal.currency)} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> {formatCurrency(goal.targetAmount, goal.currency)}
                   </span>
                   {goal.targetDate && (
-                    <span className="text-xs text-gray-400 dark:text-navy-500 flex items-center"><FiCalendar className="mr-1" size={14} /> {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <span className="text-xs text-gray-400 dark:text-navy-500">{new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                   )}
                 </div>
                 <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 sm:h-2.5 max-w-md overflow-hidden">

@@ -284,34 +284,39 @@ export default function HabitTracker() {
             }));
             const doneIn7 = days.filter((d) => d.done).length;
             return (
-              <div key={habit._id} id={`habit-${habit._id}`} className={`card p-4 sm:p-5 card-hover reveal scroll-mt-24 ${!habit.isActive ? 'opacity-60' : ''} ${highlightId === habit._id || revealedIds.includes(habit._id) ? 'reveal-visible' : ''} ${highlightId === habit._id ? 'animate-highlight border-primary-400 dark:border-primary-500 ring-2 ring-primary-400/40' : ''}`} style={{ transitionDelay: `${Math.min(i, 5) * 0.06}s` }}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
-                    <div className="min-w-0">
-                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">{habit.name}</h3>
-                        <span className={`badge ${habit.isActive ? 'badge-green' : 'bg-gray-100 dark:bg-navy-600 text-gray-500 dark:text-navy-400'}`}>
-                          {habit.isActive ? 'Active' : 'Paused'}
-                        </span>
-                        {habit.isActive && !doneToday && (
-                          <button
-                            onClick={() => handleComplete(habit._id)}
-                            disabled={completingId === habit._id}
-                            className="btn-primary text-xs px-3 py-1.5 disabled:opacity-60"
-                          >
-                            {completingId === habit._id ? (
-                              <span className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent align-middle mr-1.5" />
-                            ) : null}
-                            {completingId === habit._id ? 'Saving…' : 'Complete today'}
-                          </button>
-                        )}
-                        {doneToday && (
-                          <span className="inline-flex items-center px-3 py-1.5 bg-mint-100 dark:bg-mint-900/20 text-mint-700 dark:text-mint-400 rounded-xl text-xs font-medium">
-                            Done today
-                          </span>
-                        )}
-                      </div>
-                      {habit.description && <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate mt-0.5">{habit.description}</p>}
+              <div key={habit._id} id={`habit-${habit._id}`} className={`card p-4 sm:p-5 card-hover reveal scroll-mt-24 ${highlightId === habit._id || revealedIds.includes(habit._id) ? 'reveal-visible' : ''} ${highlightId === habit._id ? 'animate-highlight border-primary-400 dark:border-primary-500 ring-2 ring-primary-400/40' : ''}`} style={{ transitionDelay: `${Math.min(i, 5) * 0.06}s` }}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center space-x-2 min-w-0">
+                    <h3 title={habit.name} className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">{habit.name}</h3>
+                    <span className={`badge shrink-0 ${habit.isActive ? 'badge-green' : 'bg-gray-100 dark:bg-navy-600 text-gray-500 dark:text-navy-400'}`}>
+                      {habit.isActive ? 'Active' : 'Paused'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2 shrink-0">
+                    {!doneToday && (
+                      <button
+                        onClick={() => handleComplete(habit._id)}
+                        disabled={completingId === habit._id}
+                        className="btn-primary text-xs px-3 py-1.5 disabled:opacity-60 whitespace-nowrap"
+                      >
+                        {completingId === habit._id ? (
+                          <span className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent align-middle mr-1.5" />
+                        ) : null}
+                        {completingId === habit._id ? 'Saving…' : 'Complete today'}
+                      </button>
+                    )}
+                    {doneToday && (
+                      <span className="inline-flex items-center px-3 py-1.5 bg-mint-100 dark:bg-mint-900/20 text-mint-700 dark:text-mint-400 rounded-xl text-xs font-medium whitespace-nowrap">
+                        Done today
+                      </span>
+                    )}
+                    <button onClick={() => toggleActive(habit)} aria-label={habit.isActive ? 'Pause' : 'Resume'} className="btn-ghost p-1.5" title={habit.isActive ? 'Pause this habit' : 'Resume this habit'}>
+                      <FiClock size={15} />
+                    </button>
+                    <button onClick={() => setDeleteConfirm(habit._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400" title="Delete"><FiTrash2 size={15} /></button>
+                  </div>
+                </div>
+                {habit.description && <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate mt-1">{habit.description}</p>}
                       <div className="flex items-center space-x-2 mt-1 flex-wrap gap-y-1">
                         <span className="text-xs text-gray-400 dark:text-navy-500">{FREQUENCY_LABELS[habit.frequency] || habit.frequency}</span>
                         <span className="text-xs text-gray-400 dark:text-navy-500">&middot;</span>
@@ -322,15 +327,6 @@ export default function HabitTracker() {
                           <><span className="text-xs text-gray-400 dark:text-navy-500">&middot;</span><span className="text-xs text-gray-500 dark:text-navy-400">Best: {habit.longestStreak}</span></>
                         )}
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 self-end sm:self-center">
-                    <button onClick={() => toggleActive(habit)} aria-label={habit.isActive ? 'Pause' : 'Resume'} className="btn-ghost p-1.5" title={habit.isActive ? 'Pause this habit' : 'Resume this habit'}>
-                      <FiClock size={15} />
-                    </button>
-                    <button onClick={() => setDeleteConfirm(habit._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400" title="Delete"><FiTrash2 size={15} /></button>
-                  </div>
-                </div>
                 <div className="mt-3 sm:mt-4">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[11px] sm:text-xs text-gray-400 dark:text-navy-500">{doneIn7} of the last 7 days</span>

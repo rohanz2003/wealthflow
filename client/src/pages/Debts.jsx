@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
 import { currencyOptions } from '../utils/currency';
-import { FiPlus, FiEdit2, FiTrash2, FiTrendingDown, FiFileText } from 'react-icons/fi';
-import { categoryIcon, debtTypeMeta } from '../utils/categoryMeta';
+import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { debtTypeMeta } from '../utils/categoryMeta';
 import Select from '../components/Select';
 
 const DEBT_TYPES = ['Credit Card', 'Student Loan', 'Personal Loan', 'Mortgage', 'Auto Loan', 'Medical', 'Business Loan', 'Payday Loan', 'Other'];
@@ -67,7 +67,20 @@ export default function Debts() {
   };
 
   const handleTogglePaid = async (debt) => {
-    try { await axios.put(`/api/debts/${debt._id}`, { isPaid: !debt.isPaid }); fetchDebts(); } catch (err) { console.error('Error:', err); }
+    const nextPaid = !debt.isPaid;
+    setData((prev) => ({
+      ...prev,
+      data: (prev.data || []).map((d) => (d._id === debt._id ? { ...d, isPaid: nextPaid } : d)),
+      active: nextPaid ? Math.max(0, (prev.active || 0) - 1) : (prev.active || 0) + 1,
+      paidOff: nextPaid ? (prev.paidOff || 0) + 1 : Math.max(0, (prev.paidOff || 0) - 1),
+    }));
+    try {
+      await axios.put(`/api/debts/${debt._id}`, { isPaid: nextPaid });
+      fetchDebts();
+    } catch (err) {
+      console.error('Error:', err);
+      fetchDebts();
+    }
   };
 
   if (loading) {
@@ -78,32 +91,32 @@ export default function Debts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between animate-fade-up">
-        <div>
+      <div className="flex items-start justify-between gap-3 animate-fade-up">
+        <div className="min-w-0">
           <h1 className="page-title">Debt Tracking</h1>
           <p className="page-subtitle">Track and manage your liabilities</p>
         </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-sm">
-          <FiPlus className="mr-2" size={18} /> Add Debt
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap shrink-0">
+          <FiPlus className="mr-1.5" size={14} /> Add Debt
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="stat-card reveal">
-          <p className="text-sm text-gray-500 dark:text-navy-400">Total Debt</p>
-          <p className="text-2xl font-extrabold text-red-600 dark:text-red-400">{formatCurrency(data.totalDebt)}</p>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Debt</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-red-600 dark:text-red-400 truncate">{formatCurrency(data.totalDebt)}</p>
         </div>
         <div className="stat-card reveal reveal-delay-1">
-          <p className="text-sm text-gray-500 dark:text-navy-400">Paid Off</p>
-          <p className="text-2xl font-extrabold text-mint-600 dark:text-mint-400">{paidOffPct}%</p>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Paid Off</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-mint-600 dark:text-mint-400">{paidOffPct}%</p>
         </div>
         <div className="stat-card reveal reveal-delay-2">
-          <p className="text-sm text-gray-500 dark:text-navy-400">Active Debts</p>
-          <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{data.active}</p>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Active Debts</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{data.active}</p>
         </div>
         <div className="stat-card reveal reveal-delay-3">
-          <p className="text-sm text-gray-500 dark:text-navy-400">Settled</p>
-          <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{data.paidOff}</p>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Settled</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{data.paidOff}</p>
         </div>
       </div>
 
@@ -144,57 +157,51 @@ export default function Debts() {
 
       <div className="space-y-3">
         {(data.data || []).length === 0 ? (
-          <div className="card p-12 text-center">
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-magenta-100 dark:bg-magenta-900/30 flex items-center justify-center text-magenta-600 dark:text-magenta-400 animate-float">
-              <FiTrendingDown size={26} />
-            </div>
+          <div className="card p-8 sm:p-12 text-center">
             <p className="text-gray-400 dark:text-navy-500">No debts tracked. Add your first debt to start tracking!</p>
           </div>
         ) : (
           (data.data || []).map((debt, di) => {
             const paidPct = debt.totalAmount > 0 ? Math.round(((debt.totalAmount - debt.remainingAmount) / debt.totalAmount) * 100) : 0;
-            const cat = categoryIcon(debt.type, debtTypeMeta);
-            const DebtIcon = cat.icon;
             return (
-              <div key={debt._id} className={`card p-5 card-hover reveal ${debt.isPaid ? 'border-mint-300 dark:border-mint-700 bg-mint-50/30 dark:bg-mint-900/10 opacity-70' : ''}`} style={{ transitionDelay: `${Math.min(di, 5) * 0.06}s` }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4 flex-1">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 hover:scale-110 hover:rotate-6 ${debt.isPaid ? 'bg-mint-100 dark:bg-mint-900/30 text-mint-600 dark:text-mint-400' : cat.bg + ' ' + cat.text}`}>
-                      <DebtIcon size={22} />
+              <div key={debt._id} className={`card p-4 sm:p-5 card-hover reveal ${debt.isPaid ? 'border-mint-300 dark:border-mint-700 bg-mint-50/30 dark:bg-mint-900/10' : ''}`} style={{ transitionDelay: `${Math.min(di, 5) * 0.06}s` }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                      <h3 title={debt.name} className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">{debt.name}</h3>
+                      <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-navy-300 rounded-full shrink-0">{debt.type}</span>
+                      {debt.isPaid && <span className="px-2 py-0.5 text-xs bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400 rounded-full shrink-0">Paid Off ✓</span>}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{debt.name}</h3>
-                        <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-navy-300 rounded-full">{debt.type}</span>
-                        {debt.isPaid && <span className="px-2 py-0.5 text-xs bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400 rounded-full">Paid Off ✓</span>}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
-                        <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                          {formatCurrency(debt.remainingAmount, debt.currency)} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> {formatCurrency(debt.totalAmount, debt.currency)}
-                        </span>
-                        {debt.interestRate > 0 && (
-                          <span className="text-xs text-gray-400 dark:text-navy-500">{debt.interestRate}% APR</span>
-                        )}
-                        {debt.minimumPayment > 0 && (
-                          <span className="text-xs text-gray-400 dark:text-navy-500">Min: {formatCurrency(debt.minimumPayment, debt.currency)}/mo</span>
-                        )}
-                        {debt.dueDate && (
-                          <span className="text-xs text-gray-400 dark:text-navy-500">Due: {new Date(debt.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        )}
-                      </div>
-                      <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 max-w-md overflow-hidden">
-                        <div className={`h-2 rounded-full transition-all duration-1000 ${debt.isPaid ? 'bg-gradient-to-r from-mint-500 to-mint-600' : 'bg-gradient-to-r from-primary-500 to-magenta-500'} progress-shimmer`} style={{ width: `${paidPct}%` }} />
-                      </div>
-                      <p className="text-xs text-gray-400 dark:text-navy-500 mt-1">{paidPct}% paid off</p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
+                      {debt.interestRate > 0 && (
+                        <span className="text-xs text-gray-400 dark:text-navy-500">{debt.interestRate}% APR</span>
+                      )}
+                      {debt.minimumPayment > 0 && (
+                        <span className="text-xs text-gray-400 dark:text-navy-500">Min: {formatCurrency(debt.minimumPayment, debt.currency)}/mo</span>
+                      )}
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 ml-4">
-                    <button onClick={() => handleTogglePaid(debt)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${debt.isPaid ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}`}>
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                    <button type="button" onClick={() => handleTogglePaid(debt)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${debt.isPaid ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'}`}>
                       {debt.isPaid ? 'Reopen' : 'Mark Paid'}
                     </button>
-                    <button onClick={() => handleEdit(debt)} aria-label="Edit debt" id={`edit-${debt._id}`} className="p-2 text-gray-400 dark:text-navy-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"><FiEdit2 size={16} /></button>
-                    <button onClick={() => setDeleteConfirm(debt._id)} aria-label="Delete debt" id={`delete-${debt._id}`} className="p-2 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><FiTrash2 size={16} /></button>
+                    <button onClick={() => handleEdit(debt)} aria-label="Edit debt" id={`edit-${debt._id}`} className="btn-ghost p-1.5" title="Edit"><FiEdit2 size={15} /></button>
+                    <button onClick={() => setDeleteConfirm(debt._id)} aria-label="Delete debt" id={`delete-${debt._id}`} className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400" title="Delete"><FiTrash2 size={15} /></button>
                   </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {formatCurrency(debt.remainingAmount, debt.currency)} <span className="text-gray-400 dark:text-navy-500 font-normal">of</span> {formatCurrency(debt.totalAmount, debt.currency)}
+                  </span>
+                  {debt.dueDate && (
+                    <span className="text-xs text-gray-400 dark:text-navy-500">Due: {new Date(debt.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  )}
+                </div>
+                <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 sm:h-2.5 max-w-md overflow-hidden">
+                  <div className={`h-2 sm:h-2.5 rounded-full transition-all duration-1000 ${debt.isPaid ? 'bg-gradient-to-r from-mint-500 to-mint-600' : 'bg-gradient-to-r from-primary-500 to-magenta-500'} progress-shimmer`} style={{ width: `${paidPct}%` }} />
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                  <p className="text-xs text-gray-400 dark:text-navy-500">{paidPct}% paid off · {formatCurrency(debt.remainingAmount, debt.currency)} remaining</p>
                 </div>
               </div>
             );

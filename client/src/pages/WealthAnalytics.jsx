@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
 import { CURRENCY_INFO, convert } from '../utils/currency';
-import { FiTrendingUp, FiDollarSign, FiBarChart2, FiPieChart, FiActivity } from 'react-icons/fi';
+import { FiTrendingUp, FiBarChart2, FiPieChart } from 'react-icons/fi';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, Filler } from 'chart.js';
 import { chartPalette, chartAnimation } from '../utils/categoryMeta';
@@ -151,16 +151,13 @@ export default function WealthAnalytics() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: 'Total Income', value: formatCurrency(kpis?.monthlyIncomeTotal), sub: 'This month', icon: FiTrendingUp, color: 'text-mint-600 dark:text-mint-400', bg: 'bg-mint-100 dark:bg-mint-900/30' },
-          { label: 'Total Expenses', value: formatCurrency(kpis?.monthlyExpenseTotal), sub: 'This month', icon: FiDollarSign, color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
-          { label: 'Habit Completion', value: `${kpis?.habitCompletionRate || 0}%`, sub: `${kpis?.habitsCompletedToday || 0} done today`, icon: FiBarChart2, color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-100 dark:bg-primary-900/30' },
-          { label: 'Net Cash Flow', value: formatCurrency(kpis?.monthlyNetCashflow), sub: `${kpis?.totalMonthlyTransactions || 0} transactions`, icon: FiActivity, color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
+          { label: 'Total Income', value: formatCurrency(kpis?.monthlyIncomeTotal), sub: 'This month', color: 'text-mint-600 dark:text-mint-400' },
+          { label: 'Total Expenses', value: formatCurrency(kpis?.monthlyExpenseTotal), sub: 'This month', color: 'text-magenta-600 dark:text-magenta-400' },
+          { label: 'Habit Completion', value: `${kpis?.habitCompletionRate || 0}%`, sub: `${kpis?.habitsCompletedToday || 0} done today`, color: 'text-primary-600 dark:text-primary-400' },
+          { label: 'Net Cash Flow', value: formatCurrency(kpis?.monthlyNetCashflow), sub: `${kpis?.totalMonthlyTransactions || 0} transactions`, color: 'text-magenta-600 dark:text-magenta-400' },
         ].map((c, i) => (
           <div key={i} className="stat-card p-3 sm:p-4 reveal" style={{ transitionDelay: `${i * 0.08}s` }}>
-            <div className="flex items-center justify-between mb-1 sm:mb-2">
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">{c.label}</p>
-              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl ${c.bg} flex items-center justify-center ${c.color} transition-transform duration-300 hover:scale-110 hover:rotate-6`}><c.icon size={isMobile ? 14 : 20} /></div>
-            </div>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-0.5 sm:mb-1">{c.label}</p>
             <p className={`text-lg sm:text-2xl font-extrabold ${c.color}`}>{c.value}</p>
             <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5 sm:mt-1">{c.sub}</p>
           </div>
