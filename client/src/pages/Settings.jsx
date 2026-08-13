@@ -151,7 +151,7 @@ export default function Settings() {
           <button onClick={handleLogout} className="btn-outline text-xs px-3 py-1.5 whitespace-nowrap md:hidden">
             <FiLogOut className="mr-1.5" size={14} /> Sign Out
           </button>
-          <button onClick={() => setEditingProfile(!editingProfile)} className="btn-outline text-sm whitespace-nowrap">
+          <button onClick={() => setEditingProfile(!editingProfile)} className="btn-outline text-xs px-3 py-1.5 whitespace-nowrap">
             <FiEdit2 className="mr-1.5" size={14} /> {editingProfile ? 'Cancel' : 'Edit Profile'}
           </button>
         </div>
