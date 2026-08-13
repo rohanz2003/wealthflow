@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
@@ -8,6 +8,9 @@ import Logo from './components/Logo';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import {
+  FiHome, FiDollarSign, FiPieChart, FiCheckCircle, FiTarget, FiTrendingDown, FiTrendingUp, FiBarChart2, FiShield, FiSettings,
+} from 'react-icons/fi';
 
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ExpenseTracker = lazy(() => import('./pages/ExpenseTracker'));
@@ -29,15 +32,81 @@ function PageLoader() {
   );
 }
 
+function MobileNav() {
+  const location = useLocation();
+  const { user } = useAuth();
+
+  const tabs = [
+    { to: '/dashboard', label: 'Home', icon: FiHome },
+    { to: '/expenses', label: 'Expenses', icon: FiDollarSign },
+    { to: '/budgets', label: 'Budget', icon: FiPieChart },
+    { to: '/habits', label: 'Habits', icon: FiCheckCircle },
+    { to: '/savings', label: 'Savings', icon: FiTarget },
+    { to: '/debts', label: 'Debts', icon: FiTrendingDown },
+    { to: '/wealth', label: 'Wealth', icon: FiTrendingUp },
+    { to: '/insights', label: 'Insights', icon: FiBarChart2 },
+    { to: '/settings', label: 'Settings', icon: FiSettings },
+  ];
+  if (user?.role === 'admin') {
+    tabs.splice(8, 0, { to: '/admin', label: 'Admin', icon: FiShield });
+  }
+
+  return (
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-navy-950/95 backdrop-blur-xl border-t border-gray-100 dark:border-navy-800">
+      <div className="flex overflow-x-auto no-scrollbar">
+        {tabs.map((t) => {
+          const active = location.pathname === t.to;
+          return (
+            <Link
+              key={t.to}
+              to={t.to}
+              className={`flex flex-col items-center justify-center min-w-[64px] flex-1 px-2 py-2 transition-colors duration-200 ${active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-navy-400'}`}
+              title={t.label}
+            >
+              <span className={`relative flex items-center justify-center p-1.5 rounded-xl transition-all duration-200 ${active ? 'bg-primary-100 dark:bg-primary-900/30' : ''}`}>
+                <t.icon size={19} />
+              </span>
+              <span className={`text-[10px] font-medium mt-0.5 whitespace-nowrap ${active ? 'font-semibold' : ''}`}>{t.label}</span>
+              {active && <span className="absolute bottom-0.5 w-1 h-1 rounded-full bg-primary-500" />}
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
+
+function AppFooter() {
+  return (
+    <footer className="bg-white dark:bg-navy-950 border-t border-gray-100 dark:border-navy-800 py-6 pb-24 md:pb-6">
+      <div className="container-responsive">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <Link to="/dashboard" className="flex items-center">
+            <Logo size={28} withText={false} />
+            <span className="ml-2 text-base font-extrabold tracking-tight text-gray-900 dark:text-white">
+              Wealth<span className="text-gradient">Flow</span>
+            </span>
+          </Link>
+          <p className="text-sm text-gray-500 dark:text-navy-400">
+            &copy; {new Date().getFullYear()} WealthFlow. All rights reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 function AppLayout({ children }) {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
+    <div className="min-h-screen relative flex flex-col" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Navbar />
-      <main key={location.pathname} className="page-container animate-page-in">
+      <main key={location.pathname} className="page-container animate-page-in pb-24 md:pb-6 flex-1">
         {children}
       </main>
+      <AppFooter />
+      <MobileNav />
     </div>
   );
 }

@@ -22,13 +22,14 @@ const auth = async (req, res, next) => {
     const now = Date.now();
     if (!user._lastActiveUpdatedAt || now - user._lastActiveUpdatedAt > 10 * 60 * 1000) {
       user._lastActiveUpdatedAt = now;
-      User.findByIdAndUpdate(user._id, { lastActive: new Date() }).catch((err) => logger.error('lastActive update failed:', err));
+      await User.findByIdAndUpdate(user._id, { lastActive: new Date() });
     }
     req.user = user;
     req.userId = user._id;
     next();
   } catch (error) {
-    res.status(401).json({ message: 'Authentication failed', error: error.message });
+    logger.error('Authentication error:', error.message);
+    res.status(401).json({ message: 'Authentication failed' });
   }
 };
 

@@ -179,7 +179,7 @@ export default function HabitTracker() {
       )}
 
       {showForm && (
-        <div className="card p-6">
+        <div className="card card-padding">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Create a new habit</h3>
             <button type="button" onClick={() => setShowForm(false)} className="p-2 rounded-xl text-gray-400 dark:text-navy-400 hover:bg-gray-100 dark:hover:bg-navy-700 transition-colors">
@@ -343,10 +343,10 @@ export default function HabitTracker() {
                         <FiCheckCircle className="mr-1.5" size={14} /> Done today
                       </span>
                     )}
-                    <button onClick={() => toggleActive(habit)} aria-label={habit.isActive ? 'Pause' : 'Resume'} className="btn-ghost p-1.5" title={habit.isActive ? 'Pause this habit' : 'Resume this habit'}>
+                    <button onClick={() => toggleActive(habit)} aria-label={habit.isActive ? 'Pause' : 'Resume'} className="btn-ghost icon-btn-touch" title={habit.isActive ? 'Pause this habit' : 'Resume this habit'}>
                       <FiClock size={15} />
                     </button>
-                    <button onClick={() => setDeleteConfirm(habit._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400" title="Delete"><FiTrash2 size={15} /></button>
+                    <button onClick={() => setDeleteConfirm(habit._id)} aria-label="Delete" className="btn-ghost icon-btn-touch hover:text-red-600 dark:hover:text-red-400" title="Delete"><FiTrash2 size={15} /></button>
                   </div>
                 </div>
                 <div className="mt-3 sm:mt-4">
@@ -393,7 +393,7 @@ export default function HabitTracker() {
       )}
 
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-[100] px-4 py-3 rounded-xl shadow-elevated text-sm font-medium animate-pop-in flex items-center space-x-2 ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-mint-600 text-white'}`}>
+        <div className={`fixed z-[100] inset-x-4 sm:inset-x-auto bottom-20 sm:bottom-6 sm:right-6 sm:max-w-sm px-4 py-3 rounded-xl shadow-elevated text-sm font-medium animate-pop-in flex items-center space-x-2 ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-mint-600 text-white'}`}>
           {toast.type === 'error' ? <FiAlertCircle size={16} /> : <FiCheckCircle size={16} />}
           <span>{toast.msg}</span>
         </div>

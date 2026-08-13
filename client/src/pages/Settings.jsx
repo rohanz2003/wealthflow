@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
   FiDownload, FiTrash2, FiAlertTriangle, FiCheck, FiX, FiCalendar, FiClock,
-  FiBriefcase, FiDollarSign, FiEdit2, FiSave, FiMail, FiShield, FiStar, FiAward,
+  FiBriefcase, FiDollarSign, FiEdit2, FiSave, FiMail, FiShield, FiStar, FiAward, FiLogOut,
 } from 'react-icons/fi';
 import { formatCurrency, setBaseCurrency } from '../utils/formatCurrency';
 import { CURRENCY_INFO, CURRENCIES } from '../utils/currency';
@@ -39,6 +39,11 @@ export default function Settings() {
       });
     }).catch(() => {}).finally(() => setProfileLoading(false));
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -136,12 +141,12 @@ export default function Settings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between animate-fade-up">
+      <div className="header-row animate-fade-up">
         <div>
           <h1 className="page-title">Profile</h1>
           <p className="page-subtitle">Manage your account, profile and data</p>
         </div>
-        <button onClick={() => setEditingProfile(!editingProfile)} className="btn-outline text-sm">
+        <button onClick={() => setEditingProfile(!editingProfile)} className="btn-outline text-sm btn-block-mobile">
           <FiEdit2 className="mr-1.5" size={14} /> {editingProfile ? 'Cancel' : 'Edit Profile'}
         </button>
       </div>
@@ -194,11 +199,11 @@ export default function Settings() {
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 dark:bg-navy-800 rounded-xl card-hover transition-transform duration-300 hover:-translate-y-0.5 animate-fade-up" style={{ animationDelay: '0.28s' }}>
                 <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiDollarSign className="mr-1" size={12} /> Monthly Income</p>
-                <p className="text-sm font-semibold text-mint-600 dark:text-mint-400 mt-1">{monthlyIncome > 0 ? formatCurrency(monthlyIncome) : '-'}</p>
+                <p className="text-sm font-semibold text-mint-600 dark:text-mint-400 mt-1 truncate">{monthlyIncome > 0 ? formatCurrency(monthlyIncome) : '-'}</p>
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 dark:bg-navy-800 rounded-xl card-hover transition-transform duration-300 hover:-translate-y-0.5 animate-fade-up" style={{ animationDelay: '0.34s' }}>
                 <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiDollarSign className="mr-1" size={12} /> Currency</p>
-                <p className="text-sm font-semibold text-primary-600 dark:text-primary-400 mt-1">{currencyInfo.symbol} {currency} — {currencyInfo.name}</p>
+                <p className="text-sm font-semibold text-primary-600 dark:text-primary-400 mt-1 truncate">{currencyInfo.symbol} {currency} — {currencyInfo.name}</p>
               </div>
             </div>
           )}
@@ -207,6 +212,12 @@ export default function Settings() {
             <p className="text-sm text-gray-600 dark:text-navy-300 mt-4 px-1 border-l-2 border-primary-400 dark:border-primary-500 pl-3 animate-fade-up" style={{ animationDelay: '0.32s' }}>
               {bio}
             </p>
+          )}
+
+          {!editingProfile && (
+            <button onClick={handleLogout} className="md:hidden mt-5 w-full flex items-center justify-center px-4 py-2.5 rounded-xl border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+              <FiLogOut className="mr-2" size={16} /> Sign Out
+            </button>
           )}
         </div>
 
@@ -289,7 +300,7 @@ export default function Settings() {
             <div className="space-y-3">
               <p className="text-xs text-gray-400 dark:text-navy-500">Type <strong>DELETE</strong> to confirm:</p>
               <input type="text" value={confirmDelete} onChange={(e) => setConfirmDelete(e.target.value)} className="input-field text-sm" placeholder='Type "DELETE" to confirm' />
-              <button onClick={handleDeleteAccount} disabled={confirmDelete !== 'DELETE' || deleting} className="px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition-colors flex items-center">
+              <button onClick={handleDeleteAccount} disabled={confirmDelete !== 'DELETE' || deleting} className="px-5 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition-colors flex items-center btn-block-mobile">
                 <FiTrash2 className="mr-2" size={16} />
                 {deleting ? 'Deleting...' : 'Delete My Account'}
               </button>

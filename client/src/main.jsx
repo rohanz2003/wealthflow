@@ -10,30 +10,55 @@ import './index.css';
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 axios.defaults.withCredentials = true;
 
-let refreshPromise = null;
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
 
 axios.interceptors.response.use(
   (res) => res,
   async (err) => {
     const status = err.response?.status;
     const url = err.config?.url || '';
-    const isAuthUrl = url.includes('/auth/login') || url.includes('/auth/register');
+    const isAuthUrl = url.includes('/auth/login') || url.includes('/auth/register') || url.includes('/auth/refresh');
 
     if (status === 401 && !isAuthUrl && !err.config?._retried) {
       const original = err.config;
       original._retried = true;
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => {
+          delete original.headers.Authorization;
+          return axios(original);
+        }).catch((refreshErr) => {
+          return Promise.reject(refreshErr);
+        });
+      }
+
+      isRefreshing = true;
+
       try {
-        if (!refreshPromise) {
-          refreshPromise = axios.post('/api/auth/refresh', {}, { withCredentials: true }).finally(() => {
-            refreshPromise = null;
-          });
-        }
-        await refreshPromise;
+        const response = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        isRefreshing = false;
+        processQueue(null, response.data);
         delete original.headers.Authorization;
         return axios(original);
-      } catch {
+      } catch (refreshErr) {
+        isRefreshing = false;
+        processQueue(refreshErr, null);
         window.dispatchEvent(new Event('wf_unauthorized'));
-        return Promise.reject(err);
+        return Promise.reject(refreshErr);
       }
     }
 

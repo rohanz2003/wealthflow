@@ -7,8 +7,8 @@ const Income = require('../models/Income');
 const Habit = require('../models/Habit');
 const SavingsGoal = require('../models/SavingsGoal');
 const Investment = require('../models/Investment');
+const Debt = require('../models/Debt');
 const cache = require('../utils/cache');
-const logger = require('../utils/logger');
 const { convert } = require('../utils/currency');
 
 const router = express.Router();
@@ -470,7 +470,7 @@ router.get('/stability', auth, async (req, res) => {
     const [monthlyExpenses, goals, debts, habits, investments, incomes] = await Promise.all([
       Expense.find({ user: userId, date: { $gte: startOfMonth } }).lean(),
       SavingsGoal.find({ user: userId }).lean(),
-      require('../models/Debt').find({ user: userId }).lean().catch((err) => { logger.error('Debt fetch error:', err); return []; }),
+      Debt.find({ user: userId }).lean(),
       Habit.find({ user: userId }).lean(),
       Investment.find({ user: userId }).lean(),
       Income.find({ user: userId, date: { $gte: startOfMonth } }).lean(),

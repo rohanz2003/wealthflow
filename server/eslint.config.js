@@ -21,6 +21,7 @@ module.exports = [
         afterAll: 'readonly',
         beforeEach: 'readonly',
         afterEach: 'readonly',
+        URL: 'readonly',
       },
     },
     rules: {

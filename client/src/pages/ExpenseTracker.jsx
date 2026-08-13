@@ -168,7 +168,7 @@ export default function ExpenseTracker() {
               />
               <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="input-field" />
               <input type="text" placeholder="Description (optional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field" />
-              <div className="flex space-x-2 sm:self-end">
+              <div className="form-actions">
                 <button type="submit" className="btn-primary text-sm">{editing ? 'Update' : 'Add'}</button>
                 <button type="button" onClick={resetForm} className="btn-secondary text-sm">Cancel</button>
               </div>
@@ -176,12 +176,12 @@ export default function ExpenseTracker() {
           </div>
         )}
 
-        <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-navy-700 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+        <div className="toolbar-row p-3 sm:p-4 border-b border-gray-200 dark:border-navy-700">
           <div className="relative flex-1">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={16} />
             <input type="text" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field pl-9 text-sm" />
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2 sm:gap-3">
             <FiFilter className="text-gray-400 dark:text-navy-500 shrink-0" size={16} />
             <Select
               value={filterCat}
@@ -189,7 +189,7 @@ export default function ExpenseTracker() {
               options={['', ...(activeTab === 'expenses' ? CATEGORIES : INCOME_CATEGORIES)]}
               iconMap={activeTab === 'expenses' ? expenseCategoryMeta : incomeCategoryMeta}
               placeholder="All Categories"
-              className="w-44 sm:w-52"
+              className="flex-1 sm:flex-none sm:w-52"
             />
           </div>
         </div>
@@ -205,7 +205,7 @@ export default function ExpenseTracker() {
               const cat = categoryIcon(item.category, expenseCategoryMeta);
               const CatIcon = cat.icon;
               return (
-                <div key={item._id} className="p-3 sm:p-4 flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-navy-800/30 transition-all duration-300 hover:translate-x-1 reveal" style={{ transitionDelay: `${Math.min(i, 6) * 0.05}s` }}>
+                <div key={item._id} className="p-3 sm:p-4 flex items-center justify-between gap-2 flex-wrap hover:bg-gray-50/50 dark:hover:bg-navy-800/30 transition-all duration-300 hover:translate-x-1 reveal" style={{ transitionDelay: `${Math.min(i, 6) * 0.05}s` }}>
                   <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
                     <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 hover:scale-110 ${
                       activeTab === 'income'
@@ -219,12 +219,12 @@ export default function ExpenseTracker() {
                       <p className="text-xs text-gray-500 dark:text-navy-400 truncate">{item.category} &middot; {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 sm:space-x-3 shrink-0 ml-2">
-                    <span className={`text-sm sm:text-base font-semibold ${activeTab === 'income' ? 'text-mint-600 dark:text-mint-400' : 'text-magenta-600 dark:text-magenta-400'}`}>
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-2">
+                    <span className={`text-sm sm:text-base font-semibold whitespace-nowrap ${activeTab === 'income' ? 'text-mint-600 dark:text-mint-400' : 'text-magenta-600 dark:text-magenta-400'}`}>
                       {activeTab === 'income' ? '+' : '-'}{formatCurrency(item.amount, item.currency)}
                     </span>
-                    <button onClick={() => handleEdit(item)} aria-label="Edit" className="btn-ghost p-1.5"><FiEdit2 size={15} /></button>
-                    <button onClick={() => setDeleteConfirm(item._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400"><FiTrash2 size={15} /></button>
+                    <button onClick={() => handleEdit(item)} aria-label="Edit" className="btn-ghost icon-btn-touch"><FiEdit2 size={15} /></button>
+                    <button onClick={() => setDeleteConfirm(item._id)} aria-label="Delete" className="btn-ghost icon-btn-touch hover:text-red-600 dark:hover:text-red-400"><FiTrash2 size={15} /></button>
                   </div>
                 </div>
               );

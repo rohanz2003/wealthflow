@@ -172,8 +172,8 @@ export default function SavingsGoals() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                    <button onClick={() => handleEdit(goal)} aria-label="Edit" className="btn-ghost p-1.5" title="Edit"><FiEdit2 size={15} /></button>
-                    <button onClick={() => setDeleteConfirm(goal._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400" title="Delete"><FiTrash2 size={15} /></button>
+                    <button onClick={() => handleEdit(goal)} aria-label="Edit" className="btn-ghost icon-btn-touch" title="Edit"><FiEdit2 size={15} /></button>
+                    <button onClick={() => setDeleteConfirm(goal._id)} aria-label="Delete" className="btn-ghost icon-btn-touch hover:text-red-600 dark:hover:text-red-400" title="Delete"><FiTrash2 size={15} /></button>
                   </div>
                 </div>
 
@@ -211,7 +211,7 @@ export default function SavingsGoals() {
 
                 {!goal.isCompleted && (
                   <div className="mt-4 flex sm:justify-end">
-                    <button onClick={() => { setAddFundsFor(goal); setAddAmount(''); }} className="btn-primary text-xs sm:text-sm px-4 py-2 w-full sm:w-auto justify-center">
+                    <button onClick={() => { setAddFundsFor(goal); setAddAmount(''); }} className="btn-primary text-xs sm:text-sm px-4 py-2 btn-block-mobile">
                       + Add Funds
                     </button>
                   </div>

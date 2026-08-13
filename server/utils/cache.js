@@ -43,7 +43,15 @@ function invalidateUserCache(userId) {
   if (!userId) return;
   const idStr = String(userId);
   for (const key of [...cache.keys()]) {
-    if (key.includes(idStr)) cache.delete(key);
+    if (key.startsWith(`dashboard:${idStr}`) ||
+        key.startsWith(`kpis:${idStr}`) ||
+        key.startsWith(`monthly:${idStr}`) ||
+        key.startsWith(`insights:${idStr}`) ||
+        key.startsWith(`goalproj:${idStr}`) ||
+        key.startsWith(`wealthproj:${idStr}`) ||
+        key.startsWith(`stability:${idStr}`)) {
+      cache.delete(key);
+    }
   }
   cache.delete('admin:kpis');
 }

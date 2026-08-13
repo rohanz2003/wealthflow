@@ -114,14 +114,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="animate-fade-up">
+      <div className="header-row animate-fade-up">
+        <div>
           <h1 className="page-title">
             Welcome back, <span className="text-gradient">{user?.name}!</span>
           </h1>
           <p className="page-subtitle">Here's your financial overview</p>
         </div>
-        <Link to="/wealth" className="btn-primary text-sm animate-fade-up">
+        <Link to="/wealth" className="btn-primary text-sm btn-block-mobile">
           <FiTrendingUp className="mr-2" size={16} /> View Analytics
         </Link>
       </div>
@@ -168,7 +168,7 @@ export default function Dashboard() {
             {Object.keys(expenseCategories).length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
                 <div className="flex justify-center">
-                  <div className="w-52 h-52 sm:w-64 sm:h-64">
+                  <div className="w-44 h-44 sm:w-64 sm:h-64">
                     <Doughnut data={doughnutData} options={{ cutout: '72%', animation: chartAnimation, plugins: { legend: { display: false } } }} />
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export default function Dashboard() {
 
         <div className="space-y-6">
           {stability && (
-            <div className="card p-6 reveal reveal-delay-3">
+            <div className="card card-padding reveal reveal-delay-3">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financial Stability</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
@@ -222,7 +222,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="card p-6 reveal reveal-delay-4">
+          <div className="card card-padding reveal reveal-delay-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Financial Health</h3>
             <div className="flex flex-col items-center py-2">
               <div className="relative w-28 h-28">
@@ -273,7 +273,7 @@ export default function Dashboard() {
       </div>
 
       {recentHabits.length > 0 && (
-        <div className="card p-6 reveal">
+        <div className="card card-padding reveal">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Today's Habits</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {recentHabits.map((habit) => {
