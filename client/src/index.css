@@ -156,7 +156,11 @@
   }
 
   .page-subtitle {
-    @apply text-sm text-gray-500 dark:text-navy-300 mt-0.5;
+    @apply text-sm text-gray-500 dark:text-navy-300 mt-1.5;
+  }
+
+  .stat-card > p:first-child {
+    margin-bottom: 0.5rem;
   }
 
   .tab {

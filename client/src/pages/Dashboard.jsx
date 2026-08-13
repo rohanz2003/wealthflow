@@ -121,21 +121,21 @@ export default function Dashboard() {
           </h1>
           <p className="page-subtitle">Here's your financial overview</p>
         </div>
-        <Link to="/wealth" className="btn-primary text-sm animate-fade-up">
-          <FiTrendingUp className="mr-2" size={16} /> View Analytics
+        <Link to="/wealth" className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap shrink-0 animate-fade-up">
+          <FiTrendingUp className="mr-1.5 hidden sm:inline" size={14} /> View Analytics
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((card, i) => (
-          <div key={card.key} className={`stat-card reveal`} style={{ transitionDelay: `${i * 0.08}s` }}>
+          <div key={card.key} className="stat-card reveal" style={{ transitionDelay: `${i * 0.08}s` }}>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-gray-500 dark:text-navy-400 font-medium">{card.label}</span>
-              <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center ${card.color} transition-transform duration-300 hover:scale-110 hover:rotate-6`}>
+              <div className={`w-10 h-10 rounded-xl ${card.bg} ${card.color} hidden md:flex items-center justify-center transition-transform duration-300 hover:scale-110 hover:rotate-6`}>
                 <card.icon size={20} />
               </div>
             </div>
-            <p className="text-2xl font-extrabold text-gray-900 dark:text-white">
+            <p className={`text-2xl font-extrabold ${card.color} md:text-gray-900 md:dark:text-white`}>
               <CountUp value={values[card.key]} format={formatCurrency} />
             </p>
           </div>

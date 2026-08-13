@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
 import { currencyOptions } from '../utils/currency';
-import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle, FiPieChart } from 'react-icons/fi';
-import { categoryIcon, expenseCategoryMeta } from '../utils/categoryMeta';
+import { FiPlus, FiEdit2, FiTrash2, FiAlertTriangle } from 'react-icons/fi';
+import { expenseCategoryMeta } from '../utils/categoryMeta';
 import Select from '../components/Select';
 
 const EXPENSE_CATEGORIES = ['Food', 'Groceries', 'Dining', 'Food Delivery', 'Transport', 'Fuel', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Travel', 'Subscriptions', 'Fitness', 'Pets', 'Gifts', 'Personal Care', 'Other'];
@@ -79,13 +79,13 @@ export default function Budgets() {
             options={Array.from({ length: 5 }, (_, i) => String(new Date().getFullYear() - 2 + i))}
             className="w-24"
           />
-          <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-sm">
-            <FiPlus className="mr-2" size={18} /> Add Budget
+          <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap shrink-0">
+            <FiPlus className="mr-1.5" size={14} /> Add Budget
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="stat-card reveal">
           <p className="text-sm text-gray-500 dark:text-navy-400">Total Budgeted</p>
           <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{formatCurrency(data.totalBudgeted)}</p>
@@ -147,36 +147,33 @@ export default function Budgets() {
         </h2>
         {data.budgets.length === 0 && data.categoriesWithoutBudget.length === 0 && (
           <div className="card p-12 text-center">
-            <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 animate-float">
-              <FiPieChart size={26} />
-            </div>
             <p className="text-gray-400 dark:text-navy-500">No budgets set. Start by creating budgets for your spending categories!</p>
           </div>
         )}
         {data.budgets.length > 0 && data.budgets.map((b, i) => {
-          const cat = categoryIcon(b.category, expenseCategoryMeta);
-          const CatIcon = cat.icon;
           return (
           <div key={b._id} className={`card p-5 card-hover reveal ${b.isOverBudget ? 'border-red-300 dark:border-red-800 bg-red-50/30 dark:bg-red-900/10' : ''}`} style={{ transitionDelay: `${Math.min(i, 5) * 0.06}s` }}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4 flex-1">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${b.isOverBudget ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : cat.bg + ' ' + cat.text} transition-transform duration-300 hover:scale-110 hover:rotate-6`}>
-                  <CatIcon size={22} />
-                </div>
-                <div className="flex-1">
+              <div className="flex-1">
                   <div className="flex items-center space-x-2">
                     <h3 className="font-semibold text-gray-900 dark:text-white">{b.category}</h3>
                     {b.isOverBudget && (
                       <span className="px-2 py-0.5 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full font-semibold">Over Budget!</span>
                     )}
                   </div>
-                  <div className="flex items-center space-x-3 mt-1">
-                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(b.spent, b.currency)}</span>
-                    <span className="text-sm text-gray-400 dark:text-navy-500">of</span>
-                    <span className="text-sm text-gray-500 dark:text-navy-400">{formatCurrency(b.monthlyLimit, b.currency)}</span>
-                    <span className={`text-sm font-medium ${b.remaining >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
-                      ({b.remaining >= 0 ? `${formatCurrency(b.remaining, b.currency)} left` : `${formatCurrency(Math.abs(b.remaining), b.currency)} over`})
-                    </span>
+                  <div className="flex items-center mt-1">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{formatCurrency(b.spent, b.currency)}</span>
+                      <span className="text-sm text-gray-400 dark:text-navy-500">of</span>
+                      <span className="text-sm text-gray-500 dark:text-navy-400">{formatCurrency(b.monthlyLimit, b.currency)}</span>
+                      <span className={`text-sm font-medium ${b.remaining >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
+                        ({b.remaining >= 0 ? `${formatCurrency(b.remaining, b.currency)} left` : `${formatCurrency(Math.abs(b.remaining), b.currency)} over`})
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1 ml-3 shrink-0">
+                      <button onClick={() => handleEdit(b)} aria-label="Edit budget" id={`edit-${b._id}`} className="btn-ghost p-1.5"><FiEdit2 size={15} /></button>
+                      <button onClick={() => setDeleteConfirm(b._id)} aria-label="Delete budget" id={`delete-${b._id}`} className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400"><FiTrash2 size={15} /></button>
+                    </div>
                   </div>
                   <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2.5 max-w-md overflow-hidden">
                     <div
@@ -185,11 +182,6 @@ export default function Budgets() {
                     />
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-2 ml-4">
-                <button onClick={() => handleEdit(b)} aria-label="Edit budget" id={`edit-${b._id}`} className="p-2 text-gray-400 dark:text-navy-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"><FiEdit2 size={16} /></button>
-                <button onClick={() => setDeleteConfirm(b._id)} aria-label="Delete budget" id={`delete-${b._id}`} className="p-2 text-gray-400 dark:text-navy-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"><FiTrash2 size={16} /></button>
-              </div>
             </div>
           </div>
           );
@@ -202,10 +194,10 @@ export default function Budgets() {
           <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">These categories have spending this month but no budget set:</p>
           <div className="flex flex-wrap gap-2">
             {data.categoriesWithoutBudget.map((c) => (
-              <div key={c.category} className="flex items-center space-x-2 px-3 py-2 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
+              <div key={c.category} className="flex flex-wrap items-center gap-x-2.5 gap-y-1 px-3 py-2 bg-gray-50 dark:bg-navy-800 rounded-lg border border-gray-200 dark:border-navy-700">
                 <span className="text-sm font-medium text-gray-700 dark:text-navy-200">{c.category}</span>
                 <span className="text-sm text-gray-500 dark:text-navy-400">{formatCurrency(c.spent)}</span>
-                <button onClick={() => { setForm({ category: c.category, monthlyLimit: '', currency: getBaseCurrency() }); setEditing(null); setShowForm(true); }} className="text-primary-600 dark:text-primary-400 hover:text-primary-700 text-xs font-medium">
+                <button onClick={() => { setForm({ category: c.category, monthlyLimit: '', currency: getBaseCurrency() }); setEditing(null); setShowForm(true); }} className="text-primary-600 dark:text-primary-400 hover:text-primary-700 text-xs font-medium whitespace-nowrap shrink-0">
                   + Set Budget
                 </button>
               </div>

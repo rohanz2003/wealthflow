@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { FiPlus, FiTrash2, FiCheckCircle, FiClock, FiTarget, FiAlertCircle, FiArrowRight, FiZap, FiX } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiCheckCircle, FiClock, FiAlertCircle, FiX } from 'react-icons/fi';
 import { habitTypeMeta } from '../utils/categoryMeta';
 import Select from '../components/Select';
 
@@ -149,13 +149,13 @@ export default function HabitTracker() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up">
-        <div>
+      <div className="flex items-start justify-between gap-3 animate-fade-up">
+        <div className="min-w-0">
           <h1 className="page-title">Financial Habits</h1>
           <p className="page-subtitle">Small money actions that you repeat to build a healthy routine</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-primary text-sm w-full sm:w-auto justify-center">
-          <FiPlus className="mr-2" size={18} /> New Habit
+        <button onClick={() => setShowForm(!showForm)} className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap shrink-0">
+          <FiPlus className="mr-1.5" size={14} /> New Habit
         </button>
       </div>
 
@@ -168,10 +168,7 @@ export default function HabitTracker() {
             { label: 'All-time Completions', value: habits.reduce((s, h) => s + (h.totalCompletions || 0), 0), color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
           ].map((s, i) => (
             <div key={i} className="stat-card reveal" style={{ transitionDelay: `${i * 0.08}s` }}>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">{s.label}</p>
-                <div className={`w-8 h-8 rounded-lg ${s.bg} ${s.color} flex items-center justify-center`}><FiTarget size={14} /></div>
-              </div>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-2">{s.label}</p>
               <p className={`text-lg sm:text-2xl font-extrabold ${s.color}`}>{s.value}</p>
             </div>
           ))}
@@ -239,7 +236,7 @@ export default function HabitTracker() {
               <button type="submit" disabled={creating} className="btn-primary text-sm disabled:opacity-60">
                 {creating ? (
                   <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
-                ) : <FiCheckCircle className="mr-1.5" size={16} />}
+                ) : null}
                 {creating ? 'Creating…' : 'Create Habit'}
               </button>
               <button type="button" onClick={() => setShowForm(false)} disabled={creating} className="px-4 py-2 bg-gray-200 dark:bg-navy-700 text-gray-700 dark:text-navy-200 rounded-lg text-sm font-medium hover:bg-gray-300 dark:hover:bg-navy-600 transition-colors">Cancel</button>
@@ -252,25 +249,18 @@ export default function HabitTracker() {
         <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Your Habits</h2>
         {habits.length === 0 ? (
           <div className="card p-6 sm:p-10 text-center">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center text-white shadow-glow animate-float">
-              <FiTarget size={28} />
-            </div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2">Build better money habits</h3>
             <p className="text-sm text-gray-500 dark:text-navy-400 max-w-md mx-auto mb-1">
               A financial habit is a small action you repeat on a schedule &mdash; like saving a little every day, logging your spending, or reviewing your budget each week.
             </p>
             <div className="flex items-center justify-center flex-wrap gap-1.5 sm:gap-2 text-xs text-gray-500 dark:text-navy-400 my-5">
               <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium">1. Create a habit</span>
-              <FiArrowRight size={14} className="text-gray-400 dark:text-navy-500" />
               <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400 font-medium">2. Complete it when due</span>
-              <FiArrowRight size={14} className="text-gray-400 dark:text-navy-500" />
               <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-sun-100 dark:bg-sun-900/30 text-sun-700 dark:text-sun-500 font-medium">3. Build a streak</span>
             </div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-navy-500 mb-3">Or start with one of these</p>
             <div className="flex flex-wrap justify-center gap-2">
               {EXAMPLES.map((ex) => {
-                const m = habitTypeMeta[ex.type];
-                const Icon = m.icon;
                 return (
                   <button
                     key={ex.name}
@@ -278,7 +268,6 @@ export default function HabitTracker() {
                     disabled={creating}
                     className="inline-flex items-center px-3 py-2 rounded-xl text-xs sm:text-sm font-medium border border-gray-200 dark:border-navy-600 bg-white dark:bg-navy-800 text-gray-600 dark:text-navy-300 hover:border-primary-400 dark:hover:border-primary-500 hover:text-primary-700 dark:hover:text-primary-300 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60"
                   >
-                    <Icon className={`mr-1.5 ${m.text}`} size={15} />
                     {ex.name}
                   </button>
                 );
@@ -288,8 +277,6 @@ export default function HabitTracker() {
         ) : (
           habits.map((habit, i) => {
             const doneToday = habit.history?.some((h) => new Date(h.date).toDateString() === todayStr && h.completed);
-            const meta = habitTypeMeta[habit.type] || habitTypeMeta.tracking;
-            const HabitIcon = meta.icon;
             const days = weekDays.map((d) => ({
               date: d,
               done: habit.history?.some((h) => new Date(h.date).toDateString() === d.toDateString() && h.completed),
@@ -300,17 +287,31 @@ export default function HabitTracker() {
               <div key={habit._id} id={`habit-${habit._id}`} className={`card p-4 sm:p-5 card-hover reveal scroll-mt-24 ${!habit.isActive ? 'opacity-60' : ''} ${highlightId === habit._id || revealedIds.includes(habit._id) ? 'reveal-visible' : ''} ${highlightId === habit._id ? 'animate-highlight border-primary-400 dark:border-primary-500 ring-2 ring-primary-400/40' : ''}`} style={{ transitionDelay: `${Math.min(i, 5) * 0.06}s` }}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 hover:scale-110 hover:rotate-6 ${doneToday ? 'bg-mint-100 dark:bg-mint-900/30 text-mint-600 dark:text-mint-400' : meta.bg + ' ' + meta.text}`}>
-                      <HabitIcon size={20} />
-                    </div>
                     <div className="min-w-0">
                       <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                         <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">{habit.name}</h3>
                         <span className={`badge ${habit.isActive ? 'badge-green' : 'bg-gray-100 dark:bg-navy-600 text-gray-500 dark:text-navy-400'}`}>
                           {habit.isActive ? 'Active' : 'Paused'}
                         </span>
+                        {habit.isActive && !doneToday && (
+                          <button
+                            onClick={() => handleComplete(habit._id)}
+                            disabled={completingId === habit._id}
+                            className="btn-primary text-xs px-3 py-1.5 disabled:opacity-60"
+                          >
+                            {completingId === habit._id ? (
+                              <span className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent align-middle mr-1.5" />
+                            ) : null}
+                            {completingId === habit._id ? 'Saving…' : 'Complete today'}
+                          </button>
+                        )}
+                        {doneToday && (
+                          <span className="inline-flex items-center px-3 py-1.5 bg-mint-100 dark:bg-mint-900/20 text-mint-700 dark:text-mint-400 rounded-xl text-xs font-medium">
+                            Done today
+                          </span>
+                        )}
                       </div>
-                      {habit.description && <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate">{habit.description}</p>}
+                      {habit.description && <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate mt-0.5">{habit.description}</p>}
                       <div className="flex items-center space-x-2 mt-1 flex-wrap gap-y-1">
                         <span className="text-xs text-gray-400 dark:text-navy-500">{FREQUENCY_LABELS[habit.frequency] || habit.frequency}</span>
                         <span className="text-xs text-gray-400 dark:text-navy-500">&middot;</span>
@@ -324,25 +325,6 @@ export default function HabitTracker() {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2 self-end sm:self-center">
-                    {habit.isActive && !doneToday && (
-                      <button
-                        onClick={() => handleComplete(habit._id)}
-                        disabled={completingId === habit._id}
-                        className="btn-primary text-xs sm:text-sm px-3 py-1.5 disabled:opacity-60"
-                      >
-                        {completingId === habit._id ? (
-                          <span className="inline-block animate-spin rounded-full h-3 w-3 border-2 border-white border-t-transparent align-middle mr-1.5" />
-                        ) : (
-                          <FiCheckCircle className="mr-1.5" size={14} />
-                        )}
-                        {completingId === habit._id ? 'Saving…' : 'Complete today'}
-                      </button>
-                    )}
-                    {doneToday && (
-                      <span className="inline-flex items-center px-3 py-1.5 bg-mint-100 dark:bg-mint-900/20 text-mint-700 dark:text-mint-400 rounded-xl text-xs sm:text-sm font-medium">
-                        <FiCheckCircle className="mr-1.5" size={14} /> Done today
-                      </span>
-                    )}
                     <button onClick={() => toggleActive(habit)} aria-label={habit.isActive ? 'Pause' : 'Resume'} className="btn-ghost p-1.5" title={habit.isActive ? 'Pause this habit' : 'Resume this habit'}>
                       <FiClock size={15} />
                     </button>
@@ -352,7 +334,7 @@ export default function HabitTracker() {
                 <div className="mt-3 sm:mt-4">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-[11px] sm:text-xs text-gray-400 dark:text-navy-500">{doneIn7} of the last 7 days</span>
-                    <span className="text-[11px] sm:text-xs text-primary-500 dark:text-primary-400 font-medium flex items-center"><FiZap size={11} className="mr-1" /> Completed {habit.streak} in a row</span>
+                    <span className="text-[11px] sm:text-xs text-primary-500 dark:text-primary-400 font-medium">Completed {habit.streak} in a row</span>
                   </div>
                   <div className="flex items-center space-x-1 flex-wrap gap-1">
                     {days.map((d) => (

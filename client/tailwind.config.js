@@ -145,8 +145,8 @@ export default {
           '50%': { backgroundPosition: '100% 50%' },
         },
         pageIn: {
-          '0%': { opacity: '0', transform: 'translateY(14px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
         },
         highlightPop: {
           '0%': { opacity: '0.5', transform: 'scale(0.97)' },

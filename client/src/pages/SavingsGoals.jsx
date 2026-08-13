@@ -168,7 +168,7 @@ export default function SavingsGoals() {
                         <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">{goal.title}</h3>
                         {goal.isCompleted && <span className="badge-green">Completed</span>}
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate">{goal.category}{goal.description ? ` · ${goal.description}` : ''}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 truncate mt-0.5">{goal.category}{goal.description ? ` · ${goal.description}` : ''}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 shrink-0">

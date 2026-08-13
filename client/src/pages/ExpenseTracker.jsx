@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatCurrency, getBaseCurrency } from '../utils/formatCurrency';
 import { currencyOptions, convert } from '../utils/currency';
-import { FiPlus, FiEdit2, FiTrash2, FiFilter, FiSearch, FiX, FiArrowUpCircle, FiArrowDownCircle } from 'react-icons/fi';
-import { categoryIcon, expenseCategoryMeta, incomeCategoryMeta } from '../utils/categoryMeta';
+import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { expenseCategoryMeta, incomeCategoryMeta } from '../utils/categoryMeta';
 import Select from '../components/Select';
 
 const CATEGORIES = ['Food', 'Groceries', 'Dining', 'Food Delivery', 'Transport', 'Fuel', 'Rent', 'Utilities', 'Entertainment', 'Shopping', 'Healthcare', 'Education', 'Insurance', 'Travel', 'Subscriptions', 'Fitness', 'Pets', 'Gifts', 'Personal Care', 'Other'];
@@ -93,39 +93,28 @@ export default function ExpenseTracker() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up">
-        <div>
+      <div className="flex items-center justify-between gap-3 animate-fade-up">
+        <div className="min-w-0">
           <h1 className="page-title">Income & Expenses</h1>
           <p className="page-subtitle">Track your money flow</p>
         </div>
-        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-sm w-full sm:w-auto justify-center">
-          <FiPlus className="mr-2" size={18} /> Add {activeTab === 'expenses' ? 'Expense' : 'Income'}
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap shrink-0">
+          <FiPlus className="mr-1.5" size={14} /> Add {activeTab === 'expenses' ? 'Expense' : 'Income'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="stat-card reveal">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Income</p>
-            <div className="w-9 h-9 rounded-xl bg-mint-100 dark:bg-mint-900/30 flex items-center justify-center text-mint-600 dark:text-mint-400"><FiArrowUpCircle size={18} /></div>
-          </div>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-2">Total Income</p>
           <p className="text-xl sm:text-2xl font-extrabold text-mint-600 dark:text-mint-400">{formatCurrency(totalIncomes)}</p>
         </div>
         <div className="stat-card reveal reveal-delay-1">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Expenses</p>
-            <div className="w-9 h-9 rounded-xl bg-magenta-100 dark:bg-magenta-900/30 flex items-center justify-center text-magenta-600 dark:text-magenta-400"><FiArrowDownCircle size={18} /></div>
-          </div>
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-2">Total Expenses</p>
           <p className="text-xl sm:text-2xl font-extrabold text-magenta-600 dark:text-magenta-400">{formatCurrency(totalExpenses)}</p>
         </div>
-        <div className="stat-card reveal reveal-delay-2">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Net Balance</p>
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${totalIncomes - totalExpenses >= 0 ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'}`}>
-              <FiArrowUpCircle size={18} className={totalIncomes - totalExpenses < 0 ? 'rotate-180' : ''} />
-            </div>
-          </div>
-          <p className={`text-xl sm:text-2xl font-extrabold ${totalIncomes - totalExpenses >= 0 ? 'text-primary-600 dark:text-primary-400' : 'text-red-600 dark:text-red-400'}`}>
+        <div className="stat-card reveal reveal-delay-2 col-span-2 sm:col-span-1">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 text-center sm:text-left mb-2">Net Balance</p>
+          <p className={`text-xl sm:text-2xl font-extrabold text-center sm:text-left ${totalIncomes - totalExpenses >= 0 ? 'text-primary-600 dark:text-primary-400' : 'text-red-600 dark:text-red-400'}`}>
             {formatCurrency(totalIncomes - totalExpenses)}
           </p>
         </div>
@@ -133,10 +122,10 @@ export default function ExpenseTracker() {
 
       <div className="card overflow-hidden">
         <div className="border-b border-gray-200 dark:border-navy-700">
-          <div className="flex">
+          <div className="flex divide-x divide-gray-200 dark:divide-navy-700">
             {['expenses', 'income'].map((tab) => (
               <button key={tab} onClick={() => { setActiveTab(tab); resetForm(); }}
-                className={activeTab === tab ? 'tab-active' : 'tab'}
+                className={`flex-1 ${activeTab === tab ? 'tab-active' : 'tab'}`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
@@ -177,21 +166,17 @@ export default function ExpenseTracker() {
         )}
 
         <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-navy-700 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-          <div className="relative flex-1">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-navy-500" size={16} />
-            <input type="text" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field pl-9 text-sm" />
+          <div className="flex-1">
+            <input type="text" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="input-field text-sm" />
           </div>
-          <div className="flex items-center space-x-2">
-            <FiFilter className="text-gray-400 dark:text-navy-500 shrink-0" size={16} />
-            <Select
-              value={filterCat}
-              onChange={setFilterCat}
-              options={['', ...(activeTab === 'expenses' ? CATEGORIES : INCOME_CATEGORIES)]}
-              iconMap={activeTab === 'expenses' ? expenseCategoryMeta : incomeCategoryMeta}
-              placeholder="All Categories"
-              className="w-44 sm:w-52"
-            />
-          </div>
+          <Select
+            value={filterCat}
+            onChange={setFilterCat}
+            options={['', ...(activeTab === 'expenses' ? CATEGORIES : INCOME_CATEGORIES)]}
+            iconMap={activeTab === 'expenses' ? expenseCategoryMeta : incomeCategoryMeta}
+            placeholder="All Categories"
+            className="w-44 sm:w-52"
+          />
         </div>
 
         <div className="divide-y divide-gray-100 dark:divide-navy-700/50">
@@ -202,29 +187,18 @@ export default function ExpenseTracker() {
             </div>
           ) : (
             filtered.map((item, i) => {
-              const cat = categoryIcon(item.category, expenseCategoryMeta);
-              const CatIcon = cat.icon;
               return (
                 <div key={item._id} className="p-3 sm:p-4 flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-navy-800/30 transition-all duration-300 hover:translate-x-1 reveal" style={{ transitionDelay: `${Math.min(i, 6) * 0.05}s` }}>
-                  <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
-                    <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 hover:scale-110 ${
-                      activeTab === 'income'
-                        ? 'bg-mint-100 dark:bg-mint-900/30 text-mint-600 dark:text-mint-400'
-                        : cat.bg + ' ' + cat.text
-                    }`}>
-                      <CatIcon size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">{item.title || item.source}</p>
-                      <p className="text-xs text-gray-500 dark:text-navy-400 truncate">{item.category} &middot; {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 dark:text-white text-sm sm:text-base truncate">{item.title || item.source}</p>
+                    <p className="text-xs text-gray-500 dark:text-navy-400 truncate mt-1">{item.category} &middot; {new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                   </div>
                   <div className="flex items-center space-x-2 sm:space-x-3 shrink-0 ml-2">
                     <span className={`text-sm sm:text-base font-semibold ${activeTab === 'income' ? 'text-mint-600 dark:text-mint-400' : 'text-magenta-600 dark:text-magenta-400'}`}>
                       {activeTab === 'income' ? '+' : '-'}{formatCurrency(item.amount, item.currency)}
                     </span>
-                    <button onClick={() => handleEdit(item)} aria-label="Edit" className="btn-ghost p-1.5"><FiEdit2 size={15} /></button>
-                    <button onClick={() => setDeleteConfirm(item._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400"><FiTrash2 size={15} /></button>
+                    <button onClick={() => handleEdit(item)} aria-label="Edit" className="btn-ghost p-1.5" title="Edit"><FiEdit2 size={15} /></button>
+                    <button onClick={() => setDeleteConfirm(item._id)} aria-label="Delete" className="btn-ghost p-1.5 hover:text-red-600 dark:hover:text-red-400" title="Delete"><FiTrash2 size={15} /></button>
                   </div>
                 </div>
               );
