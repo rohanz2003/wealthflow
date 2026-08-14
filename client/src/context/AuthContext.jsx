@@ -1,8 +1,14 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { TOKEN_KEY, REFRESH_KEY } from '../main';
 import { setBaseCurrency } from '../utils/formatCurrency';
 
 const AuthContext = createContext(null);
+
+const clearTokens = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -15,6 +21,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const handleUnauthorized = () => {
+    clearTokens();
     setUser(null);
   };
 
@@ -33,6 +40,8 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const res = await axios.post('/api/auth/login', { email, password }, { withCredentials: true });
     const u = res.data.user;
+    if (res.data.token) localStorage.setItem(TOKEN_KEY, res.data.token);
+    if (res.data.refreshToken) localStorage.setItem(REFRESH_KEY, res.data.refreshToken);
     setBaseCurrency(u.currency);
     setUser(u);
     return u;
@@ -41,6 +50,8 @@ export function AuthProvider({ children }) {
   const register = async (name, email, password, currency) => {
     const res = await axios.post('/api/auth/register', { name, email, password, currency }, { withCredentials: true });
     const u = res.data.user;
+    if (res.data.token) localStorage.setItem(TOKEN_KEY, res.data.token);
+    if (res.data.refreshToken) localStorage.setItem(REFRESH_KEY, res.data.refreshToken);
     setBaseCurrency(u.currency);
     setUser(u);
     return u;
@@ -51,6 +62,7 @@ export function AuthProvider({ children }) {
       await axios.post('/api/auth/logout', {}, { withCredentials: true });
     } catch {
     }
+    clearTokens();
     setUser(null);
   };
 

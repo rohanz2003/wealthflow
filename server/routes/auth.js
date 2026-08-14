@@ -71,6 +71,7 @@ router.post(
     setTokenCookies(res, accessToken, refreshToken);
     res.status(201).json({
       token: accessToken,
+      refreshToken,
       user: { id: user._id, name: user.name, email: user.email, role: user.role, currency: user.currency },
     });
   })
@@ -113,6 +114,7 @@ router.post(
     setTokenCookies(res, accessToken, refreshToken);
     res.json({
       token: accessToken,
+      refreshToken,
       user: { id: user._id, name: user.name, email: user.email, role: user.role, currency: user.currency },
     });
   })
@@ -140,7 +142,11 @@ router.post('/refresh', authLimiter, asyncHandler(async (req, res) => {
   user.previousRefreshToken = oldHash;
   await user.save();
   setTokenCookies(res, accessToken, newRefreshToken);
-  res.json({ message: 'Token refreshed' });
+  res.json({
+    token: accessToken,
+    refreshToken: newRefreshToken,
+    user: { id: user._id, name: user.name, email: user.email, role: user.role, currency: user.currency },
+  });
 }));
 
 router.post('/logout', auth, asyncHandler(async (req, res) => {
