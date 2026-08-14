@@ -68,10 +68,10 @@ function useDashboard() {
 }
 
 const statCards = [
-  { key: 'income', label: 'Monthly Income', icon: FiTrendingUp, color: 'text-mint-600 dark:text-mint-400', bg: 'bg-mint-100 dark:bg-mint-900/30' },
-  { key: 'expense', label: 'Monthly Expenses', icon: FiDollarSign, color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
-  { key: 'savings', label: 'Total Savings', icon: FiTarget, color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-100 dark:bg-primary-900/30' },
-  { key: 'worth', label: 'Net Worth', icon: FiTrendingUp, color: 'text-sun-600 dark:text-sun-400', bg: 'bg-sun-100 dark:bg-sun-900/30' },
+  { key: 'income', label: 'Monthly Income', color: 'text-mint-600 dark:text-mint-400' },
+  { key: 'expense', label: 'Monthly Expenses', color: 'text-magenta-600 dark:text-magenta-400' },
+  { key: 'savings', label: 'Total Savings', color: 'text-primary-600 dark:text-primary-400' },
+  { key: 'worth', label: 'Net Worth', color: 'text-sun-600 dark:text-sun-400' },
 ];
 
 export default function Dashboard() {
@@ -129,13 +129,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((card, i) => (
           <div key={card.key} className="stat-card reveal" style={{ transitionDelay: `${i * 0.08}s` }}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-gray-500 dark:text-navy-400 font-medium">{card.label}</span>
-              <div className={`w-10 h-10 rounded-xl ${card.bg} ${card.color} hidden md:flex items-center justify-center transition-transform duration-300 hover:scale-110 hover:rotate-6`}>
-                <card.icon size={20} />
-              </div>
-            </div>
-            <p className={`text-2xl font-extrabold ${card.color} md:text-gray-900 md:dark:text-white`}>
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 font-medium mb-1 sm:mb-2">{card.label}</p>
+            <p className={`text-lg sm:text-2xl font-extrabold ${card.color} md:text-gray-900 md:dark:text-white`}>
               <CountUp value={values[card.key]} format={formatCurrency} />
             </p>
           </div>
