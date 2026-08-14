@@ -92,17 +92,17 @@ export default function Budgets() {
         </div>
         <div className="stat-card reveal reveal-delay-1">
           <p className="text-sm text-gray-500 dark:text-navy-400">Total Spent</p>
-          <p className="text-2xl font-extrabold text-magenta-600 dark:text-magenta-400">{formatCurrency(data.totalSpent)}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{formatCurrency(data.totalSpent)}</p>
         </div>
         <div className="stat-card reveal reveal-delay-2">
           <p className="text-sm text-gray-500 dark:text-navy-400">Remaining</p>
-          <p className={`text-2xl font-extrabold ${data.totalRemaining >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">
             {formatCurrency(data.totalRemaining)}
           </p>
         </div>
         <div className="stat-card reveal reveal-delay-3">
           <p className="text-sm text-gray-500 dark:text-navy-400">Usage</p>
-          <p className="text-2xl font-extrabold text-primary-600 dark:text-primary-400">
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">
             {data.totalBudgeted > 0 ? Math.round((data.totalSpent / data.totalBudgeted) * 100) : 0}%
           </p>
         </div>

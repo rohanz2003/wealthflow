@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { FiUser, FiMail, FiLock, FiMoon, FiSun, FiEye, FiEyeOff, FiCheck, FiX, FiTrendingUp } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiCheck, FiX, FiTrendingUp } from 'react-icons/fi';
 import Logo from '../components/Logo';
 
 const getStrength = (pw) => {
@@ -27,7 +26,6 @@ const requirements = [
 
 export default function Register() {
   const { register } = useAuth();
-  const { dark, toggle } = useTheme();
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
@@ -98,11 +96,6 @@ export default function Register() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md animate-fade-up">
-          <div className="flex justify-end mb-4">
-            <button onClick={toggle} className="p-2 rounded-xl text-gray-500 dark:text-navy-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-all duration-300 hover:rotate-12">
-              {dark ? <FiSun size={20} /> : <FiMoon size={20} />}
-            </button>
-          </div>
           <div className="text-center mb-8">
             <Logo size={48} withText={false} className="mx-auto mb-4 animate-float" />
             <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Create Account</h2>

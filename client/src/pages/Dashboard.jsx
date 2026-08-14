@@ -68,10 +68,10 @@ function useDashboard() {
 }
 
 const statCards = [
-  { key: 'income', label: 'Monthly Income', color: 'text-mint-600 dark:text-mint-400' },
-  { key: 'expense', label: 'Monthly Expenses', color: 'text-magenta-600 dark:text-magenta-400' },
-  { key: 'savings', label: 'Total Savings', color: 'text-primary-600 dark:text-primary-400' },
-  { key: 'worth', label: 'Net Worth', color: 'text-sun-600 dark:text-sun-400' },
+  { key: 'income', label: 'Monthly Income' },
+  { key: 'expense', label: 'Monthly Expenses' },
+  { key: 'savings', label: 'Total Savings' },
+  { key: 'worth', label: 'Net Worth' },
 ];
 
 export default function Dashboard() {
@@ -114,14 +114,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div className="animate-fade-up">
           <h1 className="page-title">
             Welcome back, <span className="text-gradient">{user?.name}!</span>
           </h1>
           <p className="page-subtitle">Here's your financial overview</p>
         </div>
-        <Link to="/wealth" className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap shrink-0 animate-fade-up">
+        <Link to="/wealth" className="btn-primary text-xs px-3 py-1.5 whitespace-nowrap shrink-0 mt-0.5 animate-fade-up">
           <FiTrendingUp className="mr-1.5 hidden sm:inline" size={14} /> View Analytics
         </Link>
       </div>
@@ -130,7 +130,7 @@ export default function Dashboard() {
         {statCards.map((card, i) => (
           <div key={card.key} className="stat-card reveal" style={{ transitionDelay: `${i * 0.08}s` }}>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 font-medium mb-1 sm:mb-2">{card.label}</p>
-            <p className={`text-lg sm:text-2xl font-extrabold ${card.color} md:text-gray-900 md:dark:text-white`}>
+            <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">
               <CountUp value={values[card.key]} format={formatCurrency} />
             </p>
           </div>

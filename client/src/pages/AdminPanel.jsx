@@ -85,7 +85,7 @@ export default function AdminPanel() {
               <p className="text-xs text-gray-500 dark:text-navy-400">{c.label}</p>
               <div className={`w-8 h-8 rounded-xl ${c.bg} flex items-center justify-center ${c.color} transition-transform duration-300 hover:scale-110 hover:rotate-6`}><c.icon size={16} /></div>
             </div>
-            <p className={`text-lg font-extrabold ${c.color}`}>{c.value}</p>
+            <p className="text-lg font-extrabold text-gray-900 dark:text-white">{c.value}</p>
             <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5">{c.sub}</p>
           </div>
         ))}
@@ -139,11 +139,11 @@ export default function AdminPanel() {
               </div>
               <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-xl border border-gray-200 dark:border-navy-700 transition-transform duration-300 hover:-translate-y-0.5">
                 <p className="text-xs text-gray-500 dark:text-navy-400">Investments</p>
-                <p className="text-xl font-extrabold text-mint-600 dark:text-mint-400">{formatCurrency(a.totalInvestmentValue)}</p>
+                <p className="text-xl font-extrabold text-gray-900 dark:text-white">{formatCurrency(a.totalInvestmentValue)}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-xl border border-gray-200 dark:border-navy-700 transition-transform duration-300 hover:-translate-y-0.5">
                 <p className="text-xs text-gray-500 dark:text-navy-400">Avg Goal Completion</p>
-                <p className="text-xl font-extrabold text-magenta-600 dark:text-magenta-400">{goalPct}%</p>
+                <p className="text-xl font-extrabold text-gray-900 dark:text-white">{goalPct}%</p>
               </div>
             </div>
           </div>

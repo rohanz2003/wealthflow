@@ -162,14 +162,14 @@ export default function HabitTracker() {
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           {[
-            { label: 'Active Habits', value: stats.active, color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-100 dark:bg-primary-900/30' },
-            { label: 'Completed Today', value: completedToday, color: 'text-mint-600 dark:text-mint-400', bg: 'bg-mint-100 dark:bg-mint-900/30' },
-            { label: 'Longest Streak', value: Math.max(0, ...habits.map((h) => h.longestStreak || 0)), color: 'text-sun-600 dark:text-sun-400', bg: 'bg-sun-100 dark:bg-sun-900/30' },
-            { label: 'All-time Completions', value: habits.reduce((s, h) => s + (h.totalCompletions || 0), 0), color: 'text-magenta-600 dark:text-magenta-400', bg: 'bg-magenta-100 dark:bg-magenta-900/30' },
+            { label: 'Active Habits', value: stats.active },
+            { label: 'Completed Today', value: completedToday },
+            { label: 'Longest Streak', value: Math.max(0, ...habits.map((h) => h.longestStreak || 0)) },
+            { label: 'All-time Completions', value: habits.reduce((s, h) => s + (h.totalCompletions || 0), 0) },
           ].map((s, i) => (
             <div key={i} className="stat-card reveal" style={{ transitionDelay: `${i * 0.08}s` }}>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-2">{s.label}</p>
-              <p className={`text-lg sm:text-2xl font-extrabold ${s.color}`}>{s.value}</p>
+              <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{s.value}</p>
             </div>
           ))}
         </div>

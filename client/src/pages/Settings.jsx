@@ -205,11 +205,11 @@ export default function Settings() {
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 dark:bg-navy-800 rounded-xl card-hover transition-transform duration-300 hover:-translate-y-0.5 animate-fade-up" style={{ animationDelay: '0.28s' }}>
                 <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiDollarSign className="mr-1" size={12} /> Monthly Income</p>
-                <p className="text-sm font-semibold text-mint-600 dark:text-mint-400 mt-1">{monthlyIncome > 0 ? formatCurrency(monthlyIncome) : '-'}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{monthlyIncome > 0 ? formatCurrency(monthlyIncome) : '-'}</p>
               </div>
               <div className="p-3 sm:p-4 bg-gray-50 dark:bg-navy-800 rounded-xl card-hover transition-transform duration-300 hover:-translate-y-0.5 animate-fade-up" style={{ animationDelay: '0.34s' }}>
                 <p className="text-xs text-gray-500 dark:text-navy-400 flex items-center"><FiDollarSign className="mr-1" size={12} /> Currency</p>
-                <p className="text-sm font-semibold text-primary-600 dark:text-primary-400 mt-1">{currencyInfo.symbol} {currency} — {currencyInfo.name}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white mt-1">{currencyInfo.symbol} {currency} — {currencyInfo.name}</p>
               </div>
             </div>
           )}

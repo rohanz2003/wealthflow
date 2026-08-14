@@ -104,11 +104,11 @@ export default function Debts() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="stat-card reveal">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Debt</p>
-          <p className="text-lg sm:text-2xl font-extrabold text-red-600 dark:text-red-400 truncate">{formatCurrency(data.totalDebt)}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white truncate">{formatCurrency(data.totalDebt)}</p>
         </div>
         <div className="stat-card reveal reveal-delay-1">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Paid Off</p>
-          <p className="text-lg sm:text-2xl font-extrabold text-mint-600 dark:text-mint-400">{paidOffPct}%</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{paidOffPct}%</p>
         </div>
         <div className="stat-card reveal reveal-delay-2">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Active Debts</p>

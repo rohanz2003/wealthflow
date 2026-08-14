@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { FiMail, FiLock, FiEye, FiEyeOff, FiMoon, FiSun, FiCheck, FiTrendingUp, FiTarget, FiPieChart } from 'react-icons/fi';
+import { FiMail, FiLock, FiEye, FiEyeOff, FiCheck, FiTrendingUp, FiTarget, FiPieChart } from 'react-icons/fi';
 import Logo from '../components/Logo';
 
 export default function Login() {
   const { login } = useAuth();
-  const { dark, toggle } = useTheme();
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
@@ -70,11 +68,6 @@ export default function Login() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md animate-fade-up">
-          <div className="flex justify-end mb-4">
-            <button onClick={toggle} className="p-2 rounded-xl text-gray-500 dark:text-navy-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-all duration-300 hover:rotate-12">
-              {dark ? <FiSun size={20} /> : <FiMoon size={20} />}
-            </button>
-          </div>
           <div className="text-center mb-8">
             <Logo size={48} withText={false} className="mx-auto mb-4 animate-float" />
             <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">Sign in</h2>

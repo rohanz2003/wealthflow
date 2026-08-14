@@ -1,10 +1,10 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import {
-  FiTrendingUp, FiTarget, FiDollarSign, FiPieChart, FiCheckCircle, FiMenu, FiX,
+  FiTrendingUp, FiTarget, FiDollarSign, FiPieChart, FiCheckCircle,
   FiMoon, FiSun, FiArrowRight, FiShield, FiBarChart2, FiStar, FiCheck,
 } from 'react-icons/fi';
-import { useState } from 'react';
 import Logo from '../components/Logo';
 import CountUp from '../components/CountUp';
 import { expenseCategoryMeta, chartPalette } from '../utils/categoryMeta';
@@ -48,7 +48,17 @@ const transactions = [
 
 export default function Landing() {
   const { dark, toggle } = useTheme();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [activeFeature, setActiveFeature] = useState(null);
+
+  useEffect(() => {
+    const closeFeature = () => setActiveFeature(null);
+    window.addEventListener('scroll', closeFeature, { passive: true, capture: true });
+    window.addEventListener('touchmove', closeFeature, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', closeFeature, { capture: true });
+      window.removeEventListener('touchmove', closeFeature);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white dark:bg-navy-950">
@@ -77,32 +87,18 @@ export default function Landing() {
             </div>
 
             <div className="flex items-center space-x-2 md:hidden">
-              <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-gray-600 dark:text-navy-300">
-                {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-              </button>
+              <Link to="/login" className="btn-primary text-[11px] px-3 h-8">Sign in</Link>
               <button
                 onClick={toggle}
                 aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-                className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 dark:border-navy-600 bg-white dark:bg-navy-800 text-gray-600 dark:text-sun-300 shadow-sm transition-all duration-300"
+                className="flex items-center justify-center text-gray-600 dark:text-sun-300 transition-colors duration-300"
                 title={dark ? 'Light mode' : 'Dark mode'}
               >
-                {dark ? <FiSun size={18} /> : <FiMoon size={18} />}
+                {dark ? <FiSun size={20} /> : <FiMoon size={20} />}
               </button>
             </div>
           </div>
         </div>
-
-        {mobileOpen && (
-          <div className="md:hidden border-t border-gray-100 dark:border-navy-800 bg-white dark:bg-navy-900 animate-fade-down">
-            <div className="px-4 py-3 space-y-2">
-              <a href="#features" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-navy-300 hover:bg-gray-50 dark:hover:bg-navy-800">Features</a>
-              <a href="#how" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-navy-300 hover:bg-gray-50 dark:hover:bg-navy-800">How it works</a>
-              <a href="#stats" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-xl text-sm text-gray-600 dark:text-navy-300 hover:bg-gray-50 dark:hover:bg-navy-800">Stats</a>
-              <Link to="/login" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-xl text-sm font-medium text-gray-700 dark:text-navy-200">Sign in</Link>
-              <Link to="/register" onClick={() => setMobileOpen(false)} className="block px-3 py-2 rounded-xl text-sm font-medium text-white bg-primary-600 text-center shadow-glow">Get Started Free</Link>
-            </div>
-          </div>
-        )}
       </nav>
 
       {/* Hero */}
@@ -250,20 +246,20 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-20 sm:py-28">
+      <section id="features" className="py-10 sm:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 reveal">
-            <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-primary-50 dark:bg-navy-800 text-primary-700 dark:text-primary-300 mb-5 border border-primary-200/60 dark:border-navy-700">
+          <div className="text-center mb-8 md:mb-16 reveal">
+            <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-primary-50 dark:bg-navy-800 text-primary-700 dark:text-primary-300 mb-4 md:mb-5 border border-primary-200/60 dark:border-navy-700">
               Features
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
               Everything you need to manage your money
             </h2>
-            <p className="mt-4 text-lg text-gray-500 dark:text-navy-300 max-w-2xl mx-auto">
+            <p className="mt-3 md:mt-4 text-sm sm:text-lg text-gray-500 dark:text-navy-300 max-w-2xl mx-auto">
               From tracking daily expenses to growing long-term wealth — WealthFlow has you covered.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f, i) => (
               <div key={i} className="card p-7 card-hover reveal" style={{ transitionDelay: `${(i % 3) * 0.1}s` }}>
                 <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center text-white mb-5 shadow-lg transition-transform duration-300 group-hover:scale-110 hover:scale-110 hover:rotate-6`}>
@@ -274,32 +270,59 @@ export default function Landing() {
               </div>
             ))}
           </div>
+
+          <div className="md:hidden">
+            <div className="grid grid-cols-3 gap-3">
+              {features.map((f, i) => (
+                <button key={i} type="button" onClick={() => setActiveFeature(activeFeature === i ? null : i)} className="text-center">
+                  <div className={`w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center text-white shadow-lg transition-all duration-300 ${activeFeature === i ? 'scale-110 rotate-6' : 'hover:scale-105'}`}>
+                    <f.icon size={20} />
+                  </div>
+                  <p className={`mt-2 text-[11px] font-semibold leading-tight transition-colors duration-300 ${activeFeature === i ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-navy-200'}`}>{f.title}</p>
+                </button>
+              ))}
+            </div>
+            {activeFeature !== null && (() => {
+              const active = features[activeFeature];
+              return (
+                <div className="mt-4 card p-4 animate-scale-in">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${active.color} flex items-center justify-center text-white`}>
+                      <active.icon size={15} />
+                    </div>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">{active.title}</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-navy-400 leading-relaxed">{active.desc}</p>
+                </div>
+              );
+            })()}
+          </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section id="how" className="py-20 bg-gray-50 dark:bg-navy-900">
+      <section id="how" className="py-10 sm:py-20 bg-gray-50 dark:bg-navy-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 reveal">
-            <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-300 mb-5 border border-mint-200/60 dark:border-mint-800">
+          <div className="text-center mb-8 md:mb-16 reveal">
+            <span className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-300 mb-4 md:mb-5 border border-mint-200/60 dark:border-mint-800">
               How it works
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
               How to get your <span className="text-gradient">money into shape?</span>
             </h2>
           </div>
-          <div className="space-y-16">
+          <div className="space-y-10 md:space-y-16">
             {steps.map((step, i) => (
-              <div key={i} className="grid md:grid-cols-2 gap-10 items-center">
+              <div key={i} className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
                 <div className={`${i % 2 === 1 ? 'md:order-2' : ''} reveal-${i % 2 === 1 ? 'right' : 'left'}`}>
-                  <div className="flex items-center space-x-4 mb-5">
-                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-white text-lg font-extrabold shadow-lg`}>
+                  <div className="flex items-center space-x-4 mb-4 md:mb-5">
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-white text-base md:text-lg font-extrabold shadow-lg`}>
                       {i + 1}
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{step.title}</h3>
+                    <h3 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{step.title}</h3>
                   </div>
-                  <p className="text-gray-500 dark:text-navy-300 leading-relaxed mb-6">{step.desc}</p>
-                  <ul className="space-y-3">
+                  <p className="text-sm md:text-base text-gray-500 dark:text-navy-300 leading-relaxed mb-4 md:mb-6">{step.desc}</p>
+                  <ul className="hidden md:block space-y-3">
                     {step.points.map((pt, j) => (
                       <li key={j} className="flex items-start space-x-3">
                         <span className={`mt-0.5 w-5 h-5 rounded-full bg-gradient-to-br ${step.color} flex items-center justify-center shrink-0`}>

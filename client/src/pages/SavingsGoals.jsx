@@ -94,18 +94,18 @@ export default function SavingsGoals() {
         </div>
         <div className="stat-card reveal reveal-delay-1">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Total Saved</p>
-          <p className="text-lg sm:text-2xl font-extrabold text-mint-600 dark:text-mint-400 truncate">{formatCurrency(totalSaved)}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white truncate">{formatCurrency(totalSaved)}</p>
         </div>
         <div className="stat-card reveal reveal-delay-2">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Overall Progress</p>
-          <p className="text-lg sm:text-2xl font-extrabold text-primary-600 dark:text-primary-400">{overallProgress}%</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{overallProgress}%</p>
           <div className="mt-2 w-full bg-gray-200 dark:bg-navy-700 rounded-full h-2 overflow-hidden">
             <div className="bg-gradient-to-r from-primary-500 to-magenta-500 h-2 rounded-full transition-all duration-1000 progress-shimmer" style={{ width: `${overallProgress}%` }} />
           </div>
         </div>
         <div className="stat-card reveal reveal-delay-3">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Monthly Surplus</p>
-          <p className={`text-lg sm:text-2xl font-extrabold truncate ${(projections?.monthlySurplus || 0) > 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className="text-lg sm:text-2xl font-extrabold truncate text-gray-900 dark:text-white">
             {formatCurrency(projections?.monthlySurplus)}
           </p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5">Available for savings</p>

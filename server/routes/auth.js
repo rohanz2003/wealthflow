@@ -120,7 +120,7 @@ router.post(
   })
 );
 
-router.post('/refresh', authLimiter, asyncHandler(async (req, res) => {
+router.post('/refresh', asyncHandler(async (req, res) => {
   const refreshToken = req.body.refreshToken || req.cookies?.refreshToken;
   if (!refreshToken) {
     return res.status(401).json({ message: 'Refresh token required' });

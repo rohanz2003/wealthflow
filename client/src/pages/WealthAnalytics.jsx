@@ -151,14 +151,14 @@ export default function WealthAnalytics() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: 'Total Income', value: formatCurrency(kpis?.monthlyIncomeTotal), sub: 'This month', color: 'text-mint-600 dark:text-mint-400' },
-          { label: 'Total Expenses', value: formatCurrency(kpis?.monthlyExpenseTotal), sub: 'This month', color: 'text-magenta-600 dark:text-magenta-400' },
-          { label: 'Habit Completion', value: `${kpis?.habitCompletionRate || 0}%`, sub: `${kpis?.habitsCompletedToday || 0} done today`, color: 'text-primary-600 dark:text-primary-400' },
-          { label: 'Net Cash Flow', value: formatCurrency(kpis?.monthlyNetCashflow), sub: `${kpis?.totalMonthlyTransactions || 0} transactions`, color: 'text-magenta-600 dark:text-magenta-400' },
+          { label: 'Total Income', value: formatCurrency(kpis?.monthlyIncomeTotal), sub: 'This month' },
+          { label: 'Total Expenses', value: formatCurrency(kpis?.monthlyExpenseTotal), sub: 'This month' },
+          { label: 'Habit Completion', value: `${kpis?.habitCompletionRate || 0}%`, sub: `${kpis?.habitsCompletedToday || 0} done today` },
+          { label: 'Net Cash Flow', value: formatCurrency(kpis?.monthlyNetCashflow), sub: `${kpis?.totalMonthlyTransactions || 0} transactions` },
         ].map((c, i) => (
           <div key={i} className="stat-card p-3 sm:p-4 reveal" style={{ transitionDelay: `${i * 0.08}s` }}>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-0.5 sm:mb-1">{c.label}</p>
-            <p className={`text-lg sm:text-2xl font-extrabold ${c.color}`}>{c.value}</p>
+            <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{c.value}</p>
             <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5 sm:mt-1">{c.sub}</p>
           </div>
         ))}
@@ -202,22 +202,22 @@ export default function WealthAnalytics() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="stat-card p-3 sm:p-4 reveal">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-0.5 sm:mb-1">Goal Completion</p>
-          <p className="text-lg sm:text-2xl font-extrabold text-primary-600 dark:text-primary-400">{kpis?.goalCompletionRate || 0}%</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{kpis?.goalCompletionRate || 0}%</p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5 sm:mt-1">{kpis?.completedGoals || 0} of {kpis?.totalGoals || 0} done</p>
         </div>
         <div className="stat-card p-3 sm:p-4 reveal reveal-delay-1">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-0.5 sm:mb-1">Avg Savings Progress</p>
-          <p className="text-lg sm:text-2xl font-extrabold text-mint-600 dark:text-mint-400">{kpis?.avgGoalCompletionRate || 0}%</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{kpis?.avgGoalCompletionRate || 0}%</p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5 sm:mt-1">Across all goals</p>
         </div>
         <div className="stat-card p-3 sm:p-4 reveal reveal-delay-2">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-0.5 sm:mb-1">Weekly Activity</p>
-          <p className="text-lg sm:text-2xl font-extrabold text-primary-600 dark:text-primary-400">{kpis?.weeklyTransactions || 0}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">{kpis?.weeklyTransactions || 0}</p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5 sm:mt-1">Transactions this week</p>
         </div>
         <div className="stat-card p-3 sm:p-4 reveal reveal-delay-3">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-0.5 sm:mb-1">Monthly Net Cashflow</p>
-          <p className={`text-lg sm:text-2xl font-extrabold ${(kpis?.monthlyNetCashflow || 0) >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">
             {formatCurrency(kpis?.monthlyNetCashflow)}
           </p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5 sm:mt-1">Income minus expenses</p>

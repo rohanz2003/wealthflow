@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useRef } from 'react';
 import axios from 'axios';
 import { TOKEN_KEY, REFRESH_KEY } from '../main';
 import { setBaseCurrency } from '../utils/formatCurrency';
@@ -13,9 +13,13 @@ const clearTokens = () => {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    fetchUser();
+    if (!fetchedRef.current) {
+      fetchedRef.current = true;
+      fetchUser();
+    }
     window.addEventListener('wf_unauthorized', handleUnauthorized);
     return () => window.removeEventListener('wf_unauthorized', handleUnauthorized);
   }, []);

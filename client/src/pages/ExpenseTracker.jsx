@@ -106,15 +106,15 @@ export default function ExpenseTracker() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="stat-card reveal">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-2">Total Income</p>
-          <p className="text-xl sm:text-2xl font-extrabold text-mint-600 dark:text-mint-400">{formatCurrency(totalIncomes)}</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">{formatCurrency(totalIncomes)}</p>
         </div>
         <div className="stat-card reveal reveal-delay-1">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 mb-2">Total Expenses</p>
-          <p className="text-xl sm:text-2xl font-extrabold text-magenta-600 dark:text-magenta-400">{formatCurrency(totalExpenses)}</p>
+          <p className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">{formatCurrency(totalExpenses)}</p>
         </div>
         <div className="stat-card reveal reveal-delay-2 col-span-2 sm:col-span-1">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400 text-center sm:text-left mb-2">Net Balance</p>
-          <p className={`text-xl sm:text-2xl font-extrabold text-center sm:text-left ${totalIncomes - totalExpenses >= 0 ? 'text-primary-600 dark:text-primary-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className="text-xl sm:text-2xl font-extrabold text-center sm:text-left text-gray-900 dark:text-white">
             {formatCurrency(totalIncomes - totalExpenses)}
           </p>
         </div>

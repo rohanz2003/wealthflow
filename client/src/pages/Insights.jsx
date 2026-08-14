@@ -53,24 +53,24 @@ export default function Insights() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="stat-card reveal">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">This Month's Spending</p>
-          <p className="text-lg sm:text-2xl font-extrabold text-magenta-600 dark:text-magenta-400 truncate">{formatCurrency(insights?.totalSpentThisMonth)}</p>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white truncate">{formatCurrency(insights?.totalSpentThisMonth)}</p>
         </div>
         <div className="stat-card reveal reveal-delay-1">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Spending Trend</p>
-          <p className={`text-lg sm:text-2xl font-extrabold ${(insights?.spendingTrend || 0) > 0 ? 'text-red-600 dark:text-red-400' : 'text-mint-600 dark:text-mint-400'}`}>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">
             {insights?.spendingTrend > 0 ? '+' : ''}{insights?.spendingTrend || 0}%
           </p>
           <p className="text-xs text-gray-400 dark:text-navy-500 mt-0.5">vs 3-month average</p>
         </div>
         <div className="stat-card reveal reveal-delay-2">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Expense-to-Income</p>
-          <p className={`text-lg sm:text-2xl font-extrabold ${(insights?.expenseRatio || 0) > 80 ? 'text-red-600 dark:text-red-400' : (insights?.expenseRatio || 0) > 60 ? 'text-sun-600 dark:text-sun-400' : 'text-mint-600 dark:text-mint-400'}`}>
+          <p className="text-lg sm:text-2xl font-extrabold text-gray-900 dark:text-white">
             {insights?.expenseRatio || 0}%
           </p>
         </div>
         <div className="stat-card reveal reveal-delay-3">
           <p className="text-xs sm:text-sm text-gray-500 dark:text-navy-400">Net Worth</p>
-          <p className={`text-lg sm:text-2xl font-extrabold truncate ${(stability?.netWorth || 0) >= 0 ? 'text-mint-600 dark:text-mint-400' : 'text-red-600 dark:text-red-400'}`}>
+          <p className="text-lg sm:text-2xl font-extrabold truncate text-gray-900 dark:text-white">
             {formatCurrency(stability?.netWorth)}
           </p>
         </div>
