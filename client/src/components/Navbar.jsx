@@ -32,12 +32,15 @@ export default function Navbar() {
 
   const isActive = (path) => location.pathname === path;
 
+  const homePath = user?.role === 'admin' ? '/admin' : '/dashboard';
+  const profilePath = user?.role === 'admin' ? '/admin' : '/settings';
+
   return (
     <nav className="sticky top-0 z-50 bg-white/85 dark:bg-navy-950/85 backdrop-blur-xl border-b border-gray-100 dark:border-navy-800">
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex justify-between h-14 sm:h-16">
           <div className="flex items-center">
-            <Link to="/dashboard" className="flex items-center group">
+            <Link to={homePath} className="flex items-center group">
               <Logo size={32} withText={false} />
               <span className="ml-2 text-base sm:text-lg font-extrabold tracking-tight text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-300 transition-colors">
                 Wealth<span className="text-gradient">Flow</span>
@@ -62,7 +65,7 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="ml-1 pl-3 border-l border-gray-100 dark:border-navy-700 flex items-center space-x-2">
-              <Link to="/settings" className="flex items-center space-x-2 hover:opacity-90 transition-opacity group">
+              <Link to={profilePath} className="flex items-center space-x-2 hover:opacity-90 transition-opacity group">
                 <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold shadow-glow">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
@@ -91,7 +94,7 @@ export default function Navbar() {
           </div>
 
           <div className="md:hidden flex items-center space-x-1">
-            <Link to="/settings" className="p-2 rounded-lg text-gray-500 dark:text-navy-300">
+            <Link to={profilePath} className="p-2 rounded-lg text-gray-500 dark:text-navy-300">
               <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center text-white text-[10px] font-bold">
                 {user?.name?.charAt(0)?.toUpperCase() || 'U'}
               </div>

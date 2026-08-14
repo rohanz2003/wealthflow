@@ -32,14 +32,15 @@ function PageLoader() {
 
 function AppLayout({ children }) {
   const location = useLocation();
+  const isAdminPage = location.pathname === '/admin';
 
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <Navbar />
+      {!isAdminPage && <Navbar />}
       <main key={location.pathname} className="page-container animate-page-in pb-24 md:pb-0">
         {children}
       </main>
-      <MobileNav />
+      {!isAdminPage && <MobileNav />}
     </div>
   );
 }
@@ -47,13 +48,15 @@ function AppLayout({ children }) {
 export default function App() {
   const { user } = useAuth();
 
+  const homePath = user?.role === 'admin' ? '/admin' : '/dashboard';
+
   return (
     <Suspense fallback={<PageLoader />}>
       <RevealObserver />
       <Routes>
-        <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
-        <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-        <Route path="/register" element={user ? <Navigate to="/dashboard" /> : <Register />} />
+        <Route path="/" element={user ? <Navigate to={homePath} /> : <Landing />} />
+        <Route path="/login" element={user ? <Navigate to={homePath} /> : <Login />} />
+        <Route path="/register" element={user ? <Navigate to={homePath} /> : <Register />} />
         <Route path="/dashboard" element={<PrivateRoute><AppLayout><Dashboard /></AppLayout></PrivateRoute>} />
         <Route path="/expenses" element={<PrivateRoute><AppLayout><ExpenseTracker /></AppLayout></PrivateRoute>} />
         <Route path="/habits" element={<PrivateRoute><AppLayout><HabitTracker /></AppLayout></PrivateRoute>} />
@@ -64,7 +67,7 @@ export default function App() {
         <Route path="/budgets" element={<PrivateRoute><AppLayout><Budgets /></AppLayout></PrivateRoute>} />
         <Route path="/insights" element={<PrivateRoute><AppLayout><Insights /></AppLayout></PrivateRoute>} />
         <Route path="/debts" element={<PrivateRoute><AppLayout><Debts /></AppLayout></PrivateRoute>} />
-        <Route path="*" element={<Navigate to={user ? '/dashboard' : '/'} />} />
+        <Route path="*" element={<Navigate to={homePath} />} />
       </Routes>
     </Suspense>
   );

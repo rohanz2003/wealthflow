@@ -91,6 +91,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/budgets', require('./routes/budget'));
 app.use('/api/debts', require('./routes/debt'));
+app.use('/api/feedback', require('./routes/feedback'));
 
 app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found' }));
 

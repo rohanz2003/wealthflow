@@ -7,6 +7,7 @@ const SavingsGoal = require('../models/SavingsGoal');
 const Investment = require('../models/Investment');
 const Budget = require('../models/Budget');
 const Debt = require('../models/Debt');
+const Feedback = require('../models/Feedback');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 
@@ -55,6 +56,7 @@ router.delete('/users/:id', auth, admin, async (req, res) => {
       Investment.deleteMany({ user: req.params.id }),
       Budget.deleteMany({ user: req.params.id }),
       Debt.deleteMany({ user: req.params.id }),
+      Feedback.deleteMany({ user: req.params.id }),
     ]);
     res.json({ message: 'User and all associated data deleted' });
   } catch {
@@ -67,7 +69,7 @@ router.get('/analytics', auth, admin, async (req, res) => {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
 
-    const [totalUsers, activeUsers, totalExpenses, totalIncome, totalHabits, totalGoals, totalInvestments, totalBudgets, totalDebts] = await Promise.all([
+    const [totalUsers, activeUsers, totalExpenses, totalIncome, totalHabits, totalGoals, totalInvestments, totalBudgets, totalDebts, openFeedback, resolvedFeedback] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ lastActive: { $gte: thirtyDaysAgo } }),
       Expense.countDocuments(),
@@ -77,6 +79,8 @@ router.get('/analytics', auth, admin, async (req, res) => {
       Investment.countDocuments(),
       Budget.countDocuments(),
       Debt.countDocuments(),
+      Feedback.countDocuments({ status: 'open' }),
+      Feedback.countDocuments({ status: 'resolved' }),
     ]);
 
     const [expenseAgg, incomeAgg, investmentAgg, habitComp, goalsAgg, debtAgg] = await Promise.all([
@@ -114,6 +118,8 @@ router.get('/analytics', auth, admin, async (req, res) => {
       totalGoalsCompleted: goalsAgg[0]?.completed || 0,
       totalDebtRemaining: Math.round(debtAgg[0]?.totalRemaining || 0),
       totalDebtOriginal: Math.round(debtAgg[0]?.totalOriginal || 0),
+      openFeedback,
+      resolvedFeedback,
       expensesByCategory,
       incomeByCategory,
       recentUsers,

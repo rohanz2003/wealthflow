@@ -10,5 +10,8 @@ export default function PrivateRoute({ children }) {
       </div>
     );
   }
+  if (user?.role === 'admin' && window.location.pathname !== '/admin') {
+    return <Navigate to="/admin" />;
+  }
   return user ? children : <Navigate to="/" />;
 }

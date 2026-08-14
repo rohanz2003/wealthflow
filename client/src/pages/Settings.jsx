@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   FiDownload, FiTrash2, FiAlertTriangle, FiCheck, FiX, FiCalendar, FiClock,
   FiBriefcase, FiDollarSign, FiEdit2, FiSave, FiMail, FiShield, FiStar, FiAward,
-  FiLogOut,
+  FiLogOut, FiMessageSquare, FiSend,
 } from 'react-icons/fi';
 import { formatCurrency, setBaseCurrency } from '../utils/formatCurrency';
 import { CURRENCY_INFO, CURRENCIES } from '../utils/currency';
@@ -28,6 +28,11 @@ export default function Settings() {
   const [pwMsg, setPwMsg] = useState('');
   const [pwError, setPwError] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
+  const [feedbackForm, setFeedbackForm] = useState({ subject: '', message: '' });
+  const [myFeedback, setMyFeedback] = useState([]);
+  const [feedbackMsg, setFeedbackMsg] = useState('');
+  const [feedbackError, setFeedbackError] = useState('');
+  const [feedbackSending, setFeedbackSending] = useState(false);
 
   useEffect(() => {
     axios.get('/api/auth/me', { withCredentials: true }).then((res) => {
@@ -39,6 +44,8 @@ export default function Settings() {
         currency: res.data.currency || 'INR',
       });
     }).catch(() => {}).finally(() => setProfileLoading(false));
+
+    axios.get('/api/feedback/my').then((res) => setMyFeedback(res.data)).catch(() => {});
   }, []);
 
   const handleSaveProfile = async (e) => {
@@ -127,6 +134,31 @@ export default function Settings() {
       setPwError(err.response?.data?.message || 'Failed to update password');
     } finally {
       setPwLoading(false);
+    }
+  };
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    setFeedbackMsg('');
+    setFeedbackError('');
+    if (!feedbackForm.subject.trim() || !feedbackForm.message.trim()) {
+      setFeedbackError('Please fill in both subject and message');
+      return;
+    }
+    setFeedbackSending(true);
+    try {
+      const res = await axios.post('/api/feedback', {
+        subject: feedbackForm.subject,
+        message: feedbackForm.message,
+      });
+      setMyFeedback((prev) => [res.data, ...prev]);
+      setFeedbackForm({ subject: '', message: '' });
+      setFeedbackMsg('Feedback submitted! Our team will review it shortly.');
+      setTimeout(() => setFeedbackMsg(''), 4000);
+    } catch (err) {
+      setFeedbackError(err.response?.data?.errors?.[0]?.msg || err.response?.data?.message || 'Failed to submit feedback');
+    } finally {
+      setFeedbackSending(false);
     }
   };
 
@@ -307,6 +339,61 @@ export default function Settings() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="card p-4 sm:p-6 reveal animate-fade-up">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+            <FiMessageSquare className="mr-2 text-primary-500" size={18} /> Feedback & Support
+          </h3>
+          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${myFeedback.some((f) => f.status === 'open') ? 'bg-sun-100 dark:bg-sun-900/30 text-sun-700 dark:text-sun-400' : 'bg-gray-100 dark:bg-navy-700 text-gray-500 dark:text-navy-400'}`}>
+            {myFeedback.some((f) => f.status === 'open') ? '1+ awaiting reply' : 'No open queries'}
+          </span>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-navy-400 mb-4">Found an issue or have a suggestion? Send it to our team — we'll respond right here.</p>
+
+        <form onSubmit={handleFeedbackSubmit} className="space-y-3 mb-6">
+          <div>
+            <label htmlFor="feedback-subject" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Subject</label>
+            <input type="text" id="feedback-subject" value={feedbackForm.subject} maxLength={100} onChange={(e) => setFeedbackForm({ ...feedbackForm, subject: e.target.value })} className="input-field" placeholder="e.g. App crashes when adding expense" />
+          </div>
+          <div>
+            <label htmlFor="feedback-message" className="block text-sm font-medium text-gray-700 dark:text-navy-300 mb-1">Message</label>
+            <textarea id="feedback-message" rows={3} maxLength={2000} value={feedbackForm.message} onChange={(e) => setFeedbackForm({ ...feedbackForm, message: e.target.value })} className="input-field" placeholder="Describe the issue or your suggestion..." />
+          </div>
+          {feedbackError && <p className="text-sm text-red-600 dark:text-red-400 flex items-center"><FiX className="mr-1" size={14} />{feedbackError}</p>}
+          {feedbackMsg && <p className="text-sm text-mint-600 dark:text-mint-400 flex items-center"><FiCheck className="mr-1" size={14} />{feedbackMsg}</p>}
+          <button type="submit" disabled={feedbackSending} className="btn-primary text-sm">
+            <FiSend className="mr-1.5" size={14} /> {feedbackSending ? 'Sending...' : 'Send Feedback'}
+          </button>
+        </form>
+
+        {myFeedback.length > 0 && (
+          <div className="space-y-3">
+            <h4 className="text-sm font-semibold text-gray-700 dark:text-navy-200">Your Queries</h4>
+            {myFeedback.map((f) => (
+              <div key={f._id} className="p-4 bg-gray-50 dark:bg-navy-800 rounded-xl border border-gray-200 dark:border-navy-700">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{f.subject}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${f.status === 'open' ? 'bg-sun-100 dark:bg-sun-900/30 text-sun-700 dark:text-sun-400' : 'bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-400'}`}>
+                    {f.status === 'open' ? 'Open' : 'Resolved'}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-navy-400 mt-1.5">{f.message}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-gray-400 dark:text-navy-500">{new Date(f.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  {f.status === 'open' && <span className="text-xs text-sun-600 dark:text-sun-400 font-medium">Awaiting response</span>}
+                </div>
+                {f.status === 'resolved' && f.resolutionNote && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-navy-700">
+                    <p className="text-xs font-medium text-mint-600 dark:text-mint-400 mb-0.5">Response from team:</p>
+                    <p className="text-sm text-gray-600 dark:text-navy-300">{f.resolutionNote}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
